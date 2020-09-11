@@ -6,6 +6,7 @@
 package com.example.ethereumserviceapp;
 
 import com.example.ethereumserviceapp.contract.CaseMonitor;
+import com.example.ethereumserviceapp.utils.ByteConverters;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
-import org.web3j.abi.datatypes.generated.Bytes32;
+import org.web3j.abi.datatypes.generated.Bytes16;
 import org.web3j.crypto.Bip32ECKeyPair;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.MnemonicUtils;
@@ -21,10 +22,11 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.protocol.http.HttpService;
-import org.web3j.tuples.generated.Tuple6;
+import org.web3j.tuples.generated.Tuple5;
 import org.web3j.tx.FastRawTransactionManager;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.DefaultGasProvider;
+import org.web3j.utils.Numeric;
 
 /**
  *
@@ -79,9 +81,10 @@ public class TestWallet {
         // Load the wallet for the derived key
         Credentials credentials = Credentials.create(derivedKeyPair);
 
-        CaseMonitor contract = CaseMonitor.load("0x2A1595307a764A97d7186672Fd5e87B8857b70b6", web3, credentials, new DefaultGasProvider());
+        CaseMonitor contract = CaseMonitor.load("0x3fF7e31E973E25071Db1E0c32B1e366f8aC5a265", web3, credentials, new DefaultGasProvider());
 
-        String functionCall = contract.addCase("fakeuuid", "the name", true, BigInteger.valueOf(12313)).encodeFunctionCall();
+        Bytes16 uuidBytes = ByteConverters.stringToByes16("fakeuuid");
+        String functionCall = contract.addCase(uuidBytes.getValue(), "the name", true, BigInteger.valueOf(12313)).encodeFunctionCall();
 
         TransactionManager txManager = new FastRawTransactionManager(web3, credentials);
 
@@ -111,15 +114,16 @@ public class TestWallet {
         // Load the wallet for the derived key
         Credentials credentials = Credentials.create(derivedKeyPair);
 
-        CaseMonitor contract = CaseMonitor.load("0x2A1595307a764A97d7186672Fd5e87B8857b70b6", web3, credentials, new DefaultGasProvider());
+        CaseMonitor contract = CaseMonitor.load("0x3fF7e31E973E25071Db1E0c32B1e366f8aC5a265", web3, credentials, new DefaultGasProvider());
 
         List<byte[]> cases = contract.getAllCases().sendAsync().get();
         cases.stream().forEach(caseId -> {
-            Bytes32 b = new Bytes32((byte[]) caseId);
 
             try {
-                Tuple6<byte[], String, String, Boolean, BigInteger, BigInteger> res = contract.getCase((byte[]) caseId).sendAsync().get();
+                Tuple5<byte[], String, Boolean, BigInteger, BigInteger> res = contract.getCase((byte[]) caseId).sendAsync().get();
                 System.out.println(res.component2());
+                String dataInString = ByteConverters.hexToASCII(Numeric.toHexStringNoPrefix(res.component1()));
+                System.out.println(dataInString);
 
             } catch (InterruptedException ex) {
                 Logger.getLogger(TestWallet.class.getName()).log(Level.SEVERE, null, ex);
