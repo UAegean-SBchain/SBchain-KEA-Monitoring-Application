@@ -83,7 +83,7 @@ public class TestWallet {
 
         CaseMonitor contract = CaseMonitor.load("0x3fF7e31E973E25071Db1E0c32B1e366f8aC5a265", web3, credentials, new DefaultGasProvider());
 
-        Bytes16 uuidBytes = ByteConverters.stringToByes16("fakeuuid");
+        Bytes16 uuidBytes = ByteConverters.stringToBytes16("fakeuuid");
         String functionCall = contract.addCase(uuidBytes.getValue(), "the name", true, BigInteger.valueOf(12313)).encodeFunctionCall();
 
         TransactionManager txManager = new FastRawTransactionManager(web3, credentials);
