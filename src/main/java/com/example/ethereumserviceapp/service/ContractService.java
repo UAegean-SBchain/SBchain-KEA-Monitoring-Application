@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.UUID;
 
 import com.example.ethereumserviceapp.contract.CaseMonitor;
-import com.example.ethereumserviceapp.utils.Case;
-import com.example.ethereumserviceapp.utils.State;
+import com.example.ethereumserviceapp.model.Case;
+import com.example.ethereumserviceapp.model.State;
 
 import org.springframework.stereotype.Service;
 import org.web3j.crypto.Credentials;

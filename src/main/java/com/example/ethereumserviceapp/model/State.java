@@ -1,4 +1,4 @@
-package com.example.ethereumserviceapp.utils;
+package com.example.ethereumserviceapp.model;
 
 public enum State {
     
