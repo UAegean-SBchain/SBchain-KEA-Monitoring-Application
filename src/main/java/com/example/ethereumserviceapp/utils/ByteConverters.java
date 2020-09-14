@@ -34,13 +34,13 @@ public class ByteConverters {
         return hex.toString() + "".join("", Collections.nCopies(32 - (hex.length() / 2), "00"));
     }
 
-    public static Bytes16 stringToByes16(String asciiString) {
+    public static Bytes16 stringToBytes16(String asciiString) {
         //Numeric.hexStringToByteArray(strValueInHex) converts any HexString to byte[].
         byte[] myStringInByte = Numeric.hexStringToByteArray(asciiToHex16(asciiString));
         return new Bytes16(myStringInByte);
     }
 
-    public static Bytes32 stringToByes32(String asciiString) {
+    public static Bytes32 stringToBytes32(String asciiString) {
         //Numeric.hexStringToByteArray(strValueInHex) converts any HexString to byte[].
         byte[] myStringInByte = Numeric.hexStringToByteArray(asciiToHex32(asciiString));
         return new Bytes32(myStringInByte);
