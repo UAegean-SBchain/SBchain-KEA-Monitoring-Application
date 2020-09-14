@@ -2,8 +2,8 @@ package com.example.ethereumserviceapp.service;
 
 import com.example.ethereumserviceapp.contract.CaseMonitor;
 import com.example.ethereumserviceapp.model.Case;
+import com.example.ethereumserviceapp.model.State;
 import com.example.ethereumserviceapp.utils.ByteConverters;
-import com.example.ethereumserviceapp.utils.State;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
@@ -212,7 +212,7 @@ public class ContractService {
                 theCase.setState(State.REJECTED);
             }
             String formattedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-            updateCase(theCase.getUuid(), theCase.getName(), theCase.getIsStudent(), formattedDate, 1);
+            updateCase(theCase.getUuid(), theCase.getName(), theCase.getIsStudent(), formattedDate, State.ACCEPTED.getValue());
         }
     }
 }
