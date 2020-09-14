@@ -1,5 +1,9 @@
 package com.example.ethereumserviceapp.service;
 
+import com.example.ethereumserviceapp.contract.CaseMonitor;
+import com.example.ethereumserviceapp.model.Case;
+import com.example.ethereumserviceapp.model.State;
+import com.example.ethereumserviceapp.utils.ByteConverters;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
@@ -10,12 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import com.example.ethereumserviceapp.contract.CaseMonitor;
-import com.example.ethereumserviceapp.utils.ByteConverters;
-import com.example.ethereumserviceapp.utils.Case;
-import com.example.ethereumserviceapp.utils.State;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.web3j.abi.datatypes.generated.Bytes16;
 import org.web3j.crypto.Bip32ECKeyPair;
@@ -30,14 +29,11 @@ import org.web3j.tx.gas.ContractGasProvider;
 import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.tx.gas.StaticGasProvider;
 
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 @Service
 public class ContractService {
 
     //private static final String ACCOUNT_KEY = "24b26a6c3f3af6eb8b81e76c9c709548200af5d0f7f08480e9c391b01b036c56";
-
     Web3j web3j = Web3j.build(new HttpService("https://ropsten.infura.io/v3/553202d0d600409eb3a05633e3b04fd6"));
 
     String contractAddress = "0x91674748e5bb6e282d020ff5a82942b272b24e3e";
@@ -49,10 +45,8 @@ public class ContractService {
 
         // Credentials credentials = Credentials
         // .create("6800b05cefcd45574fccaadb5cb807b4f18781887f73df4f110a5580bed0919e");
-
         // TransactionManager txManager = new FastRawTransactionManager(this.web3j,
         // credentials, processor);
-
         final BigInteger gasPrice = BigInteger.valueOf(2200000);
         final BigInteger gasLimit = BigInteger.valueOf(4300000);
         final ContractGasProvider gasProvider = new StaticGasProvider(gasPrice, gasLimit);
@@ -77,9 +71,7 @@ public class ContractService {
 
             // final BigInteger gasPrice = BigInteger.valueOf(2200000);
             // final BigInteger gasLimit = BigInteger.valueOf(4300000);
-
             // final ContractGasProvider gasProvider = new StaticGasProvider(gasPrice, gasLimit);
-
             Credentials credentials = getCredentials();
 
             CaseMonitor contract = CaseMonitor.load(this.contractAddress, this.web3j, credentials, new DefaultGasProvider());
@@ -88,16 +80,15 @@ public class ContractService {
             // ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
             // bb.putLong(uuid.getMostSignificantBits());
             // bb.putLong(uuid.getLeastSignificantBits());
-            
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
             Bytes16 uuidBytes = ByteConverters.stringToBytes16(uuidStr);
 
-            String functionCall = contract.addCase(/*bb.array()*/ uuidBytes.getValue(), caseName, isStudent, BigInteger.valueOf(sdf.parse(date).getTime())).encodeFunctionCall();
+            String functionCall = contract.addCase(/*bb.array()*/uuidBytes.getValue(), caseName, isStudent, BigInteger.valueOf(sdf.parse(date).getTime())).encodeFunctionCall();
 
             TransactionManager txManager = new FastRawTransactionManager(this.web3j, credentials);
 
             String txHash = txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
-                contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
+                    contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
 
             log.info("transaction hash :{}", txHash);
 
@@ -117,7 +108,7 @@ public class ContractService {
         try {
             List<byte[]> cases = contract.getAllCases().send();
 
-            for(byte[] caseId:cases){
+            for (byte[] caseId : cases) {
                 caseList.add(getCase(caseId, contract));
             }
         } catch (Exception e) {
@@ -127,7 +118,7 @@ public class ContractService {
         return caseList;
     }
 
-    public void updateCase(String uuidStr, String caseName, Boolean isStudent, String date, int state){
+    public void updateCase(String uuidStr, String caseName, Boolean isStudent, String date, int state) {
         try {
 
             Credentials credentials = getCredentials();
@@ -137,15 +128,14 @@ public class ContractService {
             Bytes16 uuidBytes = ByteConverters.stringToBytes16(uuidStr);
 
             String functionCall = contract.updateCase(uuidBytes.getValue(), caseName, isStudent,
-                BigInteger.valueOf(sdf.parse(date).getTime()), BigInteger.valueOf(state)).encodeFunctionCall();
-           
+                    BigInteger.valueOf(sdf.parse(date).getTime()), BigInteger.valueOf(state)).encodeFunctionCall();
+
             TransactionManager txManager = new FastRawTransactionManager(this.web3j, credentials);
 
             String txHash = txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
-                contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
+                    contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
 
             log.info("transaction hash :{}", txHash);
-
 
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -167,7 +157,7 @@ public class ContractService {
 
     }
 
-    private Case transformTuple(Tuple5<byte[], String, Boolean, BigInteger, BigInteger> theCase){
+    private Case transformTuple(Tuple5<byte[], String, Boolean, BigInteger, BigInteger> theCase) {
 
         Case transformedCase = new Case();
 
@@ -178,14 +168,14 @@ public class ContractService {
         transformedCase.setUuid(String.valueOf(new UUID(high, low)));
         transformedCase.setName(theCase.component2());
         transformedCase.setIsStudent(theCase.component3());
-        transformedCase.setDate(Instant.ofEpochMilli(theCase.component4().longValue()).atZone(ZoneId.systemDefault()).toLocalDate());
-        
+        transformedCase.setDate(Instant.ofEpochMilli(theCase.component4().longValue()).atZone(ZoneId.systemDefault()).toLocalDateTime());
+
         transformedCase.setState(State.values()[theCase.component5().intValue()]);
 
         return transformedCase;
     }
 
-    private Credentials getCredentials(){
+    private Credentials getCredentials() {
         String password = null; // no encryption
         String mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
         //Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in bitcoin it is different
@@ -198,33 +188,31 @@ public class ContractService {
 
         // Load the wallet for the derived key
         //Credentials credentials = Credentials.create(derivedKeyPair);
-
         return Credentials.create(derivedKeyPair);
     }
 
-    private void setContractAddress(String address){
+    private void setContractAddress(String address) {
         this.contractAddress = address;
     }
 
-    public void monitorCases(){
+    public void monitorCases() {
         List<Case> caseList = getAllCases();
 
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
-        for(Case theCase:caseList){
+        for (Case theCase : caseList) {
 
             //TODO trigger external API call to update credentials
             final Boolean isStudent = false; //mock call
 
             //theCase.setIsStudent(isStudent);
-
-            if(!theCase.getIsStudent()){
+            if (!theCase.getIsStudent()) {
                 theCase.setState(State.ACCEPTED);
             } else {
                 theCase.setState(State.REJECTED);
             }
             String formattedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-            updateCase(theCase.getUuid(), theCase.getName(), theCase.getIsStudent(), formattedDate, 1);
+            updateCase(theCase.getUuid(), theCase.getName(), theCase.getIsStudent(), formattedDate, State.ACCEPTED.getValue());
         }
     }
 }

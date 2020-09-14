@@ -1,8 +1,6 @@
-package com.example.ethereumserviceapp.utils;
+package com.example.ethereumserviceapp.model;
 
-import java.time.LocalDate;
-import java.util.UUID;
-
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -11,11 +9,11 @@ import lombok.ToString;
 @Setter
 @ToString
 public class Case {
-    
+
     private String uuid;
     private String name;
     private Boolean isStudent;
-    private LocalDate date;
+    private LocalDateTime date;
     private State state;
-    
+
 }
