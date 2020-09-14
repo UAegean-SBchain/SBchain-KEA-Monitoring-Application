@@ -8,6 +8,7 @@ package com.example.ethereumserviceapp.service;
 import com.example.ethereumserviceapp.contract.CaseMonitor;
 import com.example.ethereumserviceapp.model.Case;
 import java.util.List;
+import java.util.Optional;
 import org.web3j.crypto.Credentials;
 
 /**
@@ -22,7 +23,7 @@ public interface EthereumService {
 
     public List<String> getAllCaseUUID();
 
-    public Case getCaseByUUID(String uuid);
+    public Optional<Case> getCaseByUUID(String uuid);
 
     public void addCase(Case monitoredCase);
 

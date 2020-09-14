@@ -168,7 +168,7 @@ public class ContractService {
         transformedCase.setUuid(String.valueOf(new UUID(high, low)));
         transformedCase.setName(theCase.component2());
         transformedCase.setIsStudent(theCase.component3());
-        transformedCase.setDate(Instant.ofEpochMilli(theCase.component4().longValue()).atZone(ZoneId.systemDefault()).toLocalDate());
+        transformedCase.setDate(Instant.ofEpochMilli(theCase.component4().longValue()).atZone(ZoneId.systemDefault()).toLocalDateTime());
 
         transformedCase.setState(State.values()[theCase.component5().intValue()]);
 
