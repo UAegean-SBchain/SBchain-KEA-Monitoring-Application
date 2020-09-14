@@ -42,16 +42,16 @@ import org.web3j.utils.Numeric;
 public class EthereumServiceImpl implements EthereumService {
 
     private Web3j web3;
-    private String mnemonic = "enlist addict era market spawn van medal despair melt shift sustain multiply";
+    private String mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
     private Credentials credentials;
     private CaseMonitor contract;
     private final String CONTRACT_ADDRESS;
     private final TransactionManager txManager;
 
     public EthereumServiceImpl() {
-        this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/051806cbbf204a4886f2ab400c2c20f9"));
+        this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/e6c717dc50144f35909541fb7b32a3d4"));
         String password = null; // no encryption
-        this.mnemonic = "enlist addict era market spawn van medal despair melt shift sustain multiply";
+        this.mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
         //Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in bitcoin it is different
         int[] derivationPath = {44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT, 0 | Bip32ECKeyPair.HARDENED_BIT, 0, 0};
         // Generate a BIP32 master keypair from the mnemonic phrase
@@ -60,7 +60,7 @@ public class EthereumServiceImpl implements EthereumService {
         Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, derivationPath);
         // Load the wallet for the derived key
         this.credentials = Credentials.create(derivedKeyPair);
-        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x3fF7e31E973E25071Db1E0c32B1e366f8aC5a265" : System.getenv("CONTRACT_ADDRESS");
+        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x78dad716084c13e7d748b9c8663584235731a12b" : System.getenv("CONTRACT_ADDRESS");
 
         txManager = new FastRawTransactionManager(web3, credentials);
     }
@@ -68,9 +68,9 @@ public class EthereumServiceImpl implements EthereumService {
     @Override
     public Credentials getCredentials() {
         if (this.credentials == null) {
-            this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/051806cbbf204a4886f2ab400c2c20f9"));
+            this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/e6c717dc50144f35909541fb7b32a3d4"));
             String password = null; // no encryption
-            this.mnemonic = "enlist addict era market spawn van medal despair melt shift sustain multiply";
+            this.mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
             //Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in bitcoin it is different
             int[] derivationPath = {44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT, 0 | Bip32ECKeyPair.HARDENED_BIT, 0, 0};
             // Generate a BIP32 master keypair from the mnemonic phrase
@@ -94,17 +94,20 @@ public class EthereumServiceImpl implements EthereumService {
 
     @Override
     public List<String> getAllCaseUUID() {
-        List<String> result = new ArrayList();
+        List<String> result = new ArrayList<>();
         try {
             List<byte[]> cases = this.getContract().getAllCases().sendAsync().get();
+
             cases.stream().forEach(caseId -> {
                 result.add(ByteConverters.hexToASCII(Numeric.toHexStringNoPrefix((byte[]) caseId)));
             });
+            
         } catch (InterruptedException ex) {
             log.error(ex.getMessage());
         } catch (ExecutionException ex) {
             log.error(ex.getMessage());
         }
+
         return result;
     }
 

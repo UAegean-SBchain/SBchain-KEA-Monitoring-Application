@@ -1,6 +1,8 @@
 package com.example.ethereumserviceapp.model;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -15,5 +17,6 @@ public class Case {
     private Boolean isStudent;
     private LocalDateTime date;
     private State state;
+    private LinkedHashMap<LocalDateTime, State> history;
 
 }
