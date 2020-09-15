@@ -31,4 +31,8 @@ public interface EthereumService {
 
     public boolean checkIfCaseExists(String uuid);
 
+    public List<Case> getAllCases();
+
+    public void monitorCases();
+
 }

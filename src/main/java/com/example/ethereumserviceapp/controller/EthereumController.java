@@ -2,6 +2,8 @@ package com.example.ethereumserviceapp.controller;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Optional;
 
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.State;
@@ -75,9 +77,15 @@ public class EthereumController {
     }
 
     @GetMapping("/getAllCases")
-    protected void getAllCases() {
-        ethService.getAllCaseUUID();
+    protected String getAllCases() {
+        return ethService.getAllCaseUUID().get(0).trim();
         //contractService.getAllCases();
+    }
+
+    @GetMapping("/getCase")
+    protected Case getCase(@RequestParam(value = "uuid", required = true) String uuid) {
+        //Optional<Case> theCase = ethService.getCaseByUUID(uuid);
+        return ethService.getCaseByUUID(uuid).get();
     }
 
 }

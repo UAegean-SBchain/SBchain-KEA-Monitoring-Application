@@ -5,12 +5,6 @@
  */
 package com.example.ethereumserviceapp.service.impl;
 
-import com.example.ethereumserviceapp.contract.CaseMonitor;
-import com.example.ethereumserviceapp.model.Case;
-import com.example.ethereumserviceapp.service.EthereumService;
-import com.example.ethereumserviceapp.utils.ByteConverters;
-import com.example.ethereumserviceapp.utils.ContractBuilder;
-import com.example.ethereumserviceapp.utils.RandomIdGenerator;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
@@ -20,7 +14,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import lombok.extern.slf4j.Slf4j;
+import java.util.stream.Collectors;
+
+import com.example.ethereumserviceapp.contract.CaseMonitor;
+import com.example.ethereumserviceapp.model.Case;
+import com.example.ethereumserviceapp.model.State;
+import com.example.ethereumserviceapp.service.EthereumService;
+import com.example.ethereumserviceapp.utils.ByteConverters;
+import com.example.ethereumserviceapp.utils.ContractBuilder;
+import com.example.ethereumserviceapp.utils.RandomIdGenerator;
+
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.web3j.crypto.Bip32ECKeyPair;
@@ -32,6 +36,8 @@ import org.web3j.tx.FastRawTransactionManager;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.utils.Numeric;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
@@ -49,7 +55,7 @@ public class EthereumServiceImpl implements EthereumService {
     private final TransactionManager txManager;
 
     public EthereumServiceImpl() {
-        this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/e6c717dc50144f35909541fb7b32a3d4"));
+        this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/691797f6957f45e7944535265a9c13a6"));
         String password = null; // no encryption
         this.mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
         //Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in bitcoin it is different
@@ -60,7 +66,7 @@ public class EthereumServiceImpl implements EthereumService {
         Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, derivationPath);
         // Load the wallet for the derived key
         this.credentials = Credentials.create(derivedKeyPair);
-        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x78dad716084c13e7d748b9c8663584235731a12b" : System.getenv("CONTRACT_ADDRESS");
+        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x59bc23a07c16ad163417056643dfd44a4b5d59b9" : System.getenv("CONTRACT_ADDRESS");
 
         txManager = new FastRawTransactionManager(web3, credentials);
     }
@@ -68,7 +74,7 @@ public class EthereumServiceImpl implements EthereumService {
     @Override
     public Credentials getCredentials() {
         if (this.credentials == null) {
-            this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/e6c717dc50144f35909541fb7b32a3d4"));
+            this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/691797f6957f45e7944535265a9c13a6"));
             String password = null; // no encryption
             this.mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
             //Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in bitcoin it is different
@@ -194,6 +200,37 @@ public class EthereumServiceImpl implements EthereumService {
         }).findFirst();
 
         return match.isPresent();
+    }
+
+    @Override
+    @Scheduled(cron = "0 0 12 * * ?")
+    public void monitorCases() {
+        List<Case> caseList = getAllCases();
+        for(Case theCase:caseList){
+            if(!theCase.getState().equals(State.REJECTED)){
+
+                //TODO trigger external API call to update credentials
+                final Boolean isStudent = false; //mock call
+
+                //theCase.setIsStudent(isStudent);
+                theCase.setDate(LocalDateTime.now());
+
+                if(theCase.getIsStudent() || LocalDateTime.now().isAfter(theCase.getHistory().entrySet().iterator().next().getKey().plusMonths(6))){
+                    theCase.setState(State.REJECTED);
+                } else if(!theCase.getIsStudent()){
+                    theCase.setState(State.ACCEPTED);
+                }
+                updateCase(theCase);
+            }
+        }
+    }
+
+    @Override
+    public List<Case> getAllCases() {
+        List<String> caseUuids = getAllCaseUUID();
+        List<Case> cases = caseUuids.stream().filter(e -> getCaseByUUID(e.trim()).isPresent()).map(c -> getCaseByUUID(c.trim()).get()).collect(Collectors.toList());
+        
+        return cases;
     }
 
 }

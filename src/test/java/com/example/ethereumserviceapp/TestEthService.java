@@ -12,11 +12,15 @@ import com.example.ethereumserviceapp.service.impl.EthereumServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import jdk.internal.org.jline.utils.Log;
+import lombok.extern.slf4j.Slf4j;
+
 /**
  *
  * @author nikos
  */
-public class TestEthService {
+@Slf4j
+ public class TestEthService {
 
     @Test
     public void testGetAllCases() {
@@ -57,6 +61,15 @@ public class TestEthService {
         Assertions.assertEquals(ethServ.getCaseByUUID("2WiYi8").isPresent(), true);
         Assertions.assertEquals(ethServ.getCaseByUUID("2WiYi8").get().getIsStudent(), true);
         Assertions.assertEquals(ethServ.getCaseByUUID("2WiYi8").get().getName(), "caseName_updated");
+
+    }
+
+    @Test
+    public void testGetCase() {
+        EthereumService ethServ = new EthereumServiceImpl();
+        final String uuid = "1SiYd2";
+
+        Assertions.assertEquals(ethServ.getCaseByUUID(uuid).isPresent(), true);
 
     }
 

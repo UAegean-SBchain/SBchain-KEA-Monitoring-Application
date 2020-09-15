@@ -18,6 +18,7 @@ import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.State;
 
 import org.web3j.tuples.generated.Tuple7;
+import org.web3j.utils.Numeric;
 
 /**
  *
@@ -28,10 +29,12 @@ public class ContractBuilder {
     public static Case buildCaseFromTuple(Tuple7<byte[], String, Boolean, BigInteger, List<BigInteger>, List<BigInteger>, BigInteger> theCase) {
         Case transformedCase = new Case();
         LinkedHashMap<LocalDateTime, State> history = new LinkedHashMap<>();
-        ByteBuffer byteBuffer = ByteBuffer.wrap(theCase.component1());
-        Long high = byteBuffer.getLong();
-        Long low = byteBuffer.getLong();
-        transformedCase.setUuid(String.valueOf(new UUID(high, low)));
+        // ByteBuffer byteBuffer = ByteBuffer.wrap(theCase.component1());
+        // Long high = byteBuffer.getLong();
+        // Long low = byteBuffer.getLong();
+
+        //transformedCase.setUuid(String.valueOf(new UUID(high, low)));
+        transformedCase.setUuid(ByteConverters.hexToASCII(Numeric.toHexStringNoPrefix((byte[]) theCase.component1())));
         transformedCase.setName(theCase.component2());
         transformedCase.setIsStudent(theCase.component3());
         transformedCase.setDate(Instant.ofEpochMilli(theCase.component4().longValue()).atZone(ZoneId.systemDefault()).toLocalDateTime());

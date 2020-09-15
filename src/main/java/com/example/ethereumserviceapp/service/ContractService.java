@@ -41,9 +41,9 @@ public class ContractService {
 
     //private static final String ACCOUNT_KEY = "24b26a6c3f3af6eb8b81e76c9c709548200af5d0f7f08480e9c391b01b036c56";
 
-    Web3j web3j = Web3j.build(new HttpService("https://ropsten.infura.io/v3/e6c717dc50144f35909541fb7b32a3d4"));
+    Web3j web3j = Web3j.build(new HttpService("https://ropsten.infura.io/v3/691797f6957f45e7944535265a9c13a6"));
 
-    String contractAddress = "0x78dad716084c13e7d748b9c8663584235731a12b";
+    String contractAddress = "0x59bc23a07c16ad163417056643dfd44a4b5d59b9";
 
     // deploy contract to the block chain
     // change .send() to .encodeFunctionCall() and create transaction as in addCase
