@@ -228,7 +228,7 @@ public class EthereumServiceImpl implements EthereumService {
     @Override
     public List<Case> getAllCases() {
         List<String> caseUuids = getAllCaseUUID();
-        List<Case> cases = caseUuids.stream().filter(e -> getCaseByUUID(e.trim()).isPresent()).map(c -> getCaseByUUID(c.trim()).get()).collect(Collectors.toList());
+        List<Case> cases = caseUuids.stream().filter(e -> getCaseByUUID(e.trim()).isPresent() && !getCaseByUUID(e.trim()).get().getState().equals(State.REJECTED)).map(c -> getCaseByUUID(c.trim()).get()).collect(Collectors.toList());
         
         return cases;
     }
