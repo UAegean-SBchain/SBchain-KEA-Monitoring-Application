@@ -6,6 +6,7 @@
 package com.example.ethereumserviceapp.service.impl;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -59,20 +60,31 @@ public class MonitorServiceImpl implements MonitorService {
                         boolean isRevoked = this.ethServ.checkRevocationStatus(credIdAndExp.getId());
                         log.info("is credential {} revoked? == {}", credIdAndExp.getId(), isRevoked);
                         if (isRevoked) {
-                            //update the status of the case to REJECTED
-                            Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
-                            if (theCase.isPresent()) {
-                                theCase.get().setState(State.REJECTED);
-                                this.ethServ.updateCase(theCase.get());
-                            } else {
-                                log.error("cannot find case {} while trying to update it", uuid);
-                            }
+                            //update the status of the case to REJECTED and the date with the current date
+                            updateState(uuid, State.REJECTED);
+                        } else {
+                            // TODO probably needs another check
+                            updateState(uuid, State.ACCEPTED);
                         }
+                    } else{
+                        this.ethServ.revokeCredentials(uuid);
+                        updateState(uuid, State.REJECTED);
                     };
 
                 });
             }
         });
+    }
+
+    private void updateState(String uuid, State state){
+        Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
+        if (theCase.isPresent()) {
+            theCase.get().setState(state);
+            theCase.get().setDate(LocalDateTime.now());
+            this.ethServ.updateCase(theCase.get());
+        } else {
+            log.error("cannot find case {} while trying to update it", uuid);
+        }
     }
 
 }

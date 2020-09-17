@@ -32,11 +32,15 @@ public interface EthereumService {
 
     public boolean checkIfCaseExists(String uuid);
 
+    //remove when monitorService is completed
     public List<Case> getAllCases();
 
+    //remove when monitorService is completed
     public void monitorCases();
     public VcRevocationRegistry getRevocationContract();
 
     public boolean checkRevocationStatus(String uuid);
+
+    public void revokeCredentials(String uuid);
 
 }

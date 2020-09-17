@@ -61,16 +61,21 @@ public class EthereumServiceImpl implements EthereumService {
         this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/691797f6957f45e7944535265a9c13a6"));
         String password = null; // no encryption
         this.mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
-        //Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in bitcoin it is different
-        int[] derivationPath = {44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT, 0 | Bip32ECKeyPair.HARDENED_BIT, 0, 0};
+        // Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in
+        // bitcoin it is different
+        int[] derivationPath = { 44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT,
+                0 | Bip32ECKeyPair.HARDENED_BIT, 0, 0 };
         // Generate a BIP32 master keypair from the mnemonic phrase
         Bip32ECKeyPair masterKeypair = Bip32ECKeyPair.generateKeyPair(MnemonicUtils.generateSeed(mnemonic, password));
         // Derived the key using the derivation path
         Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, derivationPath);
         // Load the wallet for the derived key
         this.credentials = Credentials.create(derivedKeyPair);
-        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x3fF7e31E973E25071Db1E0c32B1e366f8aC5a265" : System.getenv("CONTRACT_ADDRESS");
-        this.REVOCATION_CONTRACT_ADDRESS = System.getenv("REVOCATION_CONTRACT_ADDRESS") == null ? "0x9534d226e56826Cc4C01912Eb388b121Bb0683b5" : System.getenv("REVOCATION_CONTRACT_ADDRESS");
+        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x3fF7e31E973E25071Db1E0c32B1e366f8aC5a265"
+                : System.getenv("CONTRACT_ADDRESS");
+        this.REVOCATION_CONTRACT_ADDRESS = System.getenv("REVOCATION_CONTRACT_ADDRESS") == null
+                ? "0x9534d226e56826Cc4C01912Eb388b121Bb0683b5"
+                : System.getenv("REVOCATION_CONTRACT_ADDRESS");
         txManager = new FastRawTransactionManager(web3, credentials);
     }
 
@@ -80,10 +85,13 @@ public class EthereumServiceImpl implements EthereumService {
             this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/691797f6957f45e7944535265a9c13a6"));
             String password = null; // no encryption
             this.mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
-            //Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in bitcoin it is different
-            int[] derivationPath = {44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT, 0 | Bip32ECKeyPair.HARDENED_BIT, 0, 0};
+            // Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in
+            // bitcoin it is different
+            int[] derivationPath = { 44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT,
+                    0 | Bip32ECKeyPair.HARDENED_BIT, 0, 0 };
             // Generate a BIP32 master keypair from the mnemonic phrase
-            Bip32ECKeyPair masterKeypair = Bip32ECKeyPair.generateKeyPair(MnemonicUtils.generateSeed(mnemonic, password));
+            Bip32ECKeyPair masterKeypair = Bip32ECKeyPair
+                    .generateKeyPair(MnemonicUtils.generateSeed(mnemonic, password));
             // Derived the key using the derivation path
             Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, derivationPath);
             // Load the wallet for the derived key
@@ -104,7 +112,8 @@ public class EthereumServiceImpl implements EthereumService {
     @Override
     public VcRevocationRegistry getRevocationContract() {
         if (this.revocationContract == null) {
-            this.revocationContract = VcRevocationRegistry.load(this.REVOCATION_CONTRACT_ADDRESS, this.web3, this.credentials, new DefaultGasProvider());
+            this.revocationContract = VcRevocationRegistry.load(this.REVOCATION_CONTRACT_ADDRESS, this.web3,
+                    this.credentials, new DefaultGasProvider());
         }
         return this.revocationContract;
     }
@@ -118,7 +127,7 @@ public class EthereumServiceImpl implements EthereumService {
             cases.stream().forEach(caseId -> {
                 result.add(ByteConverters.hexToASCII(Numeric.toHexStringNoPrefix((byte[]) caseId)));
             });
-            
+
         } catch (InterruptedException ex) {
             log.error(ex.getMessage());
         } catch (ExecutionException ex) {
@@ -132,7 +141,7 @@ public class EthereumServiceImpl implements EthereumService {
     public Optional<Case> getCaseByUUID(String uuid) {
         List<String> cases = getAllCaseUUID();
         Optional<String> match = cases.stream().filter(caseId -> {
-//            log.info("comparing |{}|{}|", caseId, uuid);
+            // log.info("comparing |{}|{}|", caseId, uuid);
             return caseId.trim().equals(uuid.trim());
         }).findFirst();
 
@@ -154,8 +163,9 @@ public class EthereumServiceImpl implements EthereumService {
 
             if (StringUtils.isEmpty(monitoredCase.getUuid())) {
                 // UUIDs random cannot be encoded with only 16bytes (they are 32 min) so we use
-                // Base 62 is used by tinyurl and bit.ly for the abbreviated URLs. It's a well-understood method for creating "unique", human-readable IDs
-                //But you need to check vs duplicates
+                // Base 62 is used by tinyurl and bit.ly for the abbreviated URLs. It's a
+                // well-understood method for creating "unique", human-readable IDs
+                // But you need to check vs duplicates
                 // https://stackoverflow.com/questions/9543715/generating-human-readable-usable-short-but-unique-ids
                 String currentUUID = RandomIdGenerator.GetBase62(16);
                 while (this.checkIfCaseExists(currentUUID)) {
@@ -171,9 +181,9 @@ public class EthereumServiceImpl implements EthereumService {
             }
             ZonedDateTime zdt = time.atZone(ZoneId.of("America/Los_Angeles"));
             long millis = zdt.toInstant().toEpochMilli();
-            String functionCall = this.getContract().addCase(uuid, monitoredCase.getName(),
-                    monitoredCase.getIsStudent(), BigInteger.valueOf(millis)
-            ).encodeFunctionCall();
+            String functionCall = this.getContract()
+                    .addCase(uuid, monitoredCase.getName(), monitoredCase.getIsStudent(), BigInteger.valueOf(millis))
+                    .encodeFunctionCall();
             this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
                     contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
         } catch (IOException ex) {
@@ -186,15 +196,16 @@ public class EthereumServiceImpl implements EthereumService {
         if (this.checkIfCaseExists(monitoredCase.getUuid())) {
             try {
 
-                log.info("updating case with uuid {} name {} isStudent {} State {}",
-                        monitoredCase.getUuid(), monitoredCase.getName(), monitoredCase.getIsStudent(), monitoredCase.getState().getValue());
+                log.info("updating case with uuid {} name {} isStudent {} State {}", monitoredCase.getUuid(),
+                        monitoredCase.getName(), monitoredCase.getIsStudent(), monitoredCase.getState().getValue());
                 LocalDateTime time = LocalDateTime.now();
                 ZonedDateTime zdt = time.atZone(ZoneId.of("America/Los_Angeles"));
                 long millis = zdt.toInstant().toEpochMilli();
                 byte[] uuid = ByteConverters.stringToBytes16(monitoredCase.getUuid()).getValue();
-                String functionCall = this.getContract().updateCase(uuid, monitoredCase.getName(), monitoredCase.getIsStudent(),
-                        BigInteger.valueOf(millis),
-                        BigInteger.valueOf(monitoredCase.getState().getValue())).encodeFunctionCall();
+                String functionCall = this.getContract()
+                        .updateCase(uuid, monitoredCase.getName(), monitoredCase.getIsStudent(),
+                                BigInteger.valueOf(millis), BigInteger.valueOf(monitoredCase.getState().getValue()))
+                        .encodeFunctionCall();
                 this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
                         contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
             } catch (IOException ex) {
@@ -220,18 +231,19 @@ public class EthereumServiceImpl implements EthereumService {
     @Scheduled(cron = "0 0 12 * * ?")
     public void monitorCases() {
         List<Case> caseList = getAllCases();
-        for(Case theCase:caseList){
-            if(!theCase.getState().equals(State.REJECTED)){
+        for (Case theCase : caseList) {
+            if (!theCase.getState().equals(State.REJECTED)) {
 
-                //TODO trigger external API call to update credentials
-                final Boolean isStudent = false; //mock call
+                // TODO trigger external API call to update credentials
+                final Boolean isStudent = false; // mock call
 
-                //theCase.setIsStudent(isStudent);
+                // theCase.setIsStudent(isStudent);
                 theCase.setDate(LocalDateTime.now());
 
-                if(theCase.getIsStudent() || LocalDateTime.now().isAfter(theCase.getHistory().entrySet().iterator().next().getKey().plusMonths(6))){
+                if (theCase.getIsStudent() || LocalDateTime.now()
+                        .isAfter(theCase.getHistory().entrySet().iterator().next().getKey().plusMonths(6))) {
                     theCase.setState(State.REJECTED);
-                } else if(!theCase.getIsStudent()){
+                } else if (!theCase.getIsStudent()) {
                     theCase.setState(State.ACCEPTED);
                 }
                 updateCase(theCase);
@@ -242,8 +254,11 @@ public class EthereumServiceImpl implements EthereumService {
     @Override
     public List<Case> getAllCases() {
         List<String> caseUuids = getAllCaseUUID();
-        List<Case> cases = caseUuids.stream().filter(e -> getCaseByUUID(e.trim()).isPresent() && !getCaseByUUID(e.trim()).get().getState().equals(State.REJECTED)).map(c -> getCaseByUUID(c.trim()).get()).collect(Collectors.toList());
-        
+        List<Case> cases = caseUuids.stream()
+                .filter(e -> getCaseByUUID(e.trim()).isPresent()
+                        && !getCaseByUUID(e.trim()).get().getState().equals(State.REJECTED))
+                .map(c -> getCaseByUUID(c.trim()).get()).collect(Collectors.toList());
+
         return cases;
     }
 
@@ -260,6 +275,17 @@ public class EthereumServiceImpl implements EthereumService {
 
         log.info("checking of teh revocation status failed for {}", uuid);
         return false;
+    }
+
+    public void revokeCredentials(String uuid) {
+        byte[] theUuid = ByteConverters.stringToBytes32(uuid).getValue();
+        try {
+            this.getRevocationContract().revoke(theUuid).sendAsync().get();
+        } catch (InterruptedException ex) {
+            log.error(ex.getMessage());
+        } catch (ExecutionException ex) {
+            log.error(ex.getMessage());
+        }
     }
 
 }

@@ -4,12 +4,14 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
 public class Case {
 
     private String uuid;
