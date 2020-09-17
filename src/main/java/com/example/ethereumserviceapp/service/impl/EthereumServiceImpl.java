@@ -14,9 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import com.example.ethereumserviceapp.contract.CaseMonitor;
+import com.example.ethereumserviceapp.contract.VcRevocationRegistry;
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.State;
 import com.example.ethereumserviceapp.service.EthereumService;
@@ -51,7 +51,9 @@ public class EthereumServiceImpl implements EthereumService {
     private String mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
     private Credentials credentials;
     private CaseMonitor contract;
+    private VcRevocationRegistry revocationContract;
     private final String CONTRACT_ADDRESS;
+    private final String REVOCATION_CONTRACT_ADDRESS;
     private final TransactionManager txManager;
 
     public EthereumServiceImpl() {
@@ -66,8 +68,8 @@ public class EthereumServiceImpl implements EthereumService {
         Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, derivationPath);
         // Load the wallet for the derived key
         this.credentials = Credentials.create(derivedKeyPair);
-        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x59bc23a07c16ad163417056643dfd44a4b5d59b9" : System.getenv("CONTRACT_ADDRESS");
-
+        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x3fF7e31E973E25071Db1E0c32B1e366f8aC5a265" : System.getenv("CONTRACT_ADDRESS");
+        this.REVOCATION_CONTRACT_ADDRESS = System.getenv("REVOCATION_CONTRACT_ADDRESS") == null ? "0x9534d226e56826Cc4C01912Eb388b121Bb0683b5" : System.getenv("REVOCATION_CONTRACT_ADDRESS");
         txManager = new FastRawTransactionManager(web3, credentials);
     }
 
@@ -96,6 +98,14 @@ public class EthereumServiceImpl implements EthereumService {
             contract = CaseMonitor.load(this.CONTRACT_ADDRESS, this.web3, this.credentials, new DefaultGasProvider());
         }
         return this.contract;
+    }
+
+    @Override
+    public VcRevocationRegistry getRevocationContract() {
+        if (this.revocationContract == null) {
+            this.revocationContract = VcRevocationRegistry.load(this.REVOCATION_CONTRACT_ADDRESS, this.web3, this.credentials, new DefaultGasProvider());
+        }
+        return this.revocationContract;
     }
 
     @Override
@@ -146,9 +156,9 @@ public class EthereumServiceImpl implements EthereumService {
                 // Base 62 is used by tinyurl and bit.ly for the abbreviated URLs. It's a well-understood method for creating "unique", human-readable IDs
                 //But you need to check vs duplicates
                 // https://stackoverflow.com/questions/9543715/generating-human-readable-usable-short-but-unique-ids
-                String currentUUID = RandomIdGenerator.GetBase62(6);
+                String currentUUID = RandomIdGenerator.GetBase62(16);
                 while (this.checkIfCaseExists(currentUUID)) {
-                    currentUUID = RandomIdGenerator.GetBase62(6);
+                    currentUUID = RandomIdGenerator.GetBase62(16);
                 }
                 uuid = ByteConverters.stringToBytes16(currentUUID).getValue();
             } else {
@@ -174,6 +184,9 @@ public class EthereumServiceImpl implements EthereumService {
     public void updateCase(Case monitoredCase) {
         if (this.checkIfCaseExists(monitoredCase.getUuid())) {
             try {
+
+                log.info("updating case with uuid {} name {} isStudent {} State {}",
+                        monitoredCase.getUuid(), monitoredCase.getName(), monitoredCase.getIsStudent(), monitoredCase.getState().getValue());
                 LocalDateTime time = LocalDateTime.now();
                 ZonedDateTime zdt = time.atZone(ZoneId.of("America/Los_Angeles"));
                 long millis = zdt.toInstant().toEpochMilli();
@@ -231,6 +244,21 @@ public class EthereumServiceImpl implements EthereumService {
         List<Case> cases = caseUuids.stream().filter(e -> getCaseByUUID(e.trim()).isPresent() && !getCaseByUUID(e.trim()).get().getState().equals(State.REJECTED)).map(c -> getCaseByUUID(c.trim()).get()).collect(Collectors.toList());
         
         return cases;
+    }
+    
+    public boolean checkRevocationStatus(String uuid) {
+        try {
+            byte[] theUuid = ByteConverters.stringToBytes32(uuid).getValue();
+            Boolean result = this.getRevocationContract().isRevoked(theUuid).sendAsync().get();
+            return result.booleanValue();
+        } catch (InterruptedException ex) {
+            log.error(ex.getMessage());
+        } catch (ExecutionException ex) {
+            log.error(ex.getMessage());
+        }
+
+        log.info("checking of teh revocation status failed for {}", uuid);
+        return false;
     }
 
 }

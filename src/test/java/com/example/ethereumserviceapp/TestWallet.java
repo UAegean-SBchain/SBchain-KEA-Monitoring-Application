@@ -137,4 +137,11 @@ public class TestWallet {
 
     }
 
+    @Test
+    public void testUtils() {
+        String t = "123123";
+        System.out.println(ByteConverters.asciiToHex32(t));
+
+    }
+
 }

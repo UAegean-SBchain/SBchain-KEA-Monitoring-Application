@@ -7,6 +7,7 @@ package com.example.ethereumserviceapp.service;
 
 import com.example.ethereumserviceapp.contract.CaseMonitor;
 import com.example.ethereumserviceapp.model.Case;
+import com.example.sbchainssioicdoauth2.contracts.VcRevocationRegistry;
 import java.util.List;
 import java.util.Optional;
 import org.web3j.crypto.Credentials;
@@ -34,5 +35,8 @@ public interface EthereumService {
     public List<Case> getAllCases();
 
     public void monitorCases();
+    public VcRevocationRegistry getRevocationContract();
+
+    public boolean checkRevocationStatus(String uuid);
 
 }
