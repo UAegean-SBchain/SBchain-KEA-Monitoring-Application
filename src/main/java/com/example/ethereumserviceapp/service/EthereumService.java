@@ -7,7 +7,7 @@ package com.example.ethereumserviceapp.service;
 
 import com.example.ethereumserviceapp.contract.CaseMonitor;
 import com.example.ethereumserviceapp.model.Case;
-import com.example.sbchainssioicdoauth2.contracts.VcRevocationRegistry;
+import com.example.ethereumserviceapp.contract.VcRevocationRegistry;
 import java.util.List;
 import java.util.Optional;
 import org.web3j.crypto.Credentials;

@@ -1,4 +1,4 @@
-package com.example.sbchainssioicdoauth2.contracts;
+package com.example.ethereumserviceapp.contract;
 
 import io.reactivex.Flowable;
 import io.reactivex.functions.Function;

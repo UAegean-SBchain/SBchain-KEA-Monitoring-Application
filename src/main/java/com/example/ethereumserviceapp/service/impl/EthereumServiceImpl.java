@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import com.example.ethereumserviceapp.contract.CaseMonitor;
 import com.example.ethereumserviceapp.contract.VcRevocationRegistry;
@@ -245,7 +246,7 @@ public class EthereumServiceImpl implements EthereumService {
         
         return cases;
     }
-    
+
     public boolean checkRevocationStatus(String uuid) {
         try {
             byte[] theUuid = ByteConverters.stringToBytes32(uuid).getValue();
