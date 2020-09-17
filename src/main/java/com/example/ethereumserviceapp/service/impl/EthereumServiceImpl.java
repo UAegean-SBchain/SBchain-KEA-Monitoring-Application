@@ -11,6 +11,7 @@ import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.utils.ByteConverters;
 import com.example.ethereumserviceapp.utils.ContractBuilder;
 import com.example.ethereumserviceapp.utils.RandomIdGenerator;
+import com.example.sbchainssioicdoauth2.contracts.VcRevocationRegistry;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
@@ -45,7 +46,9 @@ public class EthereumServiceImpl implements EthereumService {
     private String mnemonic = "enlist addict era market spawn van medal despair melt shift sustain multiply";
     private Credentials credentials;
     private CaseMonitor contract;
+    private VcRevocationRegistry revocationContract;
     private final String CONTRACT_ADDRESS;
+    private final String REVOCATION_CONTRACT_ADDRESS;
     private final TransactionManager txManager;
 
     public EthereumServiceImpl() {
@@ -61,7 +64,7 @@ public class EthereumServiceImpl implements EthereumService {
         // Load the wallet for the derived key
         this.credentials = Credentials.create(derivedKeyPair);
         this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x3fF7e31E973E25071Db1E0c32B1e366f8aC5a265" : System.getenv("CONTRACT_ADDRESS");
-
+        this.REVOCATION_CONTRACT_ADDRESS = System.getenv("REVOCATION_CONTRACT_ADDRESS") == null ? "0x9534d226e56826Cc4C01912Eb388b121Bb0683b5" : System.getenv("REVOCATION_CONTRACT_ADDRESS");
         txManager = new FastRawTransactionManager(web3, credentials);
     }
 
@@ -90,6 +93,14 @@ public class EthereumServiceImpl implements EthereumService {
             contract = CaseMonitor.load(this.CONTRACT_ADDRESS, this.web3, this.credentials, new DefaultGasProvider());
         }
         return this.contract;
+    }
+
+    @Override
+    public VcRevocationRegistry getRevocationContract() {
+        if (this.revocationContract == null) {
+            this.revocationContract = VcRevocationRegistry.load(this.REVOCATION_CONTRACT_ADDRESS, this.web3, this.credentials, new DefaultGasProvider());
+        }
+        return this.revocationContract;
     }
 
     @Override
@@ -137,9 +148,9 @@ public class EthereumServiceImpl implements EthereumService {
                 // Base 62 is used by tinyurl and bit.ly for the abbreviated URLs. It's a well-understood method for creating "unique", human-readable IDs
                 //But you need to check vs duplicates
                 // https://stackoverflow.com/questions/9543715/generating-human-readable-usable-short-but-unique-ids
-                String currentUUID = RandomIdGenerator.GetBase62(6);
+                String currentUUID = RandomIdGenerator.GetBase62(16);
                 while (this.checkIfCaseExists(currentUUID)) {
-                    currentUUID = RandomIdGenerator.GetBase62(6);
+                    currentUUID = RandomIdGenerator.GetBase62(16);
                 }
                 uuid = ByteConverters.stringToBytes16(currentUUID).getValue();
             } else {
@@ -165,6 +176,9 @@ public class EthereumServiceImpl implements EthereumService {
     public void updateCase(Case monitoredCase) {
         if (this.checkIfCaseExists(monitoredCase.getUuid())) {
             try {
+
+                log.info("updating case with uuid {} name {} isStudent {} State {}",
+                        monitoredCase.getUuid(), monitoredCase.getName(), monitoredCase.getIsStudent(), monitoredCase.getState().getValue());
                 LocalDateTime time = LocalDateTime.now();
                 ZonedDateTime zdt = time.atZone(ZoneId.of("America/Los_Angeles"));
                 long millis = zdt.toInstant().toEpochMilli();
@@ -191,6 +205,22 @@ public class EthereumServiceImpl implements EthereumService {
         }).findFirst();
 
         return match.isPresent();
+    }
+
+    @Override
+    public boolean checkRevocationStatus(String uuid) {
+        try {
+            byte[] theUuid = ByteConverters.stringToBytes32(uuid).getValue();
+            Boolean result = this.getRevocationContract().isRevoked(theUuid).sendAsync().get();
+            return result.booleanValue();
+        } catch (InterruptedException ex) {
+            log.error(ex.getMessage());
+        } catch (ExecutionException ex) {
+            log.error(ex.getMessage());
+        }
+
+        log.info("checking of teh revocation status failed for {}", uuid);
+        return false;
     }
 
 }

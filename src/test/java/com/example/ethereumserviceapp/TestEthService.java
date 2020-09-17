@@ -25,6 +25,8 @@ public class TestEthService {
         Assertions.assertEquals(ethServ.getAllCaseUUID().size() > 0, true);
         ethServ.getAllCaseUUID().stream().forEach(uuid -> {
             System.out.println(uuid);
+            System.out.println("the case stat is:");
+            System.out.println(ethServ.getCaseByUUID(uuid).get().getState().getValue());
         });
         //fakeuuid
         Assertions.assertEquals(ethServ.getCaseByUUID("fakeuuid").isPresent(), true);
@@ -36,6 +38,7 @@ public class TestEthService {
         Case theCase = new Case();
         theCase.setIsStudent(false);
         theCase.setName("caseName");
+        theCase.setUuid("3YLVALU9V5FXMTJS");
         ethServ.addCase(theCase);
 
         Assertions.assertEquals(true, true);
