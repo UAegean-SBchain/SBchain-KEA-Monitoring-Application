@@ -36,6 +36,6 @@ public interface EthereumService {
 
     public boolean checkRevocationStatus(String uuid);
 
-    public void revokeCredentials(String uuid);
+    //public void revokeCredentials(String uuid);
 
 }

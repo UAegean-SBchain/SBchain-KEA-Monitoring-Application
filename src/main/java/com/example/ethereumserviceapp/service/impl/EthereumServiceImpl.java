@@ -242,15 +242,15 @@ public class EthereumServiceImpl implements EthereumService {
         return false;
     }
 
-    public void revokeCredentials(String uuid) {
-        byte[] theUuid = ByteConverters.stringToBytes32(uuid).getValue();
-        try {
-            this.getRevocationContract().revoke(theUuid).sendAsync().get();
-        } catch (InterruptedException ex) {
-            log.error(ex.getMessage());
-        } catch (ExecutionException ex) {
-            log.error(ex.getMessage());
-        }
-    }
+    // public void revokeCredentials(String uuid) {
+    //     byte[] theUuid = ByteConverters.stringToBytes32(uuid).getValue();
+    //     try {
+    //         this.getRevocationContract().revoke(theUuid).sendAsync().get();
+    //     } catch (InterruptedException ex) {
+    //         log.error(ex.getMessage());
+    //     } catch (ExecutionException ex) {
+    //         log.error(ex.getMessage());
+    //     }
+    // }
 
 }

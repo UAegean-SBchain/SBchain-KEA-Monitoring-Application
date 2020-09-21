@@ -14,6 +14,7 @@ import java.util.Optional;
 
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.State;
+import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.service.MongoService;
 import com.example.ethereumserviceapp.service.MonitorService;
@@ -65,12 +66,21 @@ public class MonitorServiceImpl implements MonitorService {
                             //update the status of the case to REJECTED and the date with the current date
                             updateState(uuid, State.REJECTED);
                         } else {
-                            // TODO probably needs another check
-                            updateState(uuid, State.ACCEPTED);
+                            Optional<SsiApplication> ssiCase = mongoServ.findByUuid(uuid);
+                            if(ssiCase.isPresent()){
+                                final SsiApplication ssiApp = ssiCase.get();
+                                //check the application by the uuid and update the case accordingly
+                                if(isApplicationAccepted(ssiApp)){
+                                    updateState(uuid, State.ACCEPTED);
+                                } else {
+                                    updateState(uuid, State.REJECTED);
+                                }
+                            } else {
+                                updateState(uuid, State.REJECTED);
+                            }
                         }
-                    } else{
-                        //if credentials have expired revoke credentials and update case as rejected
-                        this.ethServ.revokeCredentials(uuid);
+                    } else {
+                        //if credentials have expired update case as rejected
                         updateState(uuid, State.REJECTED);
                     };
 
@@ -88,6 +98,19 @@ public class MonitorServiceImpl implements MonitorService {
         } else {
             log.error("cannot find case {} while trying to update it", uuid);
         }
+    }
+
+    //mock checks replace with correct ones
+    private Boolean isApplicationAccepted(SsiApplication ssiApp){
+        String employmentStatus = ssiApp.getEmploymentStatus();
+        String hospitalized = ssiApp.getHospitalized();
+        Long totalIncome = Long.valueOf(ssiApp.getTotalIncome());
+
+        if(employmentStatus.equals("unemployed") || totalIncome < Long.valueOf(10000) || hospitalized.equals("true")){
+            return true;
+        }
+
+        return false;
     }
 
 }
