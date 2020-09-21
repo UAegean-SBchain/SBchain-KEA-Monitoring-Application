@@ -5,14 +5,16 @@
  */
 package com.example.ethereumserviceapp;
 
-import com.example.ethereumserviceapp.contract.CaseMonitor;
-import com.example.ethereumserviceapp.utils.ByteConverters;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.example.ethereumserviceapp.contract.CaseMonitor;
+import com.example.ethereumserviceapp.utils.ByteConverters;
+
 import org.junit.jupiter.api.Test;
 import org.web3j.abi.datatypes.generated.Bytes16;
 import org.web3j.crypto.Bip32ECKeyPair;
@@ -22,7 +24,7 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.protocol.http.HttpService;
-import org.web3j.tuples.generated.Tuple5;
+import org.web3j.tuples.generated.Tuple7;
 import org.web3j.tx.FastRawTransactionManager;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.DefaultGasProvider;
@@ -120,7 +122,7 @@ public class TestWallet {
         cases.stream().forEach(caseId -> {
 
             try {
-                Tuple5<byte[], String, Boolean, BigInteger, BigInteger> res = contract.getCase((byte[]) caseId).sendAsync().get();
+                Tuple7<byte[], String, Boolean, BigInteger, List<BigInteger>, List<BigInteger>, BigInteger> res = contract.getCase((byte[]) caseId).sendAsync().get();
                 System.out.println(res.component2());
                 String dataInString = ByteConverters.hexToASCII(Numeric.toHexStringNoPrefix(res.component1()));
                 System.out.println(dataInString);
@@ -132,6 +134,13 @@ public class TestWallet {
             }
 
         });
+
+    }
+
+    @Test
+    public void testUtils() {
+        String t = "123123";
+        System.out.println(ByteConverters.asciiToHex32(t));
 
     }
 
