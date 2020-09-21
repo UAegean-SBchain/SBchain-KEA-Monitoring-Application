@@ -227,41 +227,6 @@ public class EthereumServiceImpl implements EthereumService {
         return match.isPresent();
     }
 
-    @Override
-    @Scheduled(cron = "0 0 12 * * ?")
-    public void monitorCases() {
-        List<Case> caseList = getAllCases();
-        for (Case theCase : caseList) {
-            if (!theCase.getState().equals(State.REJECTED)) {
-
-                // TODO trigger external API call to update credentials
-                final Boolean isStudent = false; // mock call
-
-                // theCase.setIsStudent(isStudent);
-                theCase.setDate(LocalDateTime.now());
-
-                if (theCase.getIsStudent() || LocalDateTime.now()
-                        .isAfter(theCase.getHistory().entrySet().iterator().next().getKey().plusMonths(6))) {
-                    theCase.setState(State.REJECTED);
-                } else if (!theCase.getIsStudent()) {
-                    theCase.setState(State.ACCEPTED);
-                }
-                updateCase(theCase);
-            }
-        }
-    }
-
-    @Override
-    public List<Case> getAllCases() {
-        List<String> caseUuids = getAllCaseUUID();
-        List<Case> cases = caseUuids.stream()
-                .filter(e -> getCaseByUUID(e.trim()).isPresent()
-                        && !getCaseByUUID(e.trim()).get().getState().equals(State.REJECTED))
-                .map(c -> getCaseByUUID(c.trim()).get()).collect(Collectors.toList());
-
-        return cases;
-    }
-
     public boolean checkRevocationStatus(String uuid) {
         try {
             byte[] theUuid = ByteConverters.stringToBytes32(uuid).getValue();

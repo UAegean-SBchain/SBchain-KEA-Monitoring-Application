@@ -19,6 +19,7 @@ import com.example.ethereumserviceapp.service.MongoService;
 import com.example.ethereumserviceapp.service.MonitorService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +43,7 @@ public class MonitorServiceImpl implements MonitorService {
     }
 
     @Override
+    @Scheduled(cron = "0 0 12 * * ?")
     public void startMonitoring() {
         List<String> uuids = this.ethServ.getAllCaseUUID();
         uuids.stream().forEach(uuid -> {
@@ -67,6 +69,7 @@ public class MonitorServiceImpl implements MonitorService {
                             updateState(uuid, State.ACCEPTED);
                         }
                     } else{
+                        //if credentials have expired revoke credentials and update case as rejected
                         this.ethServ.revokeCredentials(uuid);
                         updateState(uuid, State.REJECTED);
                     };
