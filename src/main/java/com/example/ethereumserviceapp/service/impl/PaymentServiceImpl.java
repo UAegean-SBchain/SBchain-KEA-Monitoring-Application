@@ -3,6 +3,7 @@ package com.example.ethereumserviceapp.service.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.State;
@@ -33,15 +34,13 @@ public class PaymentServiceImpl implements PaymentService{
         uuids.stream().forEach(uuid -> {
             Integer numDays = 0;
 
-            //check if the case state is accepted
-            int caseState = this.ethServ.getCaseByUUID(uuid).get().getState().getValue();
-            if (caseState == 1) {
-                // get the case from the block chain
-                Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
-                if(theCase.isPresent()){
-                    Case caseToBePaid = theCase.get();
-                    LocalDateTime startDate = caseToBePaid.getHistory().entrySet().iterator().next().getKey();
-                    LocalDateTime currentDate = LocalDateTime.now();
+            // get the case from the block chain
+            Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
+            if(theCase.isPresent()){
+                Case caseToBePaid = theCase.get();
+                LocalDateTime startDate = caseToBePaid.getHistory().entrySet().iterator().next().getKey();
+                LocalDateTime currentDate = LocalDateTime.now();
+                if (caseToBePaid.getState().equals(State.ACCEPTED)) {
                     if(startDate.isBefore(currentDate)){
                         // calculate the number of days to be paid 
                         if(currentDate.minusMonths(Long.valueOf(1)).isAfter(startDate) ){
@@ -50,6 +49,18 @@ public class PaymentServiceImpl implements PaymentService{
                             numDays = monthDays(startDate) - startDate.getDayOfMonth();
                         }
                         mockPaymentService(numDays);
+                        caseToBePaid.setState(State.PAID);
+                        ethServ.updateCase(caseToBePaid);
+                    }
+                }
+                //if case is rejected then check the previous month history for days that the case was accepted
+                if (caseToBePaid.getState().equals(State.REJECTED)) {
+                    int paymentMonth = currentDate.minusMonths(Long.valueOf(1)).getMonthValue();
+                    // get the number of days of the previous month that the case was accepted
+                    Long acceptedDates = caseToBePaid.getHistory().entrySet().stream().filter(
+                        e -> e.getKey().getMonthValue() == paymentMonth && e.getKey().isAfter(currentDate.minusMonths(1)) && e.getValue().equals(State.ACCEPTED)).count();
+                    if(acceptedDates.intValue() > 0){
+                        mockPaymentService(acceptedDates.intValue());
                         caseToBePaid.setState(State.PAID);
                         ethServ.updateCase(caseToBePaid);
                     }
