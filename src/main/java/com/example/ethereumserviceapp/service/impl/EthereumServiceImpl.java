@@ -5,13 +5,13 @@
  */
 package com.example.ethereumserviceapp.service.impl;
 
-import com.example.ethereumserviceapp.contract.CaseMonitor_bk;
 import com.example.ethereumserviceapp.contract.VcRevocationRegistry;
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.utils.ByteConverters;
 import com.example.ethereumserviceapp.utils.ContractBuilder;
 import com.example.ethereumserviceapp.utils.RandomIdGenerator;
+import com.example.sbchainssioicdoauth2.contracts.CaseMonitor;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
@@ -45,7 +45,7 @@ public class EthereumServiceImpl implements EthereumService {
     private Web3j web3;
     private String mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
     private Credentials credentials;
-    private CaseMonitor_bk contract;
+    private CaseMonitor contract;
     private VcRevocationRegistry revocationContract;
     private final String CONTRACT_ADDRESS;
     private final String REVOCATION_CONTRACT_ADDRESS;
@@ -96,9 +96,9 @@ public class EthereumServiceImpl implements EthereumService {
     }
 
     @Override
-    public CaseMonitor_bk getContract() {
+    public CaseMonitor getContract() {
         if (this.contract == null) {
-            contract = CaseMonitor_bk.load(this.CONTRACT_ADDRESS, this.web3, this.credentials, new DefaultGasProvider());
+            contract = CaseMonitor.load(this.CONTRACT_ADDRESS, this.web3, this.credentials, new DefaultGasProvider());
         }
         return this.contract;
     }
@@ -246,4 +246,20 @@ public class EthereumServiceImpl implements EthereumService {
     //         log.error(ex.getMessage());
     //     }
     // }
+    @Override
+    public void deleteCaseByUuid(String uuid) {
+        try {
+            byte[] theUuid = ByteConverters.stringToBytes16(uuid).getValue();
+
+            String functionCall = this.getContract()
+                    .deleteCase(theUuid)
+                    .encodeFunctionCall();
+            this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
+                    contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
+
+        } catch (IOException ex) {
+            log.error(ex.getMessage());
+        }
+
+    }
 }

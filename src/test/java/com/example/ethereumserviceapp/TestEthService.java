@@ -34,15 +34,15 @@ public class TestEthService {
     }
 
     @Test
-    public void testAddCase() {
+    public void testAddCaseDelete() {
         EthereumService ethServ = new EthereumServiceImpl();
         Case theCase = new Case();
         theCase.setIsStudent(false);
         theCase.setName("caseName");
-        theCase.setUuid("5YLVALU9V5FXMTJS");
+        theCase.setUuid("6YLVALU9V5FXMTJS");
         ethServ.addCase(theCase);
-
-        Assertions.assertEquals(true, true);
+        Assertions.assertEquals(ethServ.getCaseByUUID("6YLVALU9V5FXMTJS").isPresent(), true);
+        ethServ.deleteCaseByUuid("5YLVALU9V5FXMTJS");
 
     }
 
