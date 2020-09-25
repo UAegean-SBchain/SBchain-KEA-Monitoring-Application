@@ -61,9 +61,12 @@ public class PaymentServiceImpl implements PaymentService{
                         e -> e.getKey().getMonthValue() == paymentMonth && e.getKey().isAfter(currentDate.minusMonths(1)) && e.getValue().equals(State.ACCEPTED)).count();
                     if(acceptedDates.intValue() > 0){
                         mockPaymentService(acceptedDates.intValue());
-                        caseToBePaid.setState(State.PAID);
-                        ethServ.updateCase(caseToBePaid);
+                        //caseToBePaid.setState(State.PAID);
+                        //ethServ.updateCase(caseToBePaid);
                     }
+
+                    // if the case's state is rejected delete it from the block chain after possible payment for the remaining "accepted" days
+                    ethServ.deleteCaseByUuid(uuid);
                 }
             }
         });
