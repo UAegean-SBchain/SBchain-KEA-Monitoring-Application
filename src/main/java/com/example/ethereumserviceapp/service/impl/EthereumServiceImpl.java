@@ -5,6 +5,13 @@
  */
 package com.example.ethereumserviceapp.service.impl;
 
+import com.example.ethereumserviceapp.contract.CaseMonitor_bk;
+import com.example.ethereumserviceapp.contract.VcRevocationRegistry;
+import com.example.ethereumserviceapp.model.Case;
+import com.example.ethereumserviceapp.service.EthereumService;
+import com.example.ethereumserviceapp.utils.ByteConverters;
+import com.example.ethereumserviceapp.utils.ContractBuilder;
+import com.example.ethereumserviceapp.utils.RandomIdGenerator;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
@@ -14,18 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
-
-import com.example.ethereumserviceapp.contract.CaseMonitor;
-import com.example.ethereumserviceapp.contract.VcRevocationRegistry;
-import com.example.ethereumserviceapp.model.Case;
-import com.example.ethereumserviceapp.model.State;
-import com.example.ethereumserviceapp.service.EthereumService;
-import com.example.ethereumserviceapp.utils.ByteConverters;
-import com.example.ethereumserviceapp.utils.ContractBuilder;
-import com.example.ethereumserviceapp.utils.RandomIdGenerator;
-
-import org.springframework.scheduling.annotation.Scheduled;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.web3j.crypto.Bip32ECKeyPair;
@@ -38,8 +34,6 @@ import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.utils.Numeric;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  *
  * @author nikos
@@ -51,7 +45,7 @@ public class EthereumServiceImpl implements EthereumService {
     private Web3j web3;
     private String mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
     private Credentials credentials;
-    private CaseMonitor contract;
+    private CaseMonitor_bk contract;
     private VcRevocationRegistry revocationContract;
     private final String CONTRACT_ADDRESS;
     private final String REVOCATION_CONTRACT_ADDRESS;
@@ -63,15 +57,15 @@ public class EthereumServiceImpl implements EthereumService {
         this.mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
         // Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in
         // bitcoin it is different
-        int[] derivationPath = { 44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT,
-                0 | Bip32ECKeyPair.HARDENED_BIT, 0, 0 };
+        int[] derivationPath = {44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT,
+            0 | Bip32ECKeyPair.HARDENED_BIT, 0, 0};
         // Generate a BIP32 master keypair from the mnemonic phrase
         Bip32ECKeyPair masterKeypair = Bip32ECKeyPair.generateKeyPair(MnemonicUtils.generateSeed(mnemonic, password));
         // Derived the key using the derivation path
         Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, derivationPath);
         // Load the wallet for the derived key
         this.credentials = Credentials.create(derivedKeyPair);
-        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x3fF7e31E973E25071Db1E0c32B1e366f8aC5a265"
+        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0xe986dE51047e64fE2fAe1177f2e4FDD4Bc73F716"
                 : System.getenv("CONTRACT_ADDRESS");
         this.REVOCATION_CONTRACT_ADDRESS = System.getenv("REVOCATION_CONTRACT_ADDRESS") == null
                 ? "0x9534d226e56826Cc4C01912Eb388b121Bb0683b5"
@@ -87,8 +81,8 @@ public class EthereumServiceImpl implements EthereumService {
             this.mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
             // Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in
             // bitcoin it is different
-            int[] derivationPath = { 44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT,
-                    0 | Bip32ECKeyPair.HARDENED_BIT, 0, 0 };
+            int[] derivationPath = {44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT,
+                0 | Bip32ECKeyPair.HARDENED_BIT, 0, 0};
             // Generate a BIP32 master keypair from the mnemonic phrase
             Bip32ECKeyPair masterKeypair = Bip32ECKeyPair
                     .generateKeyPair(MnemonicUtils.generateSeed(mnemonic, password));
@@ -102,9 +96,9 @@ public class EthereumServiceImpl implements EthereumService {
     }
 
     @Override
-    public CaseMonitor getContract() {
+    public CaseMonitor_bk getContract() {
         if (this.contract == null) {
-            contract = CaseMonitor.load(this.CONTRACT_ADDRESS, this.web3, this.credentials, new DefaultGasProvider());
+            contract = CaseMonitor_bk.load(this.CONTRACT_ADDRESS, this.web3, this.credentials, new DefaultGasProvider());
         }
         return this.contract;
     }
@@ -252,5 +246,4 @@ public class EthereumServiceImpl implements EthereumService {
     //         log.error(ex.getMessage());
     //     }
     // }
-
 }

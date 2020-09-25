@@ -12,7 +12,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.example.ethereumserviceapp.contract.CaseMonitor;
+import com.example.ethereumserviceapp.contract.CaseMonitor_bk;
 import com.example.ethereumserviceapp.utils.ByteConverters;
 
 import org.junit.jupiter.api.Test;
@@ -83,7 +83,7 @@ public class TestWallet {
         // Load the wallet for the derived key
         Credentials credentials = Credentials.create(derivedKeyPair);
 
-        CaseMonitor contract = CaseMonitor.load("0x3fF7e31E973E25071Db1E0c32B1e366f8aC5a265", web3, credentials, new DefaultGasProvider());
+        CaseMonitor_bk contract = CaseMonitor_bk.load("0x3fF7e31E973E25071Db1E0c32B1e366f8aC5a265", web3, credentials, new DefaultGasProvider());
 
         Bytes16 uuidBytes = ByteConverters.stringToBytes16("fakeuuid");
         String functionCall = contract.addCase(uuidBytes.getValue(), "the name", true, BigInteger.valueOf(12313)).encodeFunctionCall();
@@ -116,7 +116,7 @@ public class TestWallet {
         // Load the wallet for the derived key
         Credentials credentials = Credentials.create(derivedKeyPair);
 
-        CaseMonitor contract = CaseMonitor.load("0x3fF7e31E973E25071Db1E0c32B1e366f8aC5a265", web3, credentials, new DefaultGasProvider());
+        CaseMonitor_bk contract = CaseMonitor_bk.load("0x3fF7e31E973E25071Db1E0c32B1e366f8aC5a265", web3, credentials, new DefaultGasProvider());
 
         List<byte[]> cases = contract.getAllCases().sendAsync().get();
         cases.stream().forEach(caseId -> {

@@ -5,25 +5,22 @@
  */
 package com.example.ethereumserviceapp.service.impl;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.State;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.service.MongoService;
 import com.example.ethereumserviceapp.service.MonitorService;
-
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  *
@@ -67,10 +64,10 @@ public class MonitorServiceImpl implements MonitorService {
                             updateState(uuid, State.REJECTED);
                         } else {
                             Optional<SsiApplication> ssiCase = mongoServ.findByUuid(uuid);
-                            if(ssiCase.isPresent()){
+                            if (ssiCase.isPresent()) {
                                 final SsiApplication ssiApp = ssiCase.get();
                                 //check the application by the uuid and update the case accordingly
-                                if(isApplicationAccepted(ssiApp)){
+                                if (isApplicationAccepted(ssiApp)) {
                                     updateState(uuid, State.ACCEPTED);
                                 } else {
                                     updateState(uuid, State.REJECTED);
@@ -89,7 +86,7 @@ public class MonitorServiceImpl implements MonitorService {
         });
     }
 
-    private void updateState(String uuid, State state){
+    private void updateState(String uuid, State state) {
         Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
         if (theCase.isPresent()) {
             theCase.get().setState(state);
@@ -101,15 +98,20 @@ public class MonitorServiceImpl implements MonitorService {
     }
 
     //mock checks replace with correct ones
-    private Boolean isApplicationAccepted(SsiApplication ssiApp){
-        String employmentStatus = ssiApp.getEmploymentStatus();
-        String hospitalized = ssiApp.getHospitalized();
-        Long totalIncome = Long.valueOf(ssiApp.getTotalIncome());
+    private Boolean isApplicationAccepted(SsiApplication ssiApp) {
+        try {
+            String employmentStatus = ssiApp.getEmploymentStatus();
+            String hospitalized = ssiApp.getHospitalized();
+            Long totalIncome = Long.valueOf(ssiApp.getTotalIncome());
+            ssiApp.getTaxisFamilyName();
+            ssiApp.getTaxisFirstName();
 
-        if(employmentStatus.equals("unemployed") || totalIncome < Long.valueOf(10000) || hospitalized.equals("true")){
-            return true;
+            if (employmentStatus.equals("unemployed") || totalIncome < Long.valueOf(10000) || hospitalized.equals("true")) {
+                return true;
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
-
         return false;
     }
 

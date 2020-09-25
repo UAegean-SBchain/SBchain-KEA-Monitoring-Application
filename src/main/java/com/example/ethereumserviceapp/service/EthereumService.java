@@ -5,7 +5,7 @@
  */
 package com.example.ethereumserviceapp.service;
 
-import com.example.ethereumserviceapp.contract.CaseMonitor;
+import com.example.ethereumserviceapp.contract.CaseMonitor_bk;
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.contract.VcRevocationRegistry;
 import java.util.List;
@@ -20,7 +20,7 @@ public interface EthereumService {
 
     public Credentials getCredentials();
 
-    public CaseMonitor getContract();
+    public CaseMonitor_bk getContract();
 
     public List<String> getAllCaseUUID();
 
