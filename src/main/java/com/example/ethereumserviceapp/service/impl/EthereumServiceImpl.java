@@ -5,13 +5,6 @@
  */
 package com.example.ethereumserviceapp.service.impl;
 
-import com.example.ethereumserviceapp.contract.VcRevocationRegistry;
-import com.example.ethereumserviceapp.model.Case;
-import com.example.ethereumserviceapp.service.EthereumService;
-import com.example.ethereumserviceapp.utils.ByteConverters;
-import com.example.ethereumserviceapp.utils.ContractBuilder;
-import com.example.ethereumserviceapp.utils.RandomIdGenerator;
-import com.example.sbchainssioicdoauth2.contracts.CaseMonitor;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
@@ -21,7 +14,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import lombok.extern.slf4j.Slf4j;
+
+import com.example.ethereumserviceapp.contract.CaseMonitor;
+import com.example.ethereumserviceapp.contract.VcRevocationRegistry;
+import com.example.ethereumserviceapp.model.Case;
+import com.example.ethereumserviceapp.service.EthereumService;
+import com.example.ethereumserviceapp.utils.ByteConverters;
+import com.example.ethereumserviceapp.utils.ContractBuilder;
+import com.example.ethereumserviceapp.utils.RandomIdGenerator;
+
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.web3j.crypto.Bip32ECKeyPair;
@@ -33,6 +34,8 @@ import org.web3j.tx.FastRawTransactionManager;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.utils.Numeric;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *

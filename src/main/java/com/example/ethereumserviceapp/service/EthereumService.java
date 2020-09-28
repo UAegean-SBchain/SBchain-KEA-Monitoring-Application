@@ -5,11 +5,13 @@
  */
 package com.example.ethereumserviceapp.service;
 
-import com.example.ethereumserviceapp.contract.VcRevocationRegistry;
-import com.example.ethereumserviceapp.model.Case;
-import com.example.sbchainssioicdoauth2.contracts.CaseMonitor;
 import java.util.List;
 import java.util.Optional;
+
+import com.example.ethereumserviceapp.contract.CaseMonitor;
+import com.example.ethereumserviceapp.contract.VcRevocationRegistry;
+import com.example.ethereumserviceapp.model.Case;
+
 import org.web3j.crypto.Credentials;
 
 /**

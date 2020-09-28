@@ -5,14 +5,16 @@
  */
 package com.example.ethereumserviceapp;
 
-import com.example.ethereumserviceapp.utils.ByteConverters;
-import com.example.sbchainssioicdoauth2.contracts.CaseMonitor;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.example.ethereumserviceapp.contract.CaseMonitor;
+import com.example.ethereumserviceapp.utils.ByteConverters;
+
 import org.junit.jupiter.api.Test;
 import org.web3j.abi.datatypes.generated.Bytes16;
 import org.web3j.crypto.Bip32ECKeyPair;
