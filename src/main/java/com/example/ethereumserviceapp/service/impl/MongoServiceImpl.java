@@ -79,4 +79,9 @@ public class MongoServiceImpl implements MongoService {
         return new CredsAndExp[0];
     }
 
+    @Override
+    public void deleteByUuid(String uuid){
+        this.rep.deleteByUuid(uuid);
+    }
+
 }
