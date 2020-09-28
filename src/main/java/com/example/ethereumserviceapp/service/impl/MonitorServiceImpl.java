@@ -11,6 +11,7 @@ import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.service.MongoService;
 import com.example.ethereumserviceapp.service.MonitorService;
+import com.example.ethereumserviceapp.utils.MonitorUtils;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -67,7 +68,7 @@ public class MonitorServiceImpl implements MonitorService {
                             if (ssiCase.isPresent()) {
                                 final SsiApplication ssiApp = ssiCase.get();
                                 //check the application by the uuid and update the case accordingly
-                                if (isApplicationAccepted(ssiApp)) {
+                                if (MonitorUtils.isApplicationAccepted(ssiApp)) {
                                     updateState(uuid, State.ACCEPTED);
                                 } else {
                                     updateState(uuid, State.REJECTED);
@@ -95,24 +96,6 @@ public class MonitorServiceImpl implements MonitorService {
         } else {
             log.error("cannot find case {} while trying to update it", uuid);
         }
-    }
-
-    //mock checks replace with correct ones
-    private Boolean isApplicationAccepted(SsiApplication ssiApp) {
-        try {
-            String employmentStatus = ssiApp.getEmploymentStatus();
-            String hospitalized = ssiApp.getHospitalized();
-            Long totalIncome = Long.valueOf(ssiApp.getTotalIncome());
-            ssiApp.getTaxisFamilyName();
-            ssiApp.getTaxisFirstName();
-
-            if (employmentStatus.equals("unemployed") || totalIncome < Long.valueOf(10000) || hospitalized.equals("true")) {
-                return true;
-            }
-        } catch (Exception e) {
-            log.error(e.getMessage());
-        }
-        return false;
     }
 
 }

@@ -1,19 +1,21 @@
 package com.example.ethereumserviceapp.controller;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 import com.example.ethereumserviceapp.model.Case;
+import com.example.ethereumserviceapp.model.State;
+import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.service.MongoService;
-
+import com.example.ethereumserviceapp.utils.MonitorUtils;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
@@ -39,7 +41,40 @@ public class EthereumController {
 
         log.info("add Case ?!?!?");
         ethService.addCase(monitoredCase);
-                
+
+    }
+
+    @PostMapping("/update")
+    public @ResponseBody
+    String updateCase(@RequestParam(value = "uuid") String uuid) {
+
+        Optional<Case> c = this.ethService.getCaseByUUID(uuid);
+        if (c.isPresent()) {
+            c.get().setState(State.ACCEPTED);
+            this.ethService.updateCase(c.get());
+            return "OK";
+        }
+        return "FAIL";
+    }
+
+    @PostMapping("/validate-update")
+    public @ResponseBody
+    String validateAndupdateCase(@RequestParam(value = "uuid") String uuid) {
+
+        Optional<Case> c = this.ethService.getCaseByUUID(uuid);
+        if (c.isPresent()) {
+            Optional<SsiApplication> ssiApp = mongoServ.findByUuid(c.get().getUuid());
+            if (!ssiApp.isPresent()) {
+                return "FAIL";
+            }
+            if (!MonitorUtils.isApplicationAccepted(ssiApp.get())) {
+                return "FAIL";
+            }
+            c.get().setState(State.ACCEPTED);
+            this.ethService.updateCase(c.get());
+            return "OK";
+        }
+        return "FAIL";
     }
 
 }
