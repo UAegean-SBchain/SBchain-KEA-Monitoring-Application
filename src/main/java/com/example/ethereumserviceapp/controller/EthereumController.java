@@ -24,6 +24,7 @@ public class EthereumController {
 
     @Autowired
     EthereumService ethService;
+    @Autowired
     MongoService mongoServ;
 
     @PostMapping("/addCase")
