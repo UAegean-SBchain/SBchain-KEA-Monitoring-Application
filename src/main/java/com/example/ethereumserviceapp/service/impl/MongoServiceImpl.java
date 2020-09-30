@@ -81,7 +81,7 @@ public class MongoServiceImpl implements MongoService {
 
     @Override
     public void deleteByUuid(String uuid){
-        this.rep.deleteByUuid(uuid);
+        rep.deleteByUuid(uuid);
     }
 
 }

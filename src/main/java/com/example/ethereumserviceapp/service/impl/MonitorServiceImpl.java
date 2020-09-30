@@ -48,7 +48,9 @@ public class MonitorServiceImpl implements MonitorService {
         uuids.stream().forEach(uuid -> {
 
             //check if the case state is rejected, if so, skip the test
-            int caseState = this.ethServ.getCaseByUUID(uuid).get().getState().getValue();
+            Optional<Case> c = this.ethServ.getCaseByUUID(uuid);
+            int caseState = c.get().getState().getValue();
+            LocalDateTime creationDate = c.get().getHistory().entrySet().iterator().next().getKey();
             if (caseState != 2) {
                 log.info("looking into case {} with state {}", uuid, caseState);
                 Arrays.stream(this.mongoServ.findCredentialIdsByUuid(uuid)).forEach(credIdAndExp -> {
@@ -60,9 +62,10 @@ public class MonitorServiceImpl implements MonitorService {
                         //check if the credential is revoked
                         boolean isRevoked = this.ethServ.checkRevocationStatus(credIdAndExp.getId());
                         log.info("is credential {} revoked? == {}", credIdAndExp.getId(), isRevoked);
-                        if (isRevoked) {
+                        if (isRevoked || MonitorUtils.isCaseOlderThanSixMonths(creationDate) || !MonitorUtils.checkExternalSources()) {
                             //update the status of the case to REJECTED and the date with the current date
                             updateState(uuid, State.REJECTED);
+                            this.mongoServ.deleteByUuid(uuid);
                         } else {
                             Optional<SsiApplication> ssiCase = mongoServ.findByUuid(uuid);
                             if (ssiCase.isPresent()) {
@@ -80,6 +83,7 @@ public class MonitorServiceImpl implements MonitorService {
                     } else {
                         //if credentials have expired update case as rejected
                         updateState(uuid, State.REJECTED);
+                        this.mongoServ.deleteByUuid(uuid);
                     };
 
                 });
