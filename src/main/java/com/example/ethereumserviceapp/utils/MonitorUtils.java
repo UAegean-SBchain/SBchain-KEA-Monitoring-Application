@@ -36,9 +36,9 @@ public class MonitorUtils {
         return false;
     }
                 
-    public static Boolean isCaseOlderThanSixMonths(LocalDateTime creationDate){
+    public static Boolean isCaseOlderThanSixMonths(LocalDateTime firstAcceptedDate){
 
-        if(LocalDateTime.now().isAfter(creationDate.plusMonths(6))){
+        if(LocalDateTime.now().isAfter(firstAcceptedDate.plusMonths(6))){
             return true;
         }
 
