@@ -5,8 +5,13 @@
  */
 package com.example.ethereumserviceapp.utils;
 
+import java.math.BigInteger;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.example.ethereumserviceapp.model.Case;
+import com.example.ethereumserviceapp.model.CasePayment;
+import com.example.ethereumserviceapp.model.State;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 
 import lombok.extern.slf4j.Slf4j;
@@ -49,4 +54,25 @@ public class MonitorUtils {
     public static Boolean checkExternalSources(){
         return true;
     }
+
+    
+
+    // public static BigInteger calculateOffset(Case monitoredCase, LocalDateTime date, SsiApplication ssiApp){
+
+    //     CasePayment paymentToUpdate = new CasePayment();
+
+    //     for(CasePayment payment:monitoredCase.getPaymentHistory()){
+    //         if(payment.getPaymentDate().getMonthValue() == date.getMonthValue()){
+    //             paymentToUpdate = payment;
+    //             break;
+    //         }
+    //     }
+
+    //     BigInteger actualPayment = paymentToUpdate.getPayment();
+       
+    //     BigInteger projection = calculatePaymentProjection(ssiApp, date, monitoredCase, paymentToUpdate);
+
+    //     return projection.subtract(actualPayment);
+    // }
+        
 }

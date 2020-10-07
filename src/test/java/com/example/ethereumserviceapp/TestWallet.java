@@ -25,6 +25,7 @@ import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tuples.generated.Tuple7;
+import org.web3j.tuples.generated.Tuple9;
 import org.web3j.tx.FastRawTransactionManager;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.DefaultGasProvider;
@@ -39,7 +40,8 @@ public class TestWallet {
     @Test
     public void testGetBallance() throws IOException {
         Web3j web3 = Web3j.build(new HttpService("https://mainnet.infura.io/v3/051806cbbf204a4886f2ab400c2c20f9"));
-        EthGetBalance balanceWei = web3.ethGetBalance("0xFa7892D5Faf243Ae1cF850f74454FF69655ea09F", DefaultBlockParameterName.LATEST).send();
+        EthGetBalance balanceWei = web3
+                .ethGetBalance("0xFa7892D5Faf243Ae1cF850f74454FF69655ea09F", DefaultBlockParameterName.LATEST).send();
         System.out.println("balance in wei: " + balanceWei.getResult());
 
     }
@@ -49,8 +51,10 @@ public class TestWallet {
         Web3j web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/051806cbbf204a4886f2ab400c2c20f9"));
         String password = null; // no encryption
         String mnemonic = "enlist addict era market spawn van medal despair melt shift sustain multiply";
-        //Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in bitcoin it is different
-        int[] derivationPath = {44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT, 0 | Bip32ECKeyPair.HARDENED_BIT, 0, 0};
+        // Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in
+        // bitcoin it is different
+        int[] derivationPath = { 44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT,
+                0 | Bip32ECKeyPair.HARDENED_BIT, 0, 0 };
 
         // Generate a BIP32 master keypair from the mnemonic phrase
         Bip32ECKeyPair masterKeypair = Bip32ECKeyPair.generateKeyPair(MnemonicUtils.generateSeed(mnemonic, password));
@@ -62,7 +66,8 @@ public class TestWallet {
         String accountAddress = credentials.getAddress();
         System.out.println("Account address: " + credentials.getAddress());
 
-        EthGetBalance balanceWei = web3.ethGetBalance(credentials.getAddress(), DefaultBlockParameterName.LATEST).send();
+        EthGetBalance balanceWei = web3.ethGetBalance(credentials.getAddress(), DefaultBlockParameterName.LATEST)
+                .send();
         System.out.println("balance in wei: " + balanceWei.getResult());
 
     }
@@ -72,8 +77,10 @@ public class TestWallet {
         Web3j web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/051806cbbf204a4886f2ab400c2c20f9"));
         String password = null; // no encryption
         String mnemonic = "enlist addict era market spawn van medal despair melt shift sustain multiply";
-        //Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in bitcoin it is different
-        int[] derivationPath = {44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT, 0 | Bip32ECKeyPair.HARDENED_BIT, 0, 0};
+        // Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in
+        // bitcoin it is different
+        int[] derivationPath = { 44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT,
+                0 | Bip32ECKeyPair.HARDENED_BIT, 0, 0 };
 
         // Generate a BIP32 master keypair from the mnemonic phrase
         Bip32ECKeyPair masterKeypair = Bip32ECKeyPair.generateKeyPair(MnemonicUtils.generateSeed(mnemonic, password));
@@ -83,10 +90,12 @@ public class TestWallet {
         // Load the wallet for the derived key
         Credentials credentials = Credentials.create(derivedKeyPair);
 
-        CaseMonitor contract = CaseMonitor.load("0x3fF7e31E973E25071Db1E0c32B1e366f8aC5a265", web3, credentials, new DefaultGasProvider());
+        CaseMonitor contract = CaseMonitor.load("0x3fF7e31E973E25071Db1E0c32B1e366f8aC5a265", web3, credentials,
+                new DefaultGasProvider());
 
         Bytes16 uuidBytes = ByteConverters.stringToBytes16("fakeuuid");
-        String functionCall = contract.addCase(uuidBytes.getValue(), "the name", true, BigInteger.valueOf(12313)).encodeFunctionCall();
+        String functionCall = contract.addCase(uuidBytes.getValue(), BigInteger.valueOf(12313))
+                .encodeFunctionCall();
 
         TransactionManager txManager = new FastRawTransactionManager(web3, credentials);
 
@@ -105,8 +114,10 @@ public class TestWallet {
         Web3j web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/051806cbbf204a4886f2ab400c2c20f9"));
         String password = null; // no encryption
         String mnemonic = "enlist addict era market spawn van medal despair melt shift sustain multiply";
-        //Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in bitcoin it is different
-        int[] derivationPath = {44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT, 0 | Bip32ECKeyPair.HARDENED_BIT, 0, 0};
+        // Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in
+        // bitcoin it is different
+        int[] derivationPath = { 44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT,
+                0 | Bip32ECKeyPair.HARDENED_BIT, 0, 0 };
 
         // Generate a BIP32 master keypair from the mnemonic phrase
         Bip32ECKeyPair masterKeypair = Bip32ECKeyPair.generateKeyPair(MnemonicUtils.generateSeed(mnemonic, password));
@@ -116,13 +127,15 @@ public class TestWallet {
         // Load the wallet for the derived key
         Credentials credentials = Credentials.create(derivedKeyPair);
 
-        CaseMonitor contract = CaseMonitor.load("0x3fF7e31E973E25071Db1E0c32B1e366f8aC5a265", web3, credentials, new DefaultGasProvider());
+        CaseMonitor contract = CaseMonitor.load("0x3fF7e31E973E25071Db1E0c32B1e366f8aC5a265", web3, credentials,
+                new DefaultGasProvider());
 
         List<byte[]> cases = contract.getAllCases().sendAsync().get();
         cases.stream().forEach(caseId -> {
 
             try {
-                Tuple7<byte[], String, Boolean, BigInteger, List<BigInteger>, List<BigInteger>, BigInteger> res = contract.getCase((byte[]) caseId).sendAsync().get();
+                Tuple9<byte[], BigInteger, List<BigInteger>, List<BigInteger>, BigInteger, List<BigInteger>, List<BigInteger>, List<BigInteger>, List<Boolean>> res = contract
+                        .getCase((byte[]) caseId).sendAsync().get();
                 System.out.println(res.component2());
                 String dataInString = ByteConverters.hexToASCII(Numeric.toHexStringNoPrefix(res.component1()));
                 System.out.println(dataInString);

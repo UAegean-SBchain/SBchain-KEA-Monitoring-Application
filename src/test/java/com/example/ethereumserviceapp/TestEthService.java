@@ -37,8 +37,6 @@ public class TestEthService {
     public void testAddCaseDelete() {
         EthereumService ethServ = new EthereumServiceImpl();
         Case theCase = new Case();
-        theCase.setIsStudent(false);
-        theCase.setName("caseName");
         theCase.setUuid("6YLVALU9V5FXMTJS");
         ethServ.addCase(theCase);
         Assertions.assertEquals(ethServ.getCaseByUUID("6YLVALU9V5FXMTJS").isPresent(), true);
@@ -50,8 +48,6 @@ public class TestEthService {
     public void testUpdateCase() {
         EthereumService ethServ = new EthereumServiceImpl();
         Case theCase = new Case();
-        theCase.setIsStudent(true);
-        theCase.setName("caseName_updated");
         theCase.setUuid("2WiYi8");
         theCase.setState(State.PAID);
 
@@ -59,8 +55,6 @@ public class TestEthService {
         // and once after the transaction has been processed
 //        ethServ.updateCase(theCase);
         Assertions.assertEquals(ethServ.getCaseByUUID("2WiYi8").isPresent(), true);
-        Assertions.assertEquals(ethServ.getCaseByUUID("2WiYi8").get().getIsStudent(), true);
-        Assertions.assertEquals(ethServ.getCaseByUUID("2WiYi8").get().getName(), "caseName_updated");
 
     }
 
