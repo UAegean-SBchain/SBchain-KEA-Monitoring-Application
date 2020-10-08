@@ -1,5 +1,6 @@
 package com.example.ethereumserviceapp.model;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -20,5 +21,5 @@ public class Case {
     private State state;
     private LinkedHashMap<LocalDateTime, State> history;
     private List<CasePayment> paymentHistory;
-
+    private BigInteger offset;
 }

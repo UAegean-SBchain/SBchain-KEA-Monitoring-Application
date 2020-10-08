@@ -49,6 +49,8 @@ public class MonitorServiceImpl implements MonitorService {
         this.ethServ = ethServ;
     }
 
+    MonitorUtils monitorUtils;
+
     @Override
     @Scheduled(cron = "0 0 12 * * ?")
     public void startMonitoring() {
@@ -85,7 +87,7 @@ public class MonitorServiceImpl implements MonitorService {
                     }
                     if (isRevoked || MonitorUtils.isCaseOlderThanSixMonths(firstAcceptedDate) || !MonitorUtils.checkExternalSources()) {
                         //update the status of the case to REJECTED and the date with the current date
-                        updateCase(uuid, State.REJECTED, null);
+                        updateCase(uuid, State.REJECTED);
                         this.mongoServ.deleteByUuid(uuid);
                     } else {
                         Optional<SsiApplication> ssiCase = mongoServ.findByUuid(uuid);
@@ -94,17 +96,17 @@ public class MonitorServiceImpl implements MonitorService {
                             //check the application by the uuid and update the case accordingly
                             if (MonitorUtils.isApplicationAccepted(ssiApp)) {
                                 
-                                updateCase(uuid, State.ACCEPTED, ssiApp);
+                                updateCase(uuid, State.ACCEPTED);
                             } else {
-                                updateCase(uuid, State.REJECTED, null);
+                                updateCase(uuid, State.REJECTED);
                             }
                         } else {
-                            updateCase(uuid, State.REJECTED, null);
+                            updateCase(uuid, State.REJECTED);
                         }
                     }
                 } else {
                     //if credentials have expired update case as rejected
-                    updateCase(uuid, State.REJECTED, null);
+                    updateCase(uuid, State.REJECTED);
                     this.mongoServ.deleteByUuid(uuid);
                 };
 
@@ -112,81 +114,17 @@ public class MonitorServiceImpl implements MonitorService {
         });
     }
 
-    private void updateCase(String uuid, State state, SsiApplication ssiApp) {
+    private void updateCase(String uuid, State state) {
         Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
         if (theCase.isPresent()) {
             theCase.get().setState(state);
             theCase.get().setDate(LocalDateTime.now());
-            if(state.getValue() == 1 && ssiApp != null ){
-                updateOffset(ssiApp, theCase.get());
-            } else {
-                this.ethServ.updateCase(theCase.get());
-            }
+            monitorUtils.updateOffset(theCase.get());
+            this.ethServ.updateCase(theCase.get());
             
         } else {
             log.error("cannot find case {} while trying to update it", uuid);
         }
-    }
-
-    // mock projection
-    private void updateOffset(SsiApplication ssiApp, Case monitoredCase){
-
-        //Mock credential date, this illustrates a date at which a credential has been modified prior to being updated in the system
-        LocalDate date = LocalDate.of(2020, 8, 12);
-        Boolean changed = false;
-
-        for(CasePayment payment:monitoredCase.getPaymentHistory()){
-
-            // update iff the month of the date is equal or after the date of the modified credential and the offset of this payment hasn't been paid
-            if(payment.getPaymentDate().getMonthValue() < date.getMonthValue()){
-                continue;
-            }
-
-            // this should probably call the payment calculation method and return the value that should have been paid for all paid days with the new credentials
-            BigInteger fullMonthProjection = BigInteger.valueOf(0);
-
-            Long paidDays = monitoredCase.getHistory().entrySet().stream().filter(
-                e -> e.getKey().getMonthValue() == date.getMonthValue() && e.getKey().getYear() == date.getYear() && e.getValue().equals(State.ACCEPTED)).count();
-
-            Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                e -> e.getKey().getMonthValue() == date.getMonthValue() && e.getKey().getYear() == date.getYear() && e.getKey().getDayOfMonth()>=date.getDayOfMonth() && e.getValue().equals(State.ACCEPTED)).count();
-
-                
-            BigInteger paymentPerDayActual = payment.getPayment().divide(BigInteger.valueOf(paidDays));
-
-            BigInteger projection = fullMonthProjection;
-            if(paidDays != offsetDays){
-                projection = (BigInteger.valueOf(paidDays - offsetDays ).multiply(paymentPerDayActual))
-                .add(BigInteger.valueOf(offsetDays).multiply(fullMonthProjection.divide(BigInteger.valueOf(paidDays))));
-            }
-
-            BigInteger actualPayment = payment.getPayment();
-            BigInteger offset = projection.subtract(actualPayment);
-
-            // if the new offset is different than the old offset update
-            if(offset.compareTo(payment.getOffset()) != 0){
-                if(payment.getIsOffsetPaid()){
-                    offset = offset.subtract(payment.getOffset());
-                    payment.setIsOffsetPaid(false);
-                }
-                payment.setOffset(offset);
-                changed = true;
-                this.ethServ.updateExistingPayment(monitoredCase.getUuid(), payment);
-            }
-        }
-
-        if(!changed){
-            this.ethServ.updateCase(monitoredCase);
-        }
-        
-
-        // if(ssiApp.getHospitalized().equals("true")){
-        //     projection = BigInteger.valueOf(22 * 100);
-        // } else {
-        //     projection = BigInteger.valueOf(22 * 120);
-        // }
-
-        // return monitoredCase;
     }
 
 }

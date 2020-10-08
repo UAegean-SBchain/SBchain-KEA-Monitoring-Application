@@ -24,8 +24,7 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.protocol.http.HttpService;
-import org.web3j.tuples.generated.Tuple7;
-import org.web3j.tuples.generated.Tuple9;
+import org.web3j.tuples.generated.Tuple8;
 import org.web3j.tx.FastRawTransactionManager;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.DefaultGasProvider;
@@ -134,7 +133,7 @@ public class TestWallet {
         cases.stream().forEach(caseId -> {
 
             try {
-                Tuple9<byte[], BigInteger, List<BigInteger>, List<BigInteger>, BigInteger, List<BigInteger>, List<BigInteger>, List<BigInteger>, List<Boolean>> res = contract
+                Tuple8<byte[], BigInteger, List<BigInteger>, List<BigInteger>, BigInteger, List<BigInteger>, List<BigInteger>,BigInteger> res = contract
                         .getCase((byte[]) caseId).sendAsync().get();
                 System.out.println(res.component2());
                 String dataInString = ByteConverters.hexToASCII(Numeric.toHexStringNoPrefix(res.component1()));

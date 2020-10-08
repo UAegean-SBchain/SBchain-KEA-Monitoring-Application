@@ -16,7 +16,5 @@ public class CasePayment {
 
     LocalDateTime paymentDate;
     BigInteger payment;
-    BigInteger offset; 
-    Boolean isOffsetPaid;
     
 }

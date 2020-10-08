@@ -37,8 +37,6 @@ public interface EthereumService {
 
     public void addPayment(Case monitoredCase, CasePayment payment);
 
-    public void updateExistingPayment(String monitoredUuid, CasePayment payment);
-
     public boolean checkIfCaseExists(String uuid);
 
     public VcRevocationRegistry getRevocationContract();

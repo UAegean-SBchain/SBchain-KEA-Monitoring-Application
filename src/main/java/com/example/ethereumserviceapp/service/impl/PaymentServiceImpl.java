@@ -22,7 +22,7 @@ public class PaymentServiceImpl implements PaymentService{
 
     private EthereumService ethServ;
 
-    final static Integer paymentValPerDay = 100;
+    final static BigInteger paymentValPerDay = BigInteger.valueOf(100);
 
     @Autowired
     public PaymentServiceImpl(EthereumService ethServ) {
@@ -42,6 +42,7 @@ public class PaymentServiceImpl implements PaymentService{
                 Case caseToBePaid = theCase.get();
                 LocalDateTime startDate = caseToBePaid.getHistory().entrySet().iterator().next().getKey();
                 LocalDateTime currentDate = LocalDateTime.now();
+                BigInteger paymentValue = BigInteger.valueOf(0);
                 CasePayment payment = new CasePayment();
                 if (caseToBePaid.getState().equals(State.ACCEPTED)) {
                     if(startDate.isBefore(currentDate)){
@@ -51,13 +52,10 @@ public class PaymentServiceImpl implements PaymentService{
                         } else {
                             numDays = monthDays(startDate) - startDate.getDayOfMonth();
                         }
-                        mockPaymentService(numDays);
+                        paymentValue = mockPaymentService(numDays, caseToBePaid.getOffset());
                         caseToBePaid.setState(State.PAID);
-                        
-                        
                         payment.setPaymentDate(currentDate);
-                        payment.setPayment(BigInteger.valueOf(mockPaymentService(numDays)));
-                        payment.setOffset(BigInteger.valueOf(0));
+                        payment.setPayment(paymentValue);
                         ethServ.addPayment(caseToBePaid, payment);
                     }
                 }
@@ -68,9 +66,10 @@ public class PaymentServiceImpl implements PaymentService{
                     Long acceptedDates = caseToBePaid.getHistory().entrySet().stream().filter(
                         e -> e.getKey().getMonthValue() == paymentMonth && e.getKey().isAfter(currentDate.minusMonths(1)) && e.getValue().equals(State.ACCEPTED)).count();
                     if(acceptedDates.intValue() > 0){
+
+                        paymentValue = mockPaymentService(acceptedDates.intValue(), caseToBePaid.getOffset());
                         payment.setPaymentDate(currentDate);
-                        payment.setPayment(BigInteger.valueOf(mockPaymentService(acceptedDates.intValue())));
-                        payment.setOffset(BigInteger.valueOf(0));
+                        payment.setPayment(paymentValue);
                         ethServ.addPayment(caseToBePaid, payment);
                         //caseToBePaid.setState(State.PAID);
                         //ethServ.updateCase(caseToBePaid);
@@ -83,8 +82,8 @@ public class PaymentServiceImpl implements PaymentService{
         });
     }
 
-    private Integer mockPaymentService(Integer days){
-        Integer valueToBePaid = days * paymentValPerDay;
+    private BigInteger mockPaymentService(Integer days, BigInteger offset){
+        BigInteger valueToBePaid = (BigInteger.valueOf(days).multiply(paymentValPerDay)).subtract(offset);
 
         return valueToBePaid;
     }

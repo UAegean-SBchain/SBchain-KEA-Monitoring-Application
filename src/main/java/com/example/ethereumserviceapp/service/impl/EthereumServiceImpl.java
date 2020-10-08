@@ -56,7 +56,7 @@ public class EthereumServiceImpl implements EthereumService {
     private final TransactionManager txManager;
 
     public EthereumServiceImpl() {
-        this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/ae171f89314b431997d1bef0392373ec"));
+        this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/db8539008d59422bae42445c4915225f"));
         String password = null; // no encryption
         this.mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
         // Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in
@@ -69,7 +69,7 @@ public class EthereumServiceImpl implements EthereumService {
         Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, derivationPath);
         // Load the wallet for the derived key
         this.credentials = Credentials.create(derivedKeyPair);
-        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0xc862286AC7B717f29f1428F8eE53EADc3F207487"
+        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x70a484717c8917C153f7B8BC6809ccFe23e53F47"
                 : System.getenv("CONTRACT_ADDRESS");
         this.REVOCATION_CONTRACT_ADDRESS = System.getenv("REVOCATION_CONTRACT_ADDRESS") == null
                 ? "0x9534d226e56826Cc4C01912Eb388b121Bb0683b5"
@@ -80,7 +80,7 @@ public class EthereumServiceImpl implements EthereumService {
     @Override
     public Credentials getCredentials() {
         if (this.credentials == null) {
-            this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/ae171f89314b431997d1bef0392373ec"));
+            this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/db8539008d59422bae42445c4915225f"));
             String password = null; // no encryption
             this.mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
             // Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in
@@ -201,7 +201,7 @@ public class EthereumServiceImpl implements EthereumService {
                 byte[] uuid = ByteConverters.stringToBytes16(monitoredCase.getUuid()).getValue();
                 String functionCall = this.getContract()
                         .updateCase(uuid,
-                                BigInteger.valueOf(millis), BigInteger.valueOf(monitoredCase.getState().getValue()))
+                                BigInteger.valueOf(millis), BigInteger.valueOf(monitoredCase.getState().getValue()), monitoredCase.getOffset())
                         .encodeFunctionCall();
                 this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
                         contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
@@ -225,7 +225,7 @@ public class EthereumServiceImpl implements EthereumService {
                 byte[] uuid = ByteConverters.stringToBytes16(monitoredCase.getUuid()).getValue();
                 String functionCall = this.getContract()
                         .addPayment(uuid, BigInteger.valueOf(monitoredCase.getState().getValue()), 
-                                BigInteger.valueOf(millis), payment.getPayment(), payment.getOffset())
+                                BigInteger.valueOf(millis), payment.getPayment())
                         .encodeFunctionCall();
                 this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
                         contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
@@ -234,30 +234,6 @@ public class EthereumServiceImpl implements EthereumService {
             }
         } else {
             log.error("no case found for uuid {}", monitoredCase.getUuid());
-        }
-    }
-
-    @Override
-    public void updateExistingPayment(String monitoredUuid, CasePayment payment){
-        if (this.checkIfCaseExists(monitoredUuid)) {
-            try {
-
-                log.info("update payment for case with uuid :{}", monitoredUuid);
-                LocalDateTime time = payment.getPaymentDate();
-                ZonedDateTime zdt = time.atZone(ZoneId.of("America/Los_Angeles"));
-                long millis = zdt.toInstant().toEpochMilli();
-                byte[] uuid = ByteConverters.stringToBytes16(monitoredUuid).getValue();
-                String functionCall = this.getContract()
-                        .updateExistingPayment(uuid, 
-                                BigInteger.valueOf(millis), payment.getOffset(), payment.getIsOffsetPaid())
-                        .encodeFunctionCall();
-                this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
-                        contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
-            } catch (IOException ex) {
-                log.error(ex.getMessage());
-            }
-        } else {
-            log.error("no case found for uuid {}", monitoredUuid);
         }
     }
 
