@@ -5,6 +5,15 @@
  */
 package com.example.ethereumserviceapp.service.impl;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Optional;
+
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.State;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
@@ -12,16 +21,12 @@ import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.service.MongoService;
 import com.example.ethereumserviceapp.service.MonitorService;
 import com.example.ethereumserviceapp.utils.MonitorUtils;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
@@ -48,7 +53,10 @@ public class MonitorServiceImpl implements MonitorService {
         uuids.stream().forEach(uuid -> {
 
             //check if the case state is rejected, if so, skip the test
-            int caseState = this.ethServ.getCaseByUUID(uuid).get().getState().getValue();
+            Optional<Case> c = this.ethServ.getCaseByUUID(uuid);
+            int caseState = c.get().getState().getValue();
+            Iterator<Entry<LocalDateTime, State>> it = c.get().getHistory().entrySet().iterator();
+            
             if (caseState != 2) {
                 log.info("looking into case {} with state {}", uuid, caseState);
                 Arrays.stream(this.mongoServ.findCredentialIdsByUuid(uuid)).forEach(credIdAndExp -> {
@@ -60,9 +68,19 @@ public class MonitorServiceImpl implements MonitorService {
                         //check if the credential is revoked
                         boolean isRevoked = this.ethServ.checkRevocationStatus(credIdAndExp.getId());
                         log.info("is credential {} revoked? == {}", credIdAndExp.getId(), isRevoked);
-                        if (isRevoked) {
+                        LocalDateTime firstAcceptedDate = LocalDateTime.of(2020, 1, 1, 00, 00, 00);
+                        Boolean accepted = false;
+                        while(it.hasNext() && !accepted){
+                            Entry<LocalDateTime, State> entry = it.next();
+                            accepted = entry.getValue().equals(State.ACCEPTED)? true : false;
+                            if(accepted){
+                                firstAcceptedDate = entry.getKey();
+                            }
+                        }
+                        if (isRevoked || MonitorUtils.isCaseOlderThanSixMonths(firstAcceptedDate) || !MonitorUtils.checkExternalSources()) {
                             //update the status of the case to REJECTED and the date with the current date
                             updateState(uuid, State.REJECTED);
+                            this.mongoServ.deleteByUuid(uuid);
                         } else {
                             Optional<SsiApplication> ssiCase = mongoServ.findByUuid(uuid);
                             if (ssiCase.isPresent()) {
@@ -80,6 +98,7 @@ public class MonitorServiceImpl implements MonitorService {
                     } else {
                         //if credentials have expired update case as rejected
                         updateState(uuid, State.REJECTED);
+                        this.mongoServ.deleteByUuid(uuid);
                     };
 
                 });

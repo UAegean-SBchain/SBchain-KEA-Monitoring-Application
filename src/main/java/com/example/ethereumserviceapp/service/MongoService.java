@@ -27,4 +27,6 @@ public interface MongoService {
     public List<SsiApplication> findAll();
 
     public CredsAndExp[] findCredentialIdsByUuid(String uuid);
+
+    public void deleteByUuid(String uuid);
 }

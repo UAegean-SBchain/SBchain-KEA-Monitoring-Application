@@ -5,7 +5,10 @@
  */
 package com.example.ethereumserviceapp.utils;
 
+import java.time.LocalDateTime;
+
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -31,5 +34,19 @@ public class MonitorUtils {
             log.error(e.getMessage());
         }
         return false;
+    }
+                
+    public static Boolean isCaseOlderThanSixMonths(LocalDateTime firstAcceptedDate){
+
+        if(LocalDateTime.now().isAfter(firstAcceptedDate.plusMonths(6))){
+            return true;
+        }
+
+        return false;
+    }
+
+    //mock method, fill up when more information is available
+    public static Boolean checkExternalSources(){
+        return true;
     }
 }

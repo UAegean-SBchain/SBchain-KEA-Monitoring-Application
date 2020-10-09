@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,6 +25,7 @@ public class EthereumController {
 
     @Autowired
     EthereumService ethService;
+
     @Autowired
     MongoService mongoServ;
 
@@ -75,6 +77,17 @@ public class EthereumController {
             this.ethService.updateCase(c.get());
             return "OK";
         }
+        return "FAIL";
+    }
+
+    @GetMapping("/getContractState")
+    protected String getContractState(@RequestParam(value = "uuid") String uuid){
+
+        Optional<Case> c = ethService.getCaseByUUID(uuid);
+        if (c.isPresent()) {
+            return c.get().getState().toString();
+        }
+
         return "FAIL";
     }
 
