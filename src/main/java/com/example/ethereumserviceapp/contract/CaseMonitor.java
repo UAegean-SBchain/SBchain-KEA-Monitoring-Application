@@ -1,4 +1,4 @@
-package com.example.sbchainssioicdoauth2.contracts;
+package com.example.ethereumserviceapp.contract;
 
 import java.math.BigInteger;
 import java.util.Arrays;
