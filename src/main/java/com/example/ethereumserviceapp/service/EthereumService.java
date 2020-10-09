@@ -11,6 +11,7 @@ import java.util.Optional;
 import com.example.ethereumserviceapp.contract.CaseMonitor;
 import com.example.ethereumserviceapp.contract.VcRevocationRegistry;
 import com.example.ethereumserviceapp.model.Case;
+import com.example.ethereumserviceapp.model.CasePayment;
 
 import org.web3j.crypto.Credentials;
 
@@ -33,6 +34,8 @@ public interface EthereumService {
     public void deleteCaseByUuid(String uuid);
 
     public void updateCase(Case monitoredCase);
+
+    public void addPayment(Case monitoredCase, CasePayment payment);
 
     public boolean checkIfCaseExists(String uuid);
 

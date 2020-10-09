@@ -1,7 +1,9 @@
 package com.example.ethereumserviceapp.model;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,10 +17,9 @@ import lombok.ToString;
 public class Case {
 
     private String uuid;
-    private String name;
-    private Boolean isStudent;
     private LocalDateTime date;
     private State state;
     private LinkedHashMap<LocalDateTime, State> history;
-
+    private List<CasePayment> paymentHistory;
+    private BigInteger offset;
 }

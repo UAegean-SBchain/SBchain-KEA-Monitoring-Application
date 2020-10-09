@@ -36,8 +36,6 @@ public class EthereumController {
 
         Case monitoredCase = new Case();
         monitoredCase.setUuid(uuid);
-        monitoredCase.setName(caseName);
-        monitoredCase.setIsStudent(isStudent);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         monitoredCase.setDate(LocalDateTime.parse(date, formatter));
