@@ -20,6 +20,10 @@ public interface SsiApplicationRepository extends MongoRepository<SsiApplication
 
     public List<SsiApplication> findAll();
 
+    public List<SsiApplication> findByMeterNumber(String meterNumber);
+
+    public List<SsiApplication> findByIban(String iban);
+
     public void deleteByUuid(String uuid);
 
     @Query(value = "{'uuid' : ?0}", fields = "{credentialIds: 1, _id: 0}")

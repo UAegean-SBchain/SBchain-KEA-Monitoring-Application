@@ -9,8 +9,11 @@ import java.util.stream.Collectors;
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.CasePayment;
 import com.example.ethereumserviceapp.model.State;
+import com.example.ethereumserviceapp.model.entities.SsiApplication;
+import com.example.ethereumserviceapp.repository.SsiApplicationRepository;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.service.PaymentService;
+import com.example.ethereumserviceapp.utils.PaymentUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PaymentServiceImpl implements PaymentService{
 
     private EthereumService ethServ;
+    private PaymentUtils paymentUtils;
 
     final static BigInteger paymentValPerDay = BigInteger.valueOf(100);
 
@@ -28,6 +32,9 @@ public class PaymentServiceImpl implements PaymentService{
     public PaymentServiceImpl(EthereumService ethServ) {
         this.ethServ = ethServ;
     }
+
+    @Autowired
+    private SsiApplicationRepository ssiRepo;
     
     @Override
     @Scheduled(cron = "0 0 0 1 * ?")
@@ -45,6 +52,11 @@ public class PaymentServiceImpl implements PaymentService{
                 BigInteger paymentValue = BigInteger.valueOf(0);
                 CasePayment payment = new CasePayment();
                 if (caseToBePaid.getState().equals(State.ACCEPTED)) {
+                    Optional<SsiApplication> ssiApp = ssiRepo.findByUuid(uuid);
+                    //check payment credentials
+                    if(!ssiApp.isPresent() || !paymentUtils.checkPaymentCredentials(caseToBePaid, ssiApp.get())){
+                        return;
+                    }
                     if(startDate.isBefore(currentDate)){
                         // calculate the number of days to be paid 
                         if(currentDate.minusMonths(Long.valueOf(1)).isAfter(startDate) ){
@@ -66,6 +78,11 @@ public class PaymentServiceImpl implements PaymentService{
                     Long acceptedDates = caseToBePaid.getHistory().entrySet().stream().filter(
                         e -> e.getKey().getMonthValue() == paymentMonth && e.getKey().isAfter(currentDate.minusMonths(1)) && e.getValue().equals(State.ACCEPTED)).count();
                     if(acceptedDates.intValue() > 0){
+                        Optional<SsiApplication> ssiApp = ssiRepo.findByUuid(uuid);
+                        //check payment credentials
+                        if(!ssiApp.isPresent() || !paymentUtils.checkPaymentCredentials(caseToBePaid, ssiApp.get())){
+                            return;
+                        }
 
                         paymentValue = mockPaymentService(acceptedDates.intValue(), caseToBePaid.getOffset());
                         payment.setPaymentDate(currentDate);

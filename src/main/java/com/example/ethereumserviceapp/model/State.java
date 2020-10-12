@@ -5,7 +5,8 @@ public enum State {
     UNDEFINED(0, "Undefined"),
     ACCEPTED(1, "Accepted"), //case has been accepted
     REJECTED(2, "Rejected"), //case has been rejected
-    PAID(3, "Paid");
+    PAID(3, "Paid"),
+    PAUSED(4, "Paused");
 
     public final Integer value;
     public final String description;
