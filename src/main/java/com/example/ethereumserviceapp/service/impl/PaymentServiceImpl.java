@@ -59,12 +59,17 @@ public class PaymentServiceImpl implements PaymentService{
                     }
                     if(startDate.isBefore(currentDate)){
                         // calculate the number of days to be paid 
-                        if(currentDate.minusMonths(Long.valueOf(1)).isAfter(startDate) ){
-                            numDays = monthDays(currentDate.minusMonths(Long.valueOf(1)));
-                        } else {
-                            numDays = monthDays(startDate) - startDate.getDayOfMonth();
-                        }
-                        paymentValue = mockPaymentService(numDays, caseToBePaid.getOffset());
+                        // if(currentDate.minusMonths(Long.valueOf(1)).isAfter(startDate) ){
+                        //     numDays = monthDays(currentDate.minusMonths(Long.valueOf(1)));
+                        // } else {
+                        //     numDays = monthDays(startDate) - startDate.getDayOfMonth();
+                        // }
+                        
+                        // calculate the number of days to be paid 
+                        Long acceptedDates = caseToBePaid.getHistory().entrySet().stream().filter(
+                        e -> e.getKey().getMonthValue() == currentDate.minusMonths(Long.valueOf(1)).getMonthValue() && e.getValue().equals(State.ACCEPTED)).count();
+
+                        paymentValue = mockPaymentService(acceptedDates.intValue(), caseToBePaid.getOffset());
                         caseToBePaid.setState(State.PAID);
                         payment.setPaymentDate(currentDate);
                         payment.setPayment(paymentValue);
@@ -80,16 +85,14 @@ public class PaymentServiceImpl implements PaymentService{
                     if(acceptedDates.intValue() > 0){
                         Optional<SsiApplication> ssiApp = ssiRepo.findByUuid(uuid);
                         //check payment credentials
-                        if(!ssiApp.isPresent() || !paymentUtils.checkPaymentCredentials(caseToBePaid, ssiApp.get())){
-                            return;
+                        if(ssiApp.isPresent() && paymentUtils.checkPaymentCredentials(caseToBePaid, ssiApp.get())){
+                            paymentValue = mockPaymentService(acceptedDates.intValue(), caseToBePaid.getOffset());
+                            payment.setPaymentDate(currentDate);
+                            payment.setPayment(paymentValue);
+                            ethServ.addPayment(caseToBePaid, payment);
+                            //caseToBePaid.setState(State.PAID);
+                            //ethServ.updateCase(caseToBePaid);
                         }
-
-                        paymentValue = mockPaymentService(acceptedDates.intValue(), caseToBePaid.getOffset());
-                        payment.setPaymentDate(currentDate);
-                        payment.setPayment(paymentValue);
-                        ethServ.addPayment(caseToBePaid, payment);
-                        //caseToBePaid.setState(State.PAID);
-                        //ethServ.updateCase(caseToBePaid);
                     }
 
                     // if the case's state is rejected delete it from the block chain after possible payment for the remaining "accepted" days
