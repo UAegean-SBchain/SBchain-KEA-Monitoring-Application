@@ -5,14 +5,17 @@
  */
 package com.example.ethereumserviceapp.utils;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.time.LocalDate;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.CasePayment;
 import com.example.ethereumserviceapp.model.State;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
+
+import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author nikos
  */
 @Slf4j
+//@Service
 public class MonitorUtils {
 //mock checks replace with correct ones
 
@@ -56,46 +60,47 @@ public class MonitorUtils {
     }
 
     // mock projection
-    public void updateOffset(Case monitoredCase){
+    public static void updateOffset(Case monitoredCase){
 
         //Mock credential date, this illustrates a date at which a credential has been modified prior to being updated in the system
         LocalDateTime date = LocalDateTime.of(2020, 8, 12, 10, 23 ,1);
-        LocalDateTime startOfMonth = date.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+        LocalDateTime startOfMonth = date.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(1);
         
         // this should probably call the payment calculation method and return the value that should have been paid for all paid days with the new credentials
-        BigInteger fullMonthProjection = BigInteger.valueOf(0);
+        BigDecimal fullMonthProjection = BigDecimal.valueOf(100).setScale(2, RoundingMode.HALF_UP);
 
-        BigInteger totalPayment = BigInteger.valueOf(0);
-        BigInteger projectedPayment = BigInteger.valueOf(0);
+        BigDecimal totalPayment = BigDecimal.valueOf(0).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal projectedPayment = BigDecimal.valueOf(0).setScale(2, RoundingMode.HALF_UP);
 
         for(CasePayment payment:monitoredCase.getPaymentHistory()){
-
-            totalPayment.add(payment.getPayment());
+            //sum the payment of each month to calculate the total paid amount 
+            totalPayment = totalPayment.add(payment.getPayment());
             // update iff the month of the date is equal or after the date of the modified credential 
-            if(payment.getPaymentDate().isBefore(startOfMonth)){
-                projectedPayment.add(payment.getPayment());
+            if(payment.getPaymentDate().minusMonths(1).isBefore(startOfMonth)){
+                projectedPayment = projectedPayment.add(payment.getPayment());
                 continue; 
             }
-           BigInteger projection = fullMonthProjection;
+           BigDecimal projection = fullMonthProjection;
 
            // if the date of the payment is on the same month as the altered credential, calculate the payment only of the offset days
-           if(payment.getPaymentDate().isBefore(date.withDayOfMonth(monthDays(date)).withHour(23).withMinute(59).withSecond(59))){
+           if(payment.getPaymentDate().minusMonths(1).isBefore(date.withDayOfMonth(monthDays(date)).withHour(23).withMinute(59).withSecond(59))){
            
                 Long paidDays = monitoredCase.getHistory().entrySet().stream().filter(
                     e -> e.getKey().getMonthValue() == date.getMonthValue() && e.getKey().isAfter(startOfMonth) && e.getValue().equals(State.ACCEPTED)).count();
 
                 Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
                     e -> e.getKey().getMonthValue() == date.getMonthValue() && e.getKey().getYear() == date.getYear() && e.getKey().getDayOfMonth()>=date.getDayOfMonth() && e.getValue().equals(State.ACCEPTED)).count();
-           
-                BigInteger paymentPerDayActual = payment.getPayment().divide(BigInteger.valueOf(paidDays));
+               
+                BigDecimal paymentPerDayActual = payment.getPayment().divide(BigDecimal.valueOf(paidDays), 2, RoundingMode.HALF_UP);
 
-                projectedPayment.add((BigInteger.valueOf(paidDays - offsetDays ).multiply(paymentPerDayActual))
-                .add(BigInteger.valueOf(offsetDays).multiply(fullMonthProjection.divide(BigInteger.valueOf(paidDays)))));
+                projectedPayment = projectedPayment.add((BigDecimal.valueOf(paidDays - offsetDays ).multiply(paymentPerDayActual))
+                .add(BigDecimal.valueOf(offsetDays).multiply(fullMonthProjection.divide(BigDecimal.valueOf(paidDays), 2, RoundingMode.HALF_UP))));
+                
             } else{
-                projectedPayment.add(projection);
+                projectedPayment = projectedPayment.add(projection);
             } 
         }
-        BigInteger newOffset = totalPayment.subtract(projectedPayment);
+        BigDecimal newOffset = totalPayment.subtract(projectedPayment);
 
         // if the offset in the case is diffrenent than the calculated offset the update the offset 
         if(newOffset.compareTo(monitoredCase.getOffset()) != 0){
@@ -103,7 +108,7 @@ public class MonitorUtils {
         }
     }
 
-    private Integer monthDays(LocalDateTime date) {
+    private static Integer monthDays(LocalDateTime date) {
 
         int month = date.getMonthValue();
         int year = date.getYear();
@@ -133,25 +138,5 @@ public class MonitorUtils {
         }
         return numDays;
     }
-
-    
-
-    // public static BigInteger calculateOffset(Case monitoredCase, LocalDateTime date, SsiApplication ssiApp){
-
-    //     CasePayment paymentToUpdate = new CasePayment();
-
-    //     for(CasePayment payment:monitoredCase.getPaymentHistory()){
-    //         if(payment.getPaymentDate().getMonthValue() == date.getMonthValue()){
-    //             paymentToUpdate = payment;
-    //             break;
-    //         }
-    //     }
-
-    //     BigInteger actualPayment = paymentToUpdate.getPayment();
-       
-    //     BigInteger projection = calculatePaymentProjection(ssiApp, date, monitoredCase, paymentToUpdate);
-
-    //     return projection.subtract(actualPayment);
-    // }
         
 }

@@ -5,7 +5,9 @@
  */
 package com.example.ethereumserviceapp.utils;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -42,11 +44,11 @@ public class ContractBuilder {
         for(int i=0; i<theCase.component6().size(); i++){
             CasePayment transformedPayment = new CasePayment();
             transformedPayment.setPaymentDate(Instant.ofEpochMilli(theCase.component6().get(i).longValue()).atZone(ZoneId.systemDefault()).toLocalDateTime());
-            transformedPayment.setPayment(theCase.component7().get(i));
+            transformedPayment.setPayment(new BigDecimal(theCase.component7().get(i)).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
             paymentHistory.add(transformedPayment);
         }
         transformedCase.setPaymentHistory(paymentHistory);
-        transformedCase.setOffset(theCase.component8());
+        transformedCase.setOffset(new BigDecimal(theCase.component8()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
         return transformedCase;
     }
 

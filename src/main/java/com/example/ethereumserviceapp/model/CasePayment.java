@@ -1,6 +1,6 @@
 package com.example.ethereumserviceapp.model;
 
-import java.math.BigInteger;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import lombok.Getter;
@@ -14,7 +14,7 @@ import lombok.ToString;
 @NoArgsConstructor
 public class CasePayment {
 
-    LocalDateTime paymentDate;
-    BigInteger payment;
+    private LocalDateTime paymentDate;
+    private BigDecimal payment;
     
 }

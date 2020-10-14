@@ -1,10 +1,13 @@
 package com.example.ethereumserviceapp.service.impl;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.CasePayment;
@@ -13,7 +16,6 @@ import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.repository.SsiApplicationRepository;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.service.PaymentService;
-import com.example.ethereumserviceapp.utils.PaymentUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,9 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 public class PaymentServiceImpl implements PaymentService{
 
     private EthereumService ethServ;
-    private PaymentUtils paymentUtils;
 
-    final static BigInteger paymentValPerDay = BigInteger.valueOf(100);
+    final static BigDecimal paymentValPerDay = BigDecimal.valueOf(100);
 
     @Autowired
     public PaymentServiceImpl(EthereumService ethServ) {
@@ -49,12 +50,12 @@ public class PaymentServiceImpl implements PaymentService{
                 Case caseToBePaid = theCase.get();
                 LocalDateTime startDate = caseToBePaid.getHistory().entrySet().iterator().next().getKey();
                 LocalDateTime currentDate = LocalDateTime.now();
-                BigInteger paymentValue = BigInteger.valueOf(0);
+                BigDecimal paymentValue = BigDecimal.valueOf(0);
                 CasePayment payment = new CasePayment();
                 if (caseToBePaid.getState().equals(State.ACCEPTED)) {
                     Optional<SsiApplication> ssiApp = ssiRepo.findByUuid(uuid);
                     //check payment credentials
-                    if(!ssiApp.isPresent() || !paymentUtils.checkPaymentCredentials(caseToBePaid, ssiApp.get())){
+                    if(!ssiApp.isPresent() || !checkPaymentCredentials(caseToBePaid, ssiApp.get())){
                         return;
                     }
                     if(startDate.isBefore(currentDate)){
@@ -85,7 +86,7 @@ public class PaymentServiceImpl implements PaymentService{
                     if(acceptedDates.intValue() > 0){
                         Optional<SsiApplication> ssiApp = ssiRepo.findByUuid(uuid);
                         //check payment credentials
-                        if(ssiApp.isPresent() && paymentUtils.checkPaymentCredentials(caseToBePaid, ssiApp.get())){
+                        if(ssiApp.isPresent() && checkPaymentCredentials(caseToBePaid, ssiApp.get())){
                             paymentValue = mockPaymentService(acceptedDates.intValue(), caseToBePaid.getOffset());
                             payment.setPaymentDate(currentDate);
                             payment.setPayment(paymentValue);
@@ -102,10 +103,91 @@ public class PaymentServiceImpl implements PaymentService{
         });
     }
 
-    private BigInteger mockPaymentService(Integer days, BigInteger offset){
-        BigInteger valueToBePaid = (BigInteger.valueOf(days).multiply(paymentValPerDay)).subtract(offset);
+    private BigDecimal mockPaymentService(Integer days, BigDecimal offset){
+        BigDecimal valueToBePaid = (BigDecimal.valueOf(days).multiply(paymentValPerDay)).subtract(offset);
 
         return valueToBePaid;
+    }
+
+    private Boolean checkPaymentCredentials(Case caseToBePaid, SsiApplication ssiApp){
+        //mock household check
+        Map<String, String>[] houseHold = ssiApp.getHouseholdComposition();
+        for(int i = 0; i < houseHold.length; i++){
+            if(houseHold[i].entrySet().stream().anyMatch(h -> h.getValue().equals("deceased"))){
+                return false;
+            }
+        }
+        //external oaed check
+        if(!oaedRegistrationCheck(ssiApp.getOaedId())){
+            return false;
+        }
+        //external housing subsidy check
+        if(houseBenefitCheck(ssiApp.getTaxisAfm())){
+            return false;
+        }
+        // check if meter number appears on other applications
+        if(ssiRepo.findByMeterNumber(ssiApp.getMeterNumber()).size() > 1){
+            return false;
+        }
+        // check for luxury living
+        if(ssiApp.getLuxury().equals(String.valueOf(Boolean.TRUE))){
+            return false;
+        }
+        //check OAED benefits
+        if(BigInteger.valueOf(Long.valueOf(ssiApp.getUnemploymentBenefitR())).compareTo(BigInteger.valueOf(500)) > 0 ){
+            return false;
+        }
+        //check other benefits
+        if(BigInteger.valueOf(Long.valueOf(ssiApp.getOtherBenefitsR())).compareTo(BigInteger.valueOf(500)) > 0 ){
+            return false;
+        }
+        //check Ergome benefits
+        if(BigInteger.valueOf(Long.valueOf(ssiApp.getErgomeR())).compareTo(BigInteger.valueOf(500)) > 0 ){
+            return false;
+        }
+        //check if two months have passed while the application is in status paused
+        Iterator<Entry<LocalDateTime, State>> it = caseToBePaid.getHistory().entrySet().iterator();
+        int count = 0;
+        while(it.hasNext()){
+            if(count > 59){
+                break;
+            }
+            Map.Entry<LocalDateTime, State> entry = caseToBePaid.getHistory().entrySet().iterator().next();
+            if(entry.getValue().equals(State.PAUSED) && (it.hasNext() && it.next().getValue().equals(State.PAUSED) || count == 59)){
+                count++;
+                
+            } else {
+                count = 0;
+            }
+        }
+
+        if(count > 59){
+            return false;
+        }
+        // check that if there differences in Amka register
+        if(differenceInAmka(ssiApp.getTaxisAmka())){
+            return false;
+        }
+        //check if iban exists in other application
+        if(ssiRepo.findByIban(ssiApp.getIban()).size() > 1){
+            return false;
+        }
+
+        return true;
+    }
+
+    //mock oaed registration check
+    private Boolean oaedRegistrationCheck(String oaedId){
+        return true;
+    }
+    //mock housing subsidy check
+    private Boolean houseBenefitCheck(String afm){
+        return true;
+    }
+
+    //mockAmkaCheck
+    private Boolean differenceInAmka(String amka){
+        return false;
     }
 
     private Integer monthDays(LocalDateTime date) {
