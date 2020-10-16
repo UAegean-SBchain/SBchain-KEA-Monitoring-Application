@@ -2,11 +2,14 @@ package com.example.ethereumserviceapp.service.impl;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.Optional;
 
 import com.example.ethereumserviceapp.model.Case;
@@ -145,24 +148,25 @@ public class PaymentServiceImpl implements PaymentService{
         if(BigInteger.valueOf(Long.valueOf(ssiApp.getErgomeR())).compareTo(BigInteger.valueOf(500)) > 0 ){
             return false;
         }
+
         //check if two months have passed while the application is in status paused
         Iterator<Entry<LocalDateTime, State>> it = caseToBePaid.getHistory().entrySet().iterator();
-        int count = 0;
+        LocalDate pausedStartDate = LocalDate.of(1900, 1, 1);
+        LocalDate pausedEndDate = LocalDate.of(1900, 1, 1);
         while(it.hasNext()){
-            if(count > 59){
-                break;
+            if(pausedEndDate.equals(pausedStartDate.plusMonths(2))){
+                return false;
             }
-            Map.Entry<LocalDateTime, State> entry = caseToBePaid.getHistory().entrySet().iterator().next();
-            if(entry.getValue().equals(State.PAUSED) && (it.hasNext() && it.next().getValue().equals(State.PAUSED) || count == 59)){
-                count++;
-                
-            } else {
-                count = 0;
+            Map.Entry<LocalDateTime, State> entry = it.next();
+            if(!entry.getValue().equals(State.PAUSED)){
+                pausedStartDate = LocalDate.of(1900, 1, 1);
+                continue;
             }
-        }
-
-        if(count > 59){
-            return false;
+            if(pausedStartDate.equals(LocalDate.of(1900, 1, 1))){
+                pausedStartDate = entry.getKey().toLocalDate();
+            }
+            pausedEndDate = entry.getKey().toLocalDate();
+            
         }
         // check that if there differences in Amka register
         if(differenceInAmka(ssiApp.getTaxisAmka())){
