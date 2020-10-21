@@ -119,7 +119,7 @@ public class MonitorServiceImpl implements MonitorService {
         if (theCase.isPresent()) {
             theCase.get().setState(state);
             theCase.get().setDate(LocalDateTime.now());
-            monitorUtils.updateOffset(theCase.get());
+            MonitorUtils.updateOffset(theCase.get());
             this.ethServ.updateCase(theCase.get());
             
         } else {
