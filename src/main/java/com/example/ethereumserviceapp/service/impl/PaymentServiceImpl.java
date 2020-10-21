@@ -81,7 +81,7 @@ public class PaymentServiceImpl implements PaymentService{
                     }
                 }
                 //if case is rejected then check the previous month history for days that the case was accepted
-                if (caseToBePaid.getState().equals(State.REJECTED)) {
+                if (caseToBePaid.getState().equals(State.REJECTED) || caseToBePaid.getState().equals(State.PAUSED)) {
                     int paymentMonth = currentDate.minusMonths(Long.valueOf(1)).getMonthValue();
                     // get the number of days of the previous month that the case was accepted
                     Long acceptedDates = caseToBePaid.getHistory().entrySet().stream().filter(
@@ -97,10 +97,12 @@ public class PaymentServiceImpl implements PaymentService{
                             //caseToBePaid.setState(State.PAID);
                             //ethServ.updateCase(caseToBePaid);
                         }
+                    } else if(caseToBePaid.getState().equals(State.REJECTED) ){
+                        // if the case's state is rejected and there are no days during the month tha the case was accepted delete it from the block chain 
+                        ethServ.deleteCaseByUuid(uuid);
                     }
 
-                    // if the case's state is rejected delete it from the block chain after possible payment for the remaining "accepted" days
-                    ethServ.deleteCaseByUuid(uuid);
+                    
                 }
             }
         });
