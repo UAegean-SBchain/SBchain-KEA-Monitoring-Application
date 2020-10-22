@@ -1,8 +1,11 @@
 package com.example.ethereumserviceapp.repository;
 
-import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+
+import com.example.ethereumserviceapp.model.entities.SsiApplication;
+
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -23,6 +26,8 @@ public interface SsiApplicationRepository extends MongoRepository<SsiApplication
     public List<SsiApplication> findByMeterNumber(String meterNumber);
 
     public List<SsiApplication> findByIban(String iban);
+
+    public List<SsiApplication> findByHouseholdIn(Map<String, String> household);
 
     public void deleteByUuid(String uuid);
 

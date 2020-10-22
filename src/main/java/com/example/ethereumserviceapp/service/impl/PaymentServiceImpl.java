@@ -39,10 +39,19 @@ public class PaymentServiceImpl implements PaymentService{
 
     @Autowired
     private SsiApplicationRepository ssiRepo;
+
+    BigDecimal rentIncome = BigDecimal.valueOf(0);
+    BigDecimal otherIncome = BigDecimal.valueOf(0);
+    BigDecimal monthlyIncome = BigDecimal.valueOf(0);
+    BigDecimal otherBenefits = BigDecimal.valueOf(0);
+    BigDecimal unemploymentBenfits = BigDecimal.valueOf(0);
+
+    BigDecimal povertyLimit = BigDecimal.valueOf(300);
     
     @Override
     @Scheduled(cron = "0 0 0 1 * ?")
     public void startPayment(){
+        
         List<String> uuids = this.ethServ.getAllCaseUUID();
         uuids.stream().forEach(uuid -> {
             Integer numDays = 0;
@@ -73,8 +82,7 @@ public class PaymentServiceImpl implements PaymentService{
                         Long acceptedDates = caseToBePaid.getHistory().entrySet().stream().filter(
                         e -> e.getKey().getMonthValue() == currentDate.minusMonths(Long.valueOf(1)).getMonthValue() && e.getValue().equals(State.ACCEPTED)).count();
 
-                        paymentValue = mockPaymentService(acceptedDates.intValue(), caseToBePaid.getOffset());
-                        caseToBePaid.setState(State.PAID);
+                        paymentValue = paymentService(acceptedDates.intValue(), caseToBePaid, ssiApp.get());
                         payment.setPaymentDate(currentDate);
                         payment.setPayment(paymentValue);
                         ethServ.addPayment(caseToBePaid, payment);
@@ -90,7 +98,7 @@ public class PaymentServiceImpl implements PaymentService{
                         Optional<SsiApplication> ssiApp = ssiRepo.findByUuid(uuid);
                         //check payment credentials
                         if(ssiApp.isPresent() && checkPaymentCredentials(caseToBePaid, ssiApp.get())){
-                            paymentValue = mockPaymentService(acceptedDates.intValue(), caseToBePaid.getOffset());
+                            paymentValue = paymentService(acceptedDates.intValue(), caseToBePaid, ssiApp.get());
                             payment.setPaymentDate(currentDate);
                             payment.setPayment(paymentValue);
                             ethServ.addPayment(caseToBePaid, payment);
@@ -108,10 +116,34 @@ public class PaymentServiceImpl implements PaymentService{
         });
     }
 
-    private BigDecimal mockPaymentService(Integer days, BigDecimal offset){
-        BigDecimal valueToBePaid = (BigDecimal.valueOf(days).multiply(paymentValPerDay)).subtract(offset);
+    private BigDecimal paymentService(Integer days, Case caseToBePaid, SsiApplication ssiApp){
+        rentIncome = BigDecimal.valueOf(Long.parseLong(ssiApp.getRentIncomeR()));
+        otherIncome = BigDecimal.valueOf(Long.parseLong(ssiApp.getOtherIncomeR()));
+        monthlyIncome = BigDecimal.valueOf(Long.parseLong(ssiApp.getMonthlyIncome()));
+        otherBenefits = BigDecimal.valueOf(Long.parseLong(ssiApp.getOtherBenefitsR()));
+        unemploymentBenfits = BigDecimal.valueOf(Long.parseLong(ssiApp.getUnemploymentBenefitR()));
+
+        Integer numDays = monthDays(LocalDateTime.now().minusMonths(Long.valueOf(1)));
+
+        BigDecimal totalDailyValue =(povertyLimit.subtract(rentIncome)
+                .subtract(otherIncome).subtract(monthlyIncome)
+                .subtract(otherBenefits).subtract(unemploymentBenfits))
+                .divide(BigDecimal.valueOf(numDays));
+
+        BigDecimal valueToBePaid = (BigDecimal.valueOf(days).multiply(totalDailyValue)).subtract(caseToBePaid.getOffset());
+
+        //mock Call to external service
+        if(mockExternalPaymentService(valueToBePaid, caseToBePaid.getUuid())){
+            caseToBePaid.setState(State.PAID);
+        } else {
+            caseToBePaid.setState(State.FAILED);
+        }
 
         return valueToBePaid;
+    }
+
+    private Boolean mockExternalPaymentService(BigDecimal valueToBePaid, String uuid){
+        return true;
     }
 
     private Boolean checkPaymentCredentials(Case caseToBePaid, SsiApplication ssiApp){
@@ -139,15 +171,20 @@ public class PaymentServiceImpl implements PaymentService{
             return false;
         }
         //check OAED benefits
-        if(BigInteger.valueOf(Long.valueOf(ssiApp.getUnemploymentBenefitR())).compareTo(BigInteger.valueOf(500)) > 0 ){
+        if(BigInteger.valueOf(Long.valueOf(ssiApp.getUnemploymentBenefitR())).compareTo(BigInteger.valueOf(300)) > 0 ){
             return false;
         }
         //check other benefits
-        if(BigInteger.valueOf(Long.valueOf(ssiApp.getOtherBenefitsR())).compareTo(BigInteger.valueOf(500)) > 0 ){
+        if(BigInteger.valueOf(Long.valueOf(ssiApp.getOtherBenefitsR())).compareTo(BigInteger.valueOf(300)) > 0 ){
             return false;
         }
         //check Ergome benefits
-        if(BigInteger.valueOf(Long.valueOf(ssiApp.getErgomeR())).compareTo(BigInteger.valueOf(500)) > 0 ){
+        if(BigInteger.valueOf(Long.valueOf(ssiApp.getErgomeR())).compareTo(BigInteger.valueOf(300)) > 0 ){
+            return false;
+        }
+
+        //check for failed payments
+        if(caseToBePaid.getPaymentHistory().stream().filter(s -> s.getState().equals(State.FAILED)).count() >= 3){
             return false;
         }
 
@@ -174,6 +211,17 @@ public class PaymentServiceImpl implements PaymentService{
         if(differenceInAmka(ssiApp.getTaxisAmka())){
             return false;
         }
+
+        //check for duplicates in households
+        Map<String, String>[] householdArray = ssiApp.getHouseholdComposition();
+        for(int i=0; i<householdArray.length; i++){
+            Map<String, String> household = householdArray[i];
+            List<SsiApplication> hSsiApp = ssiRepo.findByHouseholdIn(household);
+            if(hSsiApp.size()>1){
+                return false;
+            }
+        }
+
         //check if iban exists in other application
         if(ssiRepo.findByIban(ssiApp.getIban()).size() > 1){
             return false;

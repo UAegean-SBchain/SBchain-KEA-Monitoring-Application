@@ -19,7 +19,7 @@ import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.CasePayment;
 import com.example.ethereumserviceapp.model.State;
 
-import org.web3j.tuples.generated.Tuple8;
+import org.web3j.tuples.generated.Tuple9;
 import org.web3j.utils.Numeric;
 
 /**
@@ -28,7 +28,7 @@ import org.web3j.utils.Numeric;
  */
 public class ContractBuilder {
 
-    public static Case buildCaseFromTuple(Tuple8<byte[], BigInteger, List<BigInteger>, List<BigInteger>, BigInteger, List<BigInteger>, List<BigInteger>, BigInteger> theCase) {
+    public static Case buildCaseFromTuple(Tuple9<byte[], BigInteger, List<BigInteger>, List<BigInteger>, BigInteger, List<BigInteger>, List<BigInteger>, List<BigInteger>, BigInteger> theCase) {
         Case transformedCase = new Case();
         List<CasePayment> paymentHistory = new ArrayList<>();
         LinkedHashMap<LocalDateTime, State> history = new LinkedHashMap<>();
@@ -45,10 +45,11 @@ public class ContractBuilder {
             CasePayment transformedPayment = new CasePayment();
             transformedPayment.setPaymentDate(Instant.ofEpochMilli(theCase.component6().get(i).longValue()).atZone(ZoneId.systemDefault()).toLocalDateTime());
             transformedPayment.setPayment(new BigDecimal(theCase.component7().get(i)).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
+            transformedPayment.setState(State.values()[theCase.component8().get(i).intValue()]);
             paymentHistory.add(transformedPayment);
         }
         transformedCase.setPaymentHistory(paymentHistory);
-        transformedCase.setOffset(new BigDecimal(theCase.component8()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
+        transformedCase.setOffset(new BigDecimal(theCase.component9()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
         return transformedCase;
     }
 
