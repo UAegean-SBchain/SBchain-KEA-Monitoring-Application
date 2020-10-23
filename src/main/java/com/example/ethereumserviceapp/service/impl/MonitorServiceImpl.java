@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
@@ -63,6 +64,13 @@ public class MonitorServiceImpl implements MonitorService {
             Iterator<Entry<LocalDateTime, State>> it = c.get().getHistory().entrySet().iterator();
             
             if (caseState == 2) {
+                Iterator<Entry<LocalDateTime, State>> itr = c.get().getHistory().entrySet().iterator();
+                while(itr.hasNext()){
+                    Map.Entry<LocalDateTime, State> entry = itr.next();
+                    if(entry.getValue().equals(State.REJECTED) && entry.getKey().toLocalDate().isBefore(LocalDate.now().minusMonths(1))){
+                        this.mongoServ.deleteByUuid(uuid);
+                    }
+                }
                 return;
             }
 
@@ -85,41 +93,43 @@ public class MonitorServiceImpl implements MonitorService {
                             firstAcceptedDate = entry.getKey();
                         }
                     }
+                    Optional<SsiApplication> ssiCase = mongoServ.findByUuid(uuid);
                     if (isRevoked || MonitorUtils.isCaseOlderThanSixMonths(firstAcceptedDate) || !MonitorUtils.checkExternalSources()) {
                         //update the status of the case to REJECTED and the date with the current date
-                        updateCase(uuid, State.REJECTED);
-                        this.mongoServ.deleteByUuid(uuid);
+                        updateCase(uuid, State.REJECTED, ssiCase.isPresent()? ssiCase.get() : null);
+                        //this.mongoServ.deleteByUuid(uuid);
                     } else {
-                        Optional<SsiApplication> ssiCase = mongoServ.findByUuid(uuid);
+                        
                         if (ssiCase.isPresent()) {
                             final SsiApplication ssiApp = ssiCase.get();
                             //check the application by the uuid and update the case accordingly
                             if (MonitorUtils.isApplicationAccepted(ssiApp)) {
                                 
-                                updateCase(uuid, State.ACCEPTED);
+                                updateCase(uuid, State.ACCEPTED, ssiApp);
                             } else {
-                                updateCase(uuid, State.REJECTED);
+                                updateCase(uuid, State.REJECTED, ssiApp);
                             }
                         } else {
-                            updateCase(uuid, State.REJECTED);
+                            updateCase(uuid, State.REJECTED, null);
                         }
                     }
                 } else {
                     //if credentials have expired update case as rejected
-                    updateCase(uuid, State.REJECTED);
-                    this.mongoServ.deleteByUuid(uuid);
+                    updateCase(uuid, State.REJECTED, null);
+                    //this.mongoServ.deleteByUuid(uuid);
                 };
-
             });
         });
     }
 
-    private void updateCase(String uuid, State state) {
+    private void updateCase(String uuid, State state, SsiApplication ssiApp) {
         Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
         if (theCase.isPresent()) {
             theCase.get().setState(state);
             theCase.get().setDate(LocalDateTime.now());
-            MonitorUtils.updateOffset(theCase.get());
+            if(ssiApp != null){
+                MonitorUtils.updateOffset(theCase.get(), ssiApp);
+            }
             this.ethServ.updateCase(theCase.get());
             
         } else {

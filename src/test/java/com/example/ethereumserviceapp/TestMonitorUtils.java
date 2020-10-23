@@ -9,6 +9,7 @@ import java.util.List;
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.CasePayment;
 import com.example.ethereumserviceapp.model.State;
+import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.utils.MonitorUtils;
 
 import org.junit.jupiter.api.Test;
@@ -103,7 +104,11 @@ public class TestMonitorUtils {
         monitoredCase.setPaymentHistory(paymentHistory);
         monitoredCase.setOffset(BigDecimal.valueOf(0));
 
-        MonitorUtils.updateOffset(monitoredCase);
+        SsiApplication ssiApp = new SsiApplication();
+        ssiApp.setOtherBenefitsR("5");
+        ssiApp.setRentIncomeR("5");
+        ssiApp.setOtherIncomeR("5");
+        MonitorUtils.updateOffset(monitoredCase, ssiApp);
 
         log.info("offset :{}", monitoredCase.getOffset());
 

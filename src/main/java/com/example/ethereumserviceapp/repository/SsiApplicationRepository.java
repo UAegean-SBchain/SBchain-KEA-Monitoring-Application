@@ -27,7 +27,7 @@ public interface SsiApplicationRepository extends MongoRepository<SsiApplication
 
     public List<SsiApplication> findByIban(String iban);
 
-    public List<SsiApplication> findByHouseholdIn(Map<String, String> household);
+    public List<SsiApplication> findByHouseholdCompositionIn(Map<String, String> household);
 
     public void deleteByUuid(String uuid);
 

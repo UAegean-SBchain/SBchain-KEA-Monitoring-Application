@@ -70,7 +70,7 @@ public class EthereumServiceImpl implements EthereumService {
         Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, derivationPath);
         // Load the wallet for the derived key
         this.credentials = Credentials.create(derivedKeyPair);
-        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x4bb7774e8e1bb6Fde871bdb9a4b48A45b9C0CE34"
+        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x63AA7D6C01b2DE0702Cd5591C2584Df6CF810BC5"
                 : System.getenv("CONTRACT_ADDRESS");
         this.REVOCATION_CONTRACT_ADDRESS = System.getenv("REVOCATION_CONTRACT_ADDRESS") == null
                 ? "0x9534d226e56826Cc4C01912Eb388b121Bb0683b5"
@@ -226,7 +226,8 @@ public class EthereumServiceImpl implements EthereumService {
                 byte[] uuid = ByteConverters.stringToBytes16(monitoredCase.getUuid()).getValue();
                 String functionCall = this.getContract()
                         .addPayment(uuid, BigInteger.valueOf(monitoredCase.getState().getValue()), 
-                                BigInteger.valueOf(millis), payment.getPayment().multiply(BigDecimal.valueOf(100)).toBigInteger() )
+                                BigInteger.valueOf(millis), payment.getPayment().multiply(BigDecimal.valueOf(100)).toBigInteger(), 
+                                monitoredCase.getOffset().multiply(BigDecimal.valueOf(100)).toBigInteger())
                         .encodeFunctionCall();
                 this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
                         contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();

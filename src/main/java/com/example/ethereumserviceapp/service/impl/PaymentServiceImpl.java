@@ -5,11 +5,9 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 import java.util.Optional;
 
 import com.example.ethereumserviceapp.model.Case;
@@ -19,6 +17,7 @@ import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.repository.SsiApplicationRepository;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.service.PaymentService;
+import com.example.ethereumserviceapp.utils.EthAppUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -54,7 +53,6 @@ public class PaymentServiceImpl implements PaymentService{
         
         List<String> uuids = this.ethServ.getAllCaseUUID();
         uuids.stream().forEach(uuid -> {
-            Integer numDays = 0;
 
             // get the case from the block chain
             Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
@@ -63,7 +61,6 @@ public class PaymentServiceImpl implements PaymentService{
                 LocalDateTime startDate = caseToBePaid.getHistory().entrySet().iterator().next().getKey();
                 LocalDateTime currentDate = LocalDateTime.now();
                 BigDecimal paymentValue = BigDecimal.valueOf(0);
-                CasePayment payment = new CasePayment();
                 if (caseToBePaid.getState().equals(State.ACCEPTED)) {
                     Optional<SsiApplication> ssiApp = ssiRepo.findByUuid(uuid);
                     //check payment credentials
@@ -82,10 +79,10 @@ public class PaymentServiceImpl implements PaymentService{
                         Long acceptedDates = caseToBePaid.getHistory().entrySet().stream().filter(
                         e -> e.getKey().getMonthValue() == currentDate.minusMonths(Long.valueOf(1)).getMonthValue() && e.getValue().equals(State.ACCEPTED)).count();
 
-                        paymentValue = paymentService(acceptedDates.intValue(), caseToBePaid, ssiApp.get());
-                        payment.setPaymentDate(currentDate);
-                        payment.setPayment(paymentValue);
-                        ethServ.addPayment(caseToBePaid, payment);
+                        paymentValue = EthAppUtils.calculatePayment(acceptedDates.intValue(), caseToBePaid, ssiApp.get());
+                        //Call to payment service
+                        paymentService(paymentValue, caseToBePaid);
+                        addPayment(paymentValue, caseToBePaid, currentDate);
                     }
                 }
                 //if case is rejected then check the previous month history for days that the case was accepted
@@ -98,52 +95,39 @@ public class PaymentServiceImpl implements PaymentService{
                         Optional<SsiApplication> ssiApp = ssiRepo.findByUuid(uuid);
                         //check payment credentials
                         if(ssiApp.isPresent() && checkPaymentCredentials(caseToBePaid, ssiApp.get())){
-                            paymentValue = paymentService(acceptedDates.intValue(), caseToBePaid, ssiApp.get());
-                            payment.setPaymentDate(currentDate);
-                            payment.setPayment(paymentValue);
-                            ethServ.addPayment(caseToBePaid, payment);
-                            //caseToBePaid.setState(State.PAID);
-                            //ethServ.updateCase(caseToBePaid);
+                            paymentValue = EthAppUtils.calculatePayment(acceptedDates.intValue(), caseToBePaid, ssiApp.get());
+                            //Call to payment service
+                            paymentService(paymentValue, caseToBePaid);
+                            addPayment(paymentValue, caseToBePaid, currentDate);
                         }
                     } else if(caseToBePaid.getState().equals(State.REJECTED) ){
                         // if the case's state is rejected and there are no days during the month tha the case was accepted delete it from the block chain 
                         ethServ.deleteCaseByUuid(uuid);
                     }
-
-                    
                 }
             }
         });
     }
 
-    private BigDecimal paymentService(Integer days, Case caseToBePaid, SsiApplication ssiApp){
-        rentIncome = BigDecimal.valueOf(Long.parseLong(ssiApp.getRentIncomeR()));
-        otherIncome = BigDecimal.valueOf(Long.parseLong(ssiApp.getOtherIncomeR()));
-        monthlyIncome = BigDecimal.valueOf(Long.parseLong(ssiApp.getMonthlyIncome()));
-        otherBenefits = BigDecimal.valueOf(Long.parseLong(ssiApp.getOtherBenefitsR()));
-        unemploymentBenfits = BigDecimal.valueOf(Long.parseLong(ssiApp.getUnemploymentBenefitR()));
-
-        Integer numDays = monthDays(LocalDateTime.now().minusMonths(Long.valueOf(1)));
-
-        BigDecimal totalDailyValue =(povertyLimit.subtract(rentIncome)
-                .subtract(otherIncome).subtract(monthlyIncome)
-                .subtract(otherBenefits).subtract(unemploymentBenfits))
-                .divide(BigDecimal.valueOf(numDays));
-
-        BigDecimal valueToBePaid = (BigDecimal.valueOf(days).multiply(totalDailyValue)).subtract(caseToBePaid.getOffset());
-
+    private void paymentService(BigDecimal valueToBePaid, Case caseToBePaid){
         //mock Call to external service
         if(mockExternalPaymentService(valueToBePaid, caseToBePaid.getUuid())){
             caseToBePaid.setState(State.PAID);
+            caseToBePaid.setOffset(BigDecimal.valueOf(0));
         } else {
             caseToBePaid.setState(State.FAILED);
         }
-
-        return valueToBePaid;
     }
 
     private Boolean mockExternalPaymentService(BigDecimal valueToBePaid, String uuid){
         return true;
+    }
+
+    private void addPayment(BigDecimal valueToBePaid, Case caseToBePaid, LocalDateTime currentDate){
+        CasePayment payment = new CasePayment();
+        payment.setPaymentDate(currentDate);
+        payment.setPayment(valueToBePaid);
+        ethServ.addPayment(caseToBePaid, payment);
     }
 
     private Boolean checkPaymentCredentials(Case caseToBePaid, SsiApplication ssiApp){
@@ -182,12 +166,10 @@ public class PaymentServiceImpl implements PaymentService{
         if(BigInteger.valueOf(Long.valueOf(ssiApp.getErgomeR())).compareTo(BigInteger.valueOf(300)) > 0 ){
             return false;
         }
-
         //check for failed payments
         if(caseToBePaid.getPaymentHistory().stream().filter(s -> s.getState().equals(State.FAILED)).count() >= 3){
             return false;
         }
-
         //check if two months have passed while the application is in status paused
         Iterator<Entry<LocalDateTime, State>> it = caseToBePaid.getHistory().entrySet().iterator();
         LocalDate pausedStartDate = LocalDate.of(1900, 1, 1);
@@ -205,7 +187,6 @@ public class PaymentServiceImpl implements PaymentService{
                 pausedStartDate = entry.getKey().toLocalDate();
             }
             pausedEndDate = entry.getKey().toLocalDate();
-            
         }
         // check that if there differences in Amka register
         if(differenceInAmka(ssiApp.getTaxisAmka())){
@@ -216,17 +197,15 @@ public class PaymentServiceImpl implements PaymentService{
         Map<String, String>[] householdArray = ssiApp.getHouseholdComposition();
         for(int i=0; i<householdArray.length; i++){
             Map<String, String> household = householdArray[i];
-            List<SsiApplication> hSsiApp = ssiRepo.findByHouseholdIn(household);
+            List<SsiApplication> hSsiApp = ssiRepo.findByHouseholdCompositionIn(household);
             if(hSsiApp.size()>1){
                 return false;
             }
         }
-
         //check if iban exists in other application
         if(ssiRepo.findByIban(ssiApp.getIban()).size() > 1){
             return false;
         }
-
         return true;
     }
 
@@ -242,36 +221,5 @@ public class PaymentServiceImpl implements PaymentService{
     //mockAmkaCheck
     private Boolean differenceInAmka(String amka){
         return false;
-    }
-
-    private Integer monthDays(LocalDateTime date) {
-
-        int month = date.getMonthValue();
-        int year = date.getYear();
-        int numDays = 0;
-
-        switch (month) {
-            case 1: case 3: case 5:
-            case 7: case 8: case 10:
-            case 12:
-                numDays = 31;
-                break;
-            case 4: case 6:
-            case 9: case 11:
-                numDays = 30;
-                break;
-            case 2:
-                if (((year % 4 == 0) && 
-                     !(year % 100 == 0))
-                     || (year % 400 == 0))
-                    numDays = 29;
-                else
-                    numDays = 28;
-                break;
-            default:
-                log.error("Invalid month.");
-                break;
-        }
-        return numDays;
     }
 }

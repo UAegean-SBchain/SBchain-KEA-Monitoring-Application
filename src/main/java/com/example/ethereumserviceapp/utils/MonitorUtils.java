@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 //@Service
-public class MonitorUtils {
+public class MonitorUtils extends EthAppUtils{
 //mock checks replace with correct ones
 
     public static Boolean isApplicationAccepted(SsiApplication ssiApp) {
@@ -46,11 +46,9 @@ public class MonitorUtils {
     }
                 
     public static Boolean isCaseOlderThanSixMonths(LocalDateTime firstAcceptedDate){
-
         if(LocalDateTime.now().isAfter(firstAcceptedDate.plusMonths(6))){
             return true;
         }
-
         return false;
     }
 
@@ -60,14 +58,14 @@ public class MonitorUtils {
     }
 
     // mock projection
-    public static void updateOffset(Case monitoredCase){
+    public static void updateOffset(Case monitoredCase, SsiApplication ssiApp){
 
         //Mock credential date, this illustrates a date at which a credential has been modified prior to being updated in the system
         LocalDateTime date = LocalDateTime.of(2020, 8, 12, 10, 23 ,1);
         LocalDateTime startOfMonth = date.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(1);
         
         // this should probably call the payment calculation method and return the value that should have been paid for all paid days with the new credentials
-        BigDecimal fullMonthProjection = BigDecimal.valueOf(100).setScale(2, RoundingMode.HALF_UP);
+        //BigDecimal fullMonthProjection = BigDecimal.valueOf(100).setScale(2, RoundingMode.HALF_UP);
 
         BigDecimal totalPayment = BigDecimal.valueOf(0).setScale(2, RoundingMode.HALF_UP);
         BigDecimal projectedPayment = BigDecimal.valueOf(0).setScale(2, RoundingMode.HALF_UP);
@@ -80,10 +78,11 @@ public class MonitorUtils {
                 projectedPayment = projectedPayment.add(payment.getPayment());
                 continue; 
             }
-           BigDecimal projection = fullMonthProjection;
+            BigDecimal fullMonthProjection = calculatePayment(monthDays(payment.getPaymentDate().minusMonths(1)), monitoredCase, ssiApp);
+            BigDecimal projection = fullMonthProjection;
 
-           // if the date of the payment is on the same month as the altered credential, calculate the payment only of the offset days
-           if(payment.getPaymentDate().minusMonths(1).isBefore(date.withDayOfMonth(monthDays(date)).withHour(23).withMinute(59).withSecond(59))){
+            // if the date of the payment is on the same month as the altered credential, calculate the payment only of the offset days
+            if(payment.getPaymentDate().minusMonths(1).isBefore(date.withDayOfMonth(monthDays(date)).withHour(23).withMinute(59).withSecond(59))){
            
                 Long paidDays = monitoredCase.getHistory().entrySet().stream().filter(
                     e -> e.getKey().getMonthValue() == date.getMonthValue() && e.getKey().isAfter(startOfMonth) && e.getValue().equals(State.ACCEPTED)).count();
@@ -106,37 +105,6 @@ public class MonitorUtils {
         if(newOffset.compareTo(monitoredCase.getOffset()) != 0){
             monitoredCase.setOffset(newOffset);
         }
-    }
-
-    private static Integer monthDays(LocalDateTime date) {
-
-        int month = date.getMonthValue();
-        int year = date.getYear();
-        int numDays = 0;
-
-        switch (month) {
-            case 1: case 3: case 5:
-            case 7: case 8: case 10:
-            case 12:
-                numDays = 31;
-                break;
-            case 4: case 6:
-            case 9: case 11:
-                numDays = 30;
-                break;
-            case 2:
-                if (((year % 4 == 0) && 
-                     !(year % 100 == 0))
-                     || (year % 400 == 0))
-                    numDays = 29;
-                else
-                    numDays = 28;
-                break;
-            default:
-                log.error("Invalid month.");
-                break;
-        }
-        return numDays;
     }
         
 }
