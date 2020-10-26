@@ -67,6 +67,7 @@ public class MonitorServiceImpl implements MonitorService {
                 Iterator<Entry<LocalDateTime, State>> itr = c.get().getHistory().entrySet().iterator();
                 while(itr.hasNext()){
                     Map.Entry<LocalDateTime, State> entry = itr.next();
+                    //if the case is rejected for more than one month then delete it
                     if(entry.getValue().equals(State.REJECTED) && entry.getKey().toLocalDate().isBefore(LocalDate.now().minusMonths(1))){
                         this.mongoServ.deleteByUuid(uuid);
                     }
@@ -86,6 +87,7 @@ public class MonitorServiceImpl implements MonitorService {
                     log.info("is credential {} revoked? == {}", credIdAndExp.getId(), isRevoked);
                     LocalDateTime firstAcceptedDate = LocalDateTime.of(2020, 1, 1, 00, 00, 00);
                     Boolean accepted = false;
+                    //find the first day the case was accepted
                     while(it.hasNext() && !accepted){
                         Entry<LocalDateTime, State> entry = it.next();
                         accepted = entry.getValue().equals(State.ACCEPTED)? true : false;
@@ -104,8 +106,12 @@ public class MonitorServiceImpl implements MonitorService {
                             final SsiApplication ssiApp = ssiCase.get();
                             //check the application by the uuid and update the case accordingly
                             if (MonitorUtils.isApplicationAccepted(ssiApp)) {
-                                
-                                updateCase(uuid, State.ACCEPTED, ssiApp);
+                                //TODO replace mock check has green card with valid check
+                                if(!MonitorUtils.hasGreenCard(uuid)){
+                                    updateCase(uuid, State.PAUSED, ssiApp);
+                                } else {
+                                    updateCase(uuid, State.ACCEPTED, ssiApp);
+                                }
                             } else {
                                 updateCase(uuid, State.REJECTED, ssiApp);
                             }

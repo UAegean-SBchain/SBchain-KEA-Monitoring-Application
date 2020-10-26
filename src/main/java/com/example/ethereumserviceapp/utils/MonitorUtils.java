@@ -57,6 +57,10 @@ public class MonitorUtils extends EthAppUtils{
         return true;
     }
 
+    public static Boolean hasGreenCard(String uuid){
+        return true;
+    }
+
     // mock projection
     public static void updateOffset(Case monitoredCase, SsiApplication ssiApp){
 
