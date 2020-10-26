@@ -81,49 +81,48 @@ public class MonitorServiceImpl implements MonitorService {
                 //check if the credential has not expired
                 Date expiresAt = Date.from(Instant.ofEpochSecond(Long.parseLong(credIdAndExp.getExp())));
                 log.info("credential expires at {}", expiresAt.toString());
-                if (expiresAt.after(new Date(System.currentTimeMillis()))) {
-                    //check if the credential is revoked
-                    boolean isRevoked = this.ethServ.checkRevocationStatus(credIdAndExp.getId());
-                    log.info("is credential {} revoked? == {}", credIdAndExp.getId(), isRevoked);
-                    LocalDateTime firstAcceptedDate = LocalDateTime.of(2020, 1, 1, 00, 00, 00);
-                    Boolean accepted = false;
-                    //find the first day the case was accepted
-                    while(it.hasNext() && !accepted){
-                        Entry<LocalDateTime, State> entry = it.next();
-                        accepted = entry.getValue().equals(State.ACCEPTED)? true : false;
-                        if(accepted){
-                            firstAcceptedDate = entry.getKey();
-                        }
-                    }
-                    Optional<SsiApplication> ssiCase = mongoServ.findByUuid(uuid);
-                    if (isRevoked || MonitorUtils.isCaseOlderThanSixMonths(firstAcceptedDate) || !MonitorUtils.checkExternalSources()) {
-                        //update the status of the case to REJECTED and the date with the current date
-                        updateCase(uuid, State.REJECTED, ssiCase.isPresent()? ssiCase.get() : null);
-                        //this.mongoServ.deleteByUuid(uuid);
-                    } else {
-                        
-                        if (ssiCase.isPresent()) {
-                            final SsiApplication ssiApp = ssiCase.get();
-                            //check the application by the uuid and update the case accordingly
-                            if (MonitorUtils.isApplicationAccepted(ssiApp)) {
-                                //TODO replace mock check has green card with valid check
-                                if(!MonitorUtils.hasGreenCard(uuid)){
-                                    updateCase(uuid, State.PAUSED, ssiApp);
-                                } else {
-                                    updateCase(uuid, State.ACCEPTED, ssiApp);
-                                }
-                            } else {
-                                updateCase(uuid, State.REJECTED, ssiApp);
-                            }
-                        } else {
-                            updateCase(uuid, State.REJECTED, null);
-                        }
-                    }
-                } else {
+                if (!expiresAt.after(new Date(System.currentTimeMillis()))) {
                     //if credentials have expired update case as rejected
                     updateCase(uuid, State.REJECTED, null);
+                    return;
+                }
+                //check if the credential is revoked
+                boolean isRevoked = this.ethServ.checkRevocationStatus(credIdAndExp.getId());
+                log.info("is credential {} revoked? == {}", credIdAndExp.getId(), isRevoked);
+                LocalDateTime firstAcceptedDate = LocalDateTime.of(2020, 1, 1, 00, 00, 00);
+                Boolean accepted = false;
+                //find the first day the case was accepted
+                while(it.hasNext() && !accepted){
+                    Entry<LocalDateTime, State> entry = it.next();
+                    accepted = entry.getValue().equals(State.ACCEPTED)? true : false;
+                    if(accepted){
+                        firstAcceptedDate = entry.getKey();
+                    }
+                }
+                Optional<SsiApplication> ssiCase = mongoServ.findByUuid(uuid);
+                if (isRevoked || MonitorUtils.isCaseOlderThanSixMonths(firstAcceptedDate) || !MonitorUtils.checkExternalSources()) {
+                    //update the status of the case to REJECTED and the date with the current date
+                    updateCase(uuid, State.REJECTED, ssiCase.isPresent()? ssiCase.get() : null);
                     //this.mongoServ.deleteByUuid(uuid);
-                };
+                } else {
+                    
+                    if (!ssiCase.isPresent()) {
+                        updateCase(uuid, State.REJECTED, null);
+                        return;
+                    }
+                    final SsiApplication ssiApp = ssiCase.get();
+                    //check the application by the uuid and update the case accordingly
+                    if (MonitorUtils.isApplicationAccepted(ssiApp)) {
+                        //TODO replace mock check has green card with valid check
+                        if(!MonitorUtils.hasGreenCard(uuid)){
+                            updateCase(uuid, State.PAUSED, ssiApp);
+                        } else {
+                            updateCase(uuid, State.ACCEPTED, ssiApp);
+                        }
+                    } else {
+                        updateCase(uuid, State.REJECTED, ssiApp);
+                    }
+                }
             });
         });
     }
