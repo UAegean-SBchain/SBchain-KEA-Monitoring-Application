@@ -79,7 +79,7 @@ public class PaymentServiceImpl implements PaymentService{
                         Long acceptedDates = caseToBePaid.getHistory().entrySet().stream().filter(
                         e -> e.getKey().getMonthValue() == currentDate.minusMonths(Long.valueOf(1)).getMonthValue() && e.getValue().equals(State.ACCEPTED)).count();
 
-                        paymentValue = EthAppUtils.calculatePayment(acceptedDates.intValue(), caseToBePaid, ssiApp.get());
+                        paymentValue = EthAppUtils.calculatePayment(acceptedDates.intValue(), caseToBePaid.getOffset(), ssiApp.get());
                         //Call to payment service
                         paymentService(paymentValue, caseToBePaid);
                         addPayment(paymentValue, caseToBePaid, currentDate);
@@ -95,7 +95,7 @@ public class PaymentServiceImpl implements PaymentService{
                         Optional<SsiApplication> ssiApp = ssiRepo.findByUuid(uuid);
                         //check payment credentials
                         if(ssiApp.isPresent() && checkPaymentCredentials(caseToBePaid, ssiApp.get())){
-                            paymentValue = EthAppUtils.calculatePayment(acceptedDates.intValue(), caseToBePaid, ssiApp.get());
+                            paymentValue = EthAppUtils.calculatePayment(acceptedDates.intValue(), caseToBePaid.getOffset(), ssiApp.get());
                             //Call to payment service
                             paymentService(paymentValue, caseToBePaid);
                             addPayment(paymentValue, caseToBePaid, currentDate);

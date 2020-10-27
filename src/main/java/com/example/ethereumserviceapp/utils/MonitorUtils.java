@@ -82,7 +82,7 @@ public class MonitorUtils extends EthAppUtils{
                 projectedPayment = projectedPayment.add(payment.getPayment());
                 continue; 
             }
-            BigDecimal fullMonthProjection = calculatePayment(monthDays(payment.getPaymentDate().minusMonths(1)), monitoredCase, ssiApp);
+            BigDecimal fullMonthProjection = calculatePayment(monthDays(payment.getPaymentDate().minusMonths(1)), BigDecimal.valueOf(0), ssiApp);
             BigDecimal projection = fullMonthProjection;
 
             // if the date of the payment is on the same month as the altered credential, calculate the payment only of the offset days

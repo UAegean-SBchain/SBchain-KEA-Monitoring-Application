@@ -13,7 +13,7 @@ public class EthAppUtils {
 
     private static BigDecimal povertyLimit = BigDecimal.valueOf(300);
 
-    public static BigDecimal calculatePayment(Integer days, Case caseToBePaid, SsiApplication ssiApp){
+    public static BigDecimal calculatePayment(Integer days, BigDecimal offset, SsiApplication ssiApp){
 
         Integer numDays = monthDays(LocalDateTime.now().minusMonths(Long.valueOf(1)));
 
@@ -25,7 +25,7 @@ public class EthAppUtils {
                 .subtract(BigDecimal.valueOf(Long.parseLong(ssiApp.getUnemploymentBenefitR() == null? "0" : ssiApp.getUnemploymentBenefitR())))
                 ).divide(BigDecimal.valueOf(numDays));
 
-        BigDecimal valueToBePaid = (BigDecimal.valueOf(days).multiply(totalDailyValue)).subtract(caseToBePaid.getOffset());
+        BigDecimal valueToBePaid = (BigDecimal.valueOf(days).multiply(totalDailyValue)).subtract(offset);
 
         return valueToBePaid;
     }
