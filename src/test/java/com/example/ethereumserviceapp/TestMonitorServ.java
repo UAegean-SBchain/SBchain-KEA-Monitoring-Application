@@ -6,10 +6,18 @@
 package com.example.ethereumserviceapp;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -50,6 +58,11 @@ public class TestMonitorServ {
     @Autowired
     SsiApplicationRepository rep;
 
+    @Mock
+    EthereumService ethServ;
+
+    @Mock
+    MongoService mongoServ;
 
     @Test
     public void testGetBallance() throws IOException {
@@ -64,7 +77,7 @@ public class TestMonitorServ {
     }
 
     @Test
-    public void testStartMonitoring(@Mock EthereumService ethServ, @Mock MongoService mongoServ){
+    public void testStartMonitoringAccepted(){
 
         MonitorService monServ = new MonitorServiceImpl(mongoServ, ethServ);
 
@@ -72,19 +85,170 @@ public class TestMonitorServ {
         uuids.add("2WiYi1");
         //uuids.add("2WiYi2");
 
+        String expDateStr = String.valueOf(LocalDateTime.now().plusDays(1).toEpochSecond(ZoneOffset.UTC));
         CredsAndExp cred = new CredsAndExp();
-        cred.setExp("20202020202");
+        cred.setExp(expDateStr);
         cred.setId("2WiYi1");
         CredsAndExp[] credIdAndExp = new CredsAndExp[]{cred};
 
         Mockito.when(ethServ.getAllCaseUUID()).thenReturn(uuids);
-        Mockito.when(ethServ.getCaseByUUID("2WiYi1")).thenReturn(Optional.of(generateMockCase("2WiYi1", State.ACCEPTED)));
+        Mockito.when(ethServ.getCaseByUUID("2WiYi1")).thenReturn(Optional.of(generateMockCase("2WiYi1", State.ACCEPTED, false)));
         //Mockito.when(ethServ.getCaseByUUID("2WiYi2")).thenReturn(Optional.of(generateMockCase("2WiYi2", State.ACCEPTED)));
         //Mockito.when(mongoServ.deleteByUuid("2WiYi1")).thenReturn(null);
         Mockito.when(mongoServ.findCredentialIdsByUuid("2WiYi1")).thenReturn(credIdAndExp);
+        Mockito.when(ethServ.checkRevocationStatus(anyString())).thenReturn(false);
         Mockito.when(mongoServ.findByUuid("2WiYi1")).thenReturn(Optional.of(generateMockSsiApp("2WiYi1")));
-        
+        doNothing().when(ethServ).updateCase(any());
+
         monServ.startMonitoring();
+
+        verify(ethServ, times(1)).updateCase(any());
+        
+    }
+
+    @Test
+    public void testStartMonitoringExpired(){
+
+        MonitorService monServ = new MonitorServiceImpl(mongoServ, ethServ);
+
+        List<String> uuids = new ArrayList<>();
+        uuids.add("2WiYi1");
+        //uuids.add("2WiYi2");
+        
+        String expDateStr = String.valueOf(LocalDateTime.of(2020, 8, 5, 1, 1, 1).toEpochSecond(ZoneOffset.UTC));
+        CredsAndExp cred = new CredsAndExp();
+        cred.setExp(expDateStr);
+        cred.setId("2WiYi1");
+
+        CredsAndExp[] credIdAndExp = new CredsAndExp[]{cred};
+
+        Mockito.when(ethServ.getAllCaseUUID()).thenReturn(uuids);
+        Mockito.when(ethServ.getCaseByUUID("2WiYi1")).thenReturn(Optional.of(generateMockCase("2WiYi1", State.ACCEPTED, false)));
+        Mockito.when(mongoServ.findCredentialIdsByUuid("2WiYi1")).thenReturn(credIdAndExp);
+        doNothing().when(ethServ).updateCase(any());
+        monServ.startMonitoring();
+
+        verify(ethServ, times(1)).updateCase(any());
+        
+    }
+
+    @Test
+    public void testStartMonitoringRevoked(){
+
+        MonitorService monServ = new MonitorServiceImpl(mongoServ, ethServ);
+
+        List<String> uuids = new ArrayList<>();
+        uuids.add("2WiYi1");
+        //uuids.add("2WiYi2");
+        
+        String expDateStr = String.valueOf(LocalDateTime.now().plusDays(1).toEpochSecond(ZoneOffset.UTC));
+        CredsAndExp cred = new CredsAndExp();
+        cred.setExp(expDateStr);
+        cred.setId("2WiYi1");
+
+        CredsAndExp[] credIdAndExp = new CredsAndExp[]{cred};
+
+        Mockito.when(ethServ.getAllCaseUUID()).thenReturn(uuids);
+        Mockito.when(ethServ.getCaseByUUID("2WiYi1")).thenReturn(Optional.of(generateMockCase("2WiYi1", State.ACCEPTED, false)));
+       
+        Mockito.when(mongoServ.findCredentialIdsByUuid("2WiYi1")).thenReturn(credIdAndExp);
+        Mockito.when(ethServ.checkRevocationStatus(anyString())).thenReturn(true);
+       
+        doNothing().when(ethServ).updateCase(any());
+        monServ.startMonitoring();
+        
+        verify(ethServ, times(1)).updateCase(any());
+        
+    }
+
+    @Test
+    public void testStartMonitoringOlderThan6Months(){
+
+        MonitorService monServ = new MonitorServiceImpl(mongoServ, ethServ);
+
+        List<String> uuids = new ArrayList<>();
+        uuids.add("2WiYi1");
+        //uuids.add("2WiYi2");
+
+        String expDateStr = String.valueOf(LocalDateTime.now().plusDays(1).toEpochSecond(ZoneOffset.UTC));
+        CredsAndExp cred = new CredsAndExp();
+        cred.setExp(expDateStr);
+        cred.setId("2WiYi1");
+        CredsAndExp[] credIdAndExp = new CredsAndExp[]{cred};
+
+        Mockito.when(ethServ.getAllCaseUUID()).thenReturn(uuids);
+        Mockito.when(ethServ.getCaseByUUID("2WiYi1")).thenReturn(Optional.of(generateMockCase("2WiYi1", State.ACCEPTED, true)));
+
+        Mockito.when(mongoServ.findCredentialIdsByUuid("2WiYi1")).thenReturn(credIdAndExp);
+        Mockito.when(ethServ.checkRevocationStatus(anyString())).thenReturn(false);
+        Mockito.when(mongoServ.findByUuid("2WiYi1")).thenReturn(Optional.of(generateMockSsiApp("2WiYi1")));
+        doNothing().when(ethServ).updateCase(any());
+
+        monServ.startMonitoring();
+
+        verify(ethServ, times(1)).updateCase(any());
+        
+    }
+
+    @Test
+    public void testStartMonitoringNoApplication(){
+
+        MonitorService monServ = new MonitorServiceImpl(mongoServ, ethServ);
+
+        List<String> uuids = new ArrayList<>();
+        uuids.add("2WiYi1");
+        //uuids.add("2WiYi2");
+
+        String expDateStr = String.valueOf(LocalDateTime.now().plusDays(1).toEpochSecond(ZoneOffset.UTC));
+        CredsAndExp cred = new CredsAndExp();
+        cred.setExp(expDateStr);
+        cred.setId("2WiYi1");
+        CredsAndExp[] credIdAndExp = new CredsAndExp[]{cred};
+
+        SsiApplication ssiApp = generateMockSsiApp("2WiYi1");
+        ssiApp.setHospitalized("false");
+
+        Mockito.when(ethServ.getAllCaseUUID()).thenReturn(uuids);
+        Mockito.when(ethServ.getCaseByUUID("2WiYi1")).thenReturn(Optional.of(generateMockCase("2WiYi1", State.ACCEPTED, false)));
+
+        Mockito.when(mongoServ.findCredentialIdsByUuid("2WiYi1")).thenReturn(credIdAndExp);
+        Mockito.when(ethServ.checkRevocationStatus(anyString())).thenReturn(false);
+        Mockito.when(mongoServ.findByUuid("2WiYi1")).thenReturn(Optional.of(ssiApp));
+        doNothing().when(ethServ).updateCase(any());
+
+        monServ.startMonitoring();
+
+        verify(ethServ, times(1)).updateCase(any());
+        
+    }
+
+    @Test
+    public void testStartMonitoringAppRejected(){
+
+        MonitorService monServ = new MonitorServiceImpl(mongoServ, ethServ);
+
+        List<String> uuids = new ArrayList<>();
+        uuids.add("2WiYi1");
+        //uuids.add("2WiYi2");
+
+        String expDateStr = String.valueOf(LocalDateTime.now().plusDays(1).toEpochSecond(ZoneOffset.UTC));
+        CredsAndExp cred = new CredsAndExp();
+        cred.setExp(expDateStr);
+        cred.setId("2WiYi1");
+        CredsAndExp[] credIdAndExp = new CredsAndExp[]{cred};
+        
+
+        Mockito.when(ethServ.getAllCaseUUID()).thenReturn(uuids);
+        Mockito.when(ethServ.getCaseByUUID("2WiYi1")).thenReturn(Optional.of(generateMockCase("2WiYi1", State.ACCEPTED, false)));
+
+        Mockito.when(mongoServ.findCredentialIdsByUuid("2WiYi1")).thenReturn(credIdAndExp);
+        Mockito.when(ethServ.checkRevocationStatus(anyString())).thenReturn(false);
+        Mockito.when(mongoServ.findByUuid("2WiYi1")).thenReturn(Optional.empty());
+        doNothing().when(ethServ).updateCase(any());
+
+        monServ.startMonitoring();
+
+        verify(ethServ, times(1)).updateCase(any());
         
     }
 
@@ -102,7 +266,7 @@ public class TestMonitorServ {
         return ssiApp;
     }
 
-    private Case generateMockCase(String uuid, State state){
+    private Case generateMockCase(String uuid, State state, Boolean isOld){
         Case monitoredCase = new Case();
 
         monitoredCase.setDate(LocalDateTime.of(2020, 9, 10, 1, 1, 1));
@@ -110,6 +274,9 @@ public class TestMonitorServ {
         monitoredCase.setUuid(uuid);
 
         LinkedHashMap<LocalDateTime, State> history = new LinkedHashMap<>();
+        if(isOld){
+            history.put(LocalDateTime.of(2020, 1, 1, 1, 1), State.ACCEPTED);
+        }
         history.put(LocalDateTime.of(2020, 7, 1, 1, 1), State.ACCEPTED);
         history.put(LocalDateTime.of(2020, 7, 2, 1, 1), State.ACCEPTED);
         history.put(LocalDateTime.of(2020, 7, 3, 1, 1), State.ACCEPTED);
@@ -186,7 +353,7 @@ public class TestMonitorServ {
         paymentHistory.add(payment1);
         paymentHistory.add(payment2);
         monitoredCase.setPaymentHistory(paymentHistory);
-        monitoredCase.setOffset(BigDecimal.valueOf(0));
+        monitoredCase.setOffset(BigDecimal.valueOf(3));
 
         return monitoredCase;
     }
