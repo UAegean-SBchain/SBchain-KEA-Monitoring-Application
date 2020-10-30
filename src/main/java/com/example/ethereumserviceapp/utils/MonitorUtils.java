@@ -36,7 +36,7 @@ public class MonitorUtils extends EthAppUtils{
             ssiApp.getTaxisFamilyName();
             ssiApp.getTaxisFirstName();
 
-            if (employmentStatus.equals("unemployed") || totalIncome < Long.valueOf(10000) || hospitalized.equals("true")) {
+            if (employmentStatus.equals("unemployed") && totalIncome < Long.valueOf(10000) && hospitalized.equals("true")) {
                 return true;
             }
         } catch (Exception e) {

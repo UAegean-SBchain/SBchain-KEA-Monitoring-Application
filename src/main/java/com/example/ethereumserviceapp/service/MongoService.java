@@ -5,10 +5,12 @@
  */
 package com.example.ethereumserviceapp.service;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 import com.example.ethereumserviceapp.model.CredsAndExp;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
-import java.util.List;
-import java.util.Optional;
 
 /**
  *
@@ -27,6 +29,12 @@ public interface MongoService {
     public List<SsiApplication> findAll();
 
     public CredsAndExp[] findCredentialIdsByUuid(String uuid);
+
+    public List<SsiApplication> findByMeterNumber(String meterNumber);
+
+    public List<SsiApplication> findByIban(String iban);
+
+    public List<SsiApplication> findByHouseholdCompositionIn(Map<String, String> household);
 
     public void deleteByUuid(String uuid);
 }

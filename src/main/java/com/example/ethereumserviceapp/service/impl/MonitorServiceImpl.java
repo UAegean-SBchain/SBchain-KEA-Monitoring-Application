@@ -8,6 +8,7 @@ package com.example.ethereumserviceapp.service.impl;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
@@ -143,7 +144,7 @@ public class MonitorServiceImpl implements MonitorService {
                 MonitorUtils.updateOffset(theCase.get(), ssiApp);
             }
             this.ethServ.updateCase(theCase.get());
-            
+            log.info("updated case uuid :{}, date :{}, state :{}, offset:{} ", theCase.get().getUuid(), theCase.get().getDate(), theCase.get().getState(), theCase.get().getOffset());
         } else {
             log.error("cannot find case {} while trying to update it", uuid);
         }
@@ -158,9 +159,10 @@ public class MonitorServiceImpl implements MonitorService {
         for(int i = 0; i < credIdAndExp.length; i++){
             log.info("checking credential {} from case {}", credIdAndExp[i].getId(), uuid);
             //check if the credential has not expired
-            Date expiresAt = Date.from(Instant.ofEpochSecond(Long.parseLong(credIdAndExp[i].getExp())));
-            log.info("credential expires at {}", expiresAt.toString());
-            if (!expiresAt.after(new Date(System.currentTimeMillis()))) {
+            LocalDateTime expiresAt = LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.parseLong(credIdAndExp[i].getExp())), ZoneId.systemDefault());
+            //Date expiresAt = Date.from(Instant.ofEpochSecond(Long.parseLong(credIdAndExp[i].getExp())));
+            log.info("credential expires at {}", expiresAt);
+            if (!expiresAt.isAfter(LocalDateTime.now())) {
                 //if credentials have expired update case as rejected
                 updateCase(uuid, State.REJECTED, null);
                 credsOk = false;

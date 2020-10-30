@@ -1,9 +1,9 @@
 package com.example.ethereumserviceapp.utils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
-import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,7 @@ public class EthAppUtils {
 
     public static BigDecimal calculatePayment(Integer days, BigDecimal offset, SsiApplication ssiApp){
 
-        Integer numDays = monthDays(LocalDateTime.now().minusMonths(Long.valueOf(1)));
+        Integer numDays = monthDays(LocalDateTime.now().minusMonths(1));
 
         BigDecimal totalDailyValue = (
                 povertyLimit.subtract(BigDecimal.valueOf(Long.parseLong(ssiApp.getRentIncomeR())))
@@ -23,7 +23,7 @@ public class EthAppUtils {
                 .subtract(BigDecimal.valueOf(Long.parseLong(ssiApp.getMonthlyIncome() == null? "0" : ssiApp.getMonthlyIncome())))
                 .subtract(BigDecimal.valueOf(Long.parseLong(ssiApp.getOtherBenefitsR() == null? "0" : ssiApp.getOtherBenefitsR() )))
                 .subtract(BigDecimal.valueOf(Long.parseLong(ssiApp.getUnemploymentBenefitR() == null? "0" : ssiApp.getUnemploymentBenefitR())))
-                ).divide(BigDecimal.valueOf(numDays));
+                ).divide(BigDecimal.valueOf(numDays), 2, RoundingMode.HALF_UP).setScale(2, RoundingMode.HALF_UP);
 
         BigDecimal valueToBePaid = (BigDecimal.valueOf(days).multiply(totalDailyValue)).subtract(offset);
 

@@ -6,6 +6,7 @@
 package com.example.ethereumserviceapp.service.impl;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.example.ethereumserviceapp.model.ColletionOfCredentials;
@@ -78,9 +79,24 @@ public class MongoServiceImpl implements MongoService {
 
         return new CredsAndExp[0];
     }
+    
+    @Override
+    public List<SsiApplication> findByMeterNumber(String meterNumber) {
+        return this.rep.findByMeterNumber(meterNumber);
+    }
 
     @Override
-    public void deleteByUuid(String uuid){
+    public List<SsiApplication> findByIban(String iban) {
+        return this.rep.findByIban(iban);
+    }
+
+    @Override
+    public List<SsiApplication> findByHouseholdCompositionIn(Map<String, String> household) {
+        return this.rep.findByHouseholdCompositionIn(household);
+    }
+
+    @Override
+    public void deleteByUuid(String uuid) {
         rep.deleteByUuid(uuid);
     }
 
