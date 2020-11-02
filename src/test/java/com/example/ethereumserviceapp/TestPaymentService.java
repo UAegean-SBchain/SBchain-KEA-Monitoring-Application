@@ -113,11 +113,11 @@ public class TestPaymentService {
     
     private SsiApplication generateMockSsiApp(String uuid){
         SsiApplication ssiApp = new SsiApplication();
-        ssiApp.setOtherBenefitsR("5");
-        ssiApp.setUnemploymentBenefitR("5");
-        ssiApp.setErgomeR("5");
-        ssiApp.setRentIncomeR("5");
-        ssiApp.setOtherIncomeR("5");
+        // ssiApp.setOtherBenefitsR("5");
+        // ssiApp.setUnemploymentBenefitR("5");
+        // ssiApp.setErgomeR("5");
+        // ssiApp.setRentIncomeR("5");
+        // ssiApp.setOtherIncomeR("5");
         ssiApp.setUuid(uuid);
         ssiApp.setLuxury("false");
         ssiApp.setTotalIncome("10");
@@ -125,11 +125,27 @@ public class TestPaymentService {
         ssiApp.setUnemployed("true");
         ssiApp.setEmploymentStatus("unemployed");
         ssiApp.setTaxisAfm("taxisAfm");
-        Map<String, String> householdVal = new HashMap<>();
-        householdVal.put("householdKey1", "householdVal1");
-        Map[] householdArray = new Map[1];
-        householdArray[0] = householdVal;
+        //ssiApp.setSalariesR("2000");
+        ssiApp.setPensionsR("2400");
+        //ssiApp.setFreelanceR("500");
+        //ssiApp.setDepositsA("50");
+        //ssiApp.setOtherBenefitsR("480");
+        Map<String, String> householdVal1 = new HashMap<>();
+        householdVal1.put("adult1", "35");
+        Map<String, String> householdVal2 = new HashMap<>();
+        householdVal2.put("adult2", "28");
+        Map<String, String> householdVal3 = new HashMap<>();
+        householdVal3.put("adult3", "18");
+        Map<String, String> householdVal4 = new HashMap<>();
+        householdVal4.put("minor1", "10");
+        Map[] householdArray = new Map[3];
+        householdArray[0] = householdVal1;
+        householdArray[1] = householdVal2;
+        householdArray[2] = householdVal4;
+        //householdArray[3] = householdVal4;
         ssiApp.setHouseholdComposition(householdArray);
+
+        
 
         return ssiApp;
     }
@@ -161,7 +177,7 @@ public class TestPaymentService {
         }
         
         monitoredCase.setHistory(history);
-        monitoredCase.setOffset(BigDecimal.valueOf(3));
+        monitoredCase.setOffset(BigDecimal.valueOf(0));
 
         return monitoredCase;
 

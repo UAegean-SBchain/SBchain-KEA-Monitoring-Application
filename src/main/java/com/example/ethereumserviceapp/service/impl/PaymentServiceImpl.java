@@ -159,7 +159,7 @@ public class PaymentServiceImpl implements PaymentService{
             return false;
         }
         //check other benefits
-        if(BigInteger.valueOf(Long.valueOf(ssiApp.getOtherBenefitsR() == null? "0" : ssiApp.getOtherBenefitsR())).compareTo(BigInteger.valueOf(300)) > 0 ){
+        if(BigInteger.valueOf(Long.valueOf(ssiApp.getOtherBenefitsR() == null? "0" : ssiApp.getOtherBenefitsR())).compareTo(BigInteger.valueOf(500)) > 0 ){
             return false;
         }
         //check Ergome benefits

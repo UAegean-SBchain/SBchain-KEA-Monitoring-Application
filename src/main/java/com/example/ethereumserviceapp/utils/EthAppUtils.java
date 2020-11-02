@@ -3,6 +3,7 @@ package com.example.ethereumserviceapp.utils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 
@@ -11,19 +12,67 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EthAppUtils {
 
-    private static BigDecimal povertyLimit = BigDecimal.valueOf(300);
-
     public static BigDecimal calculatePayment(Integer days, BigDecimal offset, SsiApplication ssiApp){
+
+        BigDecimal paymentThresshold = BigDecimal.valueOf(0);
+        Map<String, String>[] houseHold = ssiApp.getHouseholdComposition();
+        Integer adultCount = 0;
+        Integer minorCount = 0;
+
+        for(int i=0; i<houseHold.length; i++){
+            if(Integer.valueOf(houseHold[i].entrySet().iterator().next().getValue()) >= 18){
+                adultCount++;
+            } else{
+                minorCount++;
+            }
+        }
+
+        // remove one adult because the first one has a fixed payment value of 200
+        if(adultCount == 0 && minorCount > 0){
+            minorCount = adultCount - 1;
+        } else if(adultCount == 1 && minorCount > 0){
+            minorCount--;
+        } else if ((adultCount == 1  && minorCount == 0) || adultCount >=2 ){
+            adultCount--;
+        }
+        paymentThresshold = BigDecimal.valueOf(6).multiply(BigDecimal.valueOf(200)
+            .add((BigDecimal.valueOf(adultCount).multiply(BigDecimal.valueOf(100))
+            .add(BigDecimal.valueOf(minorCount).multiply(BigDecimal.valueOf(50))))));
 
         Integer numDays = monthDays(LocalDateTime.now().minusMonths(1));
 
-        BigDecimal totalDailyValue = (
-                povertyLimit.subtract(BigDecimal.valueOf(Long.parseLong(ssiApp.getRentIncomeR())))
-                .subtract(BigDecimal.valueOf(Long.parseLong(ssiApp.getOtherIncomeR() == null? "0" : ssiApp.getOtherIncomeR())))
-                .subtract(BigDecimal.valueOf(Long.parseLong(ssiApp.getMonthlyIncome() == null? "0" : ssiApp.getMonthlyIncome())))
-                .subtract(BigDecimal.valueOf(Long.parseLong(ssiApp.getOtherBenefitsR() == null? "0" : ssiApp.getOtherBenefitsR() )))
-                .subtract(BigDecimal.valueOf(Long.parseLong(ssiApp.getUnemploymentBenefitR() == null? "0" : ssiApp.getUnemploymentBenefitR())))
-                ).divide(BigDecimal.valueOf(numDays), 2, RoundingMode.HALF_UP).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalIncome = (//salaries
+                BigDecimal.valueOf(Long.parseLong(ssiApp.getSalariesR()== null? "0" : ssiApp.getSalariesR())).subtract(BigDecimal.valueOf(Long.parseLong(ssiApp.getSalariesR()== null? "0" : ssiApp.getSalariesR())).multiply(BigDecimal.valueOf(0.2)))
+            .add( //pensions
+                BigDecimal.valueOf(Long.parseLong(ssiApp.getPensionsR() == null? "0" : ssiApp.getPensionsR()))
+            ).add(//farming
+                BigDecimal.valueOf(Long.parseLong(ssiApp.getFarmingR() == null? "0" : ssiApp.getFarmingR()))
+            ).add(//freelance
+                BigDecimal.valueOf(Long.parseLong(ssiApp.getFreelanceR() == null? "0" : ssiApp.getFreelanceR()))
+            ).add(//other benefits
+                BigDecimal.valueOf(Long.parseLong(ssiApp.getOtherBenefitsR() == null? "0" : ssiApp.getOtherBenefitsR()))
+            ).add(//deposits
+                BigDecimal.valueOf(Long.parseLong(ssiApp.getDepositsA() == null? "0" : ssiApp.getDepositsA()))
+            ).add(//domestic real estate
+                BigDecimal.valueOf(Long.parseLong(ssiApp.getDomesticRealEstateA() == null? "0" : ssiApp.getDomesticRealEstateA()))
+            ).add(//foreign real estate
+                BigDecimal.valueOf(Long.parseLong(ssiApp.getForeignRealEstateA() == null? "0" : ssiApp.getForeignRealEstateA()))
+            )
+            ).divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
+
+        if(paymentThresshold.compareTo(totalIncome)<= 0){
+            return BigDecimal.valueOf(0);
+        }
+        BigDecimal totalMonthlyValue = (paymentThresshold.subtract(totalIncome)).divide(BigDecimal.valueOf(6), 2, RoundingMode.HALF_UP);
+        //maximum monthly allowance is 900
+        if(totalMonthlyValue.compareTo(BigDecimal.valueOf(900)) > 0){
+            totalMonthlyValue = BigDecimal.valueOf(900);
+        }
+
+        if(numDays == days){
+            return totalMonthlyValue.subtract(offset);
+        }
+        BigDecimal totalDailyValue = totalMonthlyValue.divide(BigDecimal.valueOf(numDays), 2, RoundingMode.HALF_UP);
 
         BigDecimal valueToBePaid = (BigDecimal.valueOf(days).multiply(totalDailyValue)).subtract(offset);
 
