@@ -9,8 +9,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -141,7 +139,8 @@ public class MonitorServiceImpl implements MonitorService {
             theCase.get().setState(state);
             theCase.get().setDate(LocalDateTime.now());
             if(ssiApp != null){
-                MonitorUtils.updateOffset(theCase.get(), ssiApp);
+                //mock date
+                MonitorUtils.updateOffset(LocalDate.of(2020, 8, 12), theCase.get(), ssiApp);
             }
             this.ethServ.updateCase(theCase.get());
             log.info("updated case uuid :{}, date :{}, state :{}, offset:{} ", theCase.get().getUuid(), theCase.get().getDate(), theCase.get().getState(), theCase.get().getOffset());

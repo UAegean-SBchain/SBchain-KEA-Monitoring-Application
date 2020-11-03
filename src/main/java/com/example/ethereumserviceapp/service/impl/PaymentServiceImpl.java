@@ -14,7 +14,6 @@ import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.CasePayment;
 import com.example.ethereumserviceapp.model.State;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
-import com.example.ethereumserviceapp.repository.SsiApplicationRepository;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.service.MongoService;
 import com.example.ethereumserviceapp.service.PaymentService;
@@ -158,8 +157,8 @@ public class PaymentServiceImpl implements PaymentService{
         if(BigInteger.valueOf(Long.valueOf(ssiApp.getUnemploymentBenefitR() == null? "0" : ssiApp.getUnemploymentBenefitR())).compareTo(BigInteger.valueOf(300)) > 0 ){
             return false;
         }
-        //check other benefits
-        if(BigInteger.valueOf(Long.valueOf(ssiApp.getOtherBenefitsR() == null? "0" : ssiApp.getOtherBenefitsR())).compareTo(BigInteger.valueOf(500)) > 0 ){
+        //economics check
+        if(EthAppUtils.getTotalMonthlyValue(ssiApp).compareTo(BigDecimal.valueOf(0)) == 0){
             return false;
         }
         //check Ergome benefits
