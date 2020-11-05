@@ -38,15 +38,6 @@ public class PaymentServiceImpl implements PaymentService{
         this.mongoServ = mongoServ;
     }
     
-
-    // BigDecimal rentIncome = BigDecimal.valueOf(0);
-    // BigDecimal otherIncome = BigDecimal.valueOf(0);
-    // BigDecimal monthlyIncome = BigDecimal.valueOf(0);
-    // BigDecimal otherBenefits = BigDecimal.valueOf(0);
-    // BigDecimal unemploymentBenfits = BigDecimal.valueOf(0);
-
-    // BigDecimal povertyLimit = BigDecimal.valueOf(300);
-    
     @Override
     @Scheduled(cron = "0 0 0 1 * ?")
     public void startPayment(){
@@ -70,7 +61,7 @@ public class PaymentServiceImpl implements PaymentService{
                 }
                 if(startDate.isBefore(currentDate)){
                     Long acceptedDates= caseToBePaid.getHistory().entrySet().stream().filter(
-                        e -> (e.getKey().toLocalDate().isAfter(currentDate.toLocalDate().minusMonths(1)) || e.getKey().toLocalDate().isEqual(currentDate.toLocalDate().minusMonths(1))) 
+                        e -> (e.getKey().toLocalDate().compareTo(currentDate.toLocalDate().minusMonths(1)) >= 0) 
                         && e.getKey().toLocalDate().isBefore(currentDate.toLocalDate())
                         && e.getValue().equals(State.ACCEPTED)).count();
                     paymentValue = EthAppUtils.calculatePayment(acceptedDates.intValue(), caseToBePaid.getOffset(), ssiApp.get());
@@ -79,11 +70,11 @@ public class PaymentServiceImpl implements PaymentService{
                     addPayment(paymentValue, caseToBePaid, currentDate, paymentState);
                 }
             }
-            //if case is rejected then check the previous month history for days that the case was accepted
+            //if case is rejected then check the previous month history for days during which the case was accepted
             if (caseToBePaid.getState().equals(State.REJECTED) || caseToBePaid.getState().equals(State.PAUSED)) {
-                // get the number of days of the previous month that the case was accepted
+                // get the number of days of the previous month during which the case was accepted
                 Long acceptedDates= caseToBePaid.getHistory().entrySet().stream().filter(
-                        e -> (e.getKey().toLocalDate().isAfter(currentDate.toLocalDate().minusMonths(1)) || e.getKey().toLocalDate().isEqual(currentDate.toLocalDate().minusMonths(1))) 
+                        e -> (e.getKey().toLocalDate().compareTo(currentDate.toLocalDate().minusMonths(1)) >= 0) 
                         && e.getKey().toLocalDate().isBefore(currentDate.toLocalDate())
                         && e.getValue().equals(State.ACCEPTED)).count();
                 if(acceptedDates.intValue() > 0){
@@ -96,7 +87,7 @@ public class PaymentServiceImpl implements PaymentService{
                         addPayment(paymentValue, caseToBePaid, currentDate, paymentState);
                     }
                 } else if(caseToBePaid.getState().equals(State.REJECTED) ){
-                    // if the case's state is rejected and there are no days during the month tha the case was accepted delete it from the block chain 
+                    // if the case's state is rejected and there are no days during the month during which the case was accepted, delete it from the block chain 
                     ethServ.deleteCaseByUuid(uuid);
                 }
             }
@@ -107,6 +98,7 @@ public class PaymentServiceImpl implements PaymentService{
     private State paymentService(BigDecimal valueToBePaid, Case caseToBePaid){
         //mock Call to external service
         if(!mockExternalPaymentService(valueToBePaid, caseToBePaid.getUuid())){
+            caseToBePaid.setOffset(BigDecimal.valueOf(0));
             //caseToBePaid.setState(State.PAID);
             return State.FAILED;
         } 
