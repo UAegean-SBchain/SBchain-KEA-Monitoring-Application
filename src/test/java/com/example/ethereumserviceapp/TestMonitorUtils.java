@@ -158,7 +158,7 @@ public class TestMonitorUtils {
     @Test
     public void testOffsetPayment2(){
 
-        Case monitoredCase = generateCase();
+        Case monitoredCase = generateMockCase("2WiYi1", State.ACCEPTED);
         SsiApplicationTest ssiApp = generateSsiApp();
 
         //log.info("ssiApp before :{}", ssiApp);
@@ -170,133 +170,85 @@ public class TestMonitorUtils {
 
     }
 
-    private Case generateCase(){
+    @Test
+    public void testCalcualtePaymentWithoutOffset(){
+
+        Case monitoredCase = generateMockCase("2WiYi1", State.ACCEPTED);
+        SsiApplicationTest ssiApp = generateSsiApp();
+
+        //log.info("ssiApp before :{}", ssiApp);
+
+        BigDecimal payment = MonitorUtils.calculateOffset2(monitoredCase, ssiApp, BigDecimal.valueOf(130));
+
+        log.info("xxxxxxxxxxxxxxxxxxx offset :{}", payment);
+        //log.info("ssiApp after :{}", ssiApp);
+
+    }
+
+    private Case generateMockCase(String uuid, State state){
+        
         Case monitoredCase = new Case();
+        monitoredCase.setUuid(uuid);
+        monitoredCase.setDate(LocalDateTime.now().minusDays(1));
+        monitoredCase.setState(state);
         LinkedHashMap<LocalDateTime, State> history = new LinkedHashMap<>();
-        history.put(LocalDateTime.of(2020, 7, 1, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 2, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 3, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 4, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 5, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 6, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 7, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 8, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 9, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 10, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 11, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 12, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 13, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 14, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 15, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 16, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 17, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 18, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 19, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 20, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 21, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 22, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 23, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 24, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 25, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 26, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 27, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 28, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 29, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 30, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 31, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 1, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 2, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 3, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 4, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 5, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 6, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 7, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 8, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 9, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 10, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 11, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 12, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 13, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 14, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 15, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 16, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 17, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 18, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 19, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 20, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 21, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 22, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 23, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 24, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 25, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 26, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 27, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 28, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 29, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 30, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 31, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 1, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 2, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 3, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 4, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 5, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 6, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 7, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 8, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 9, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 10, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 11, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 12, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 13, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 14, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 15, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 16, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 17, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 18, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 19, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 20, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 21, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 22, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 23, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 24, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 25, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 26, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 27, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 28, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 29, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 30, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 10, 1, 1, 1), State.ACCEPTED);
-
-        monitoredCase.setHistory(history);
-
+        Integer daysOfCurrentPayment = monthDays(LocalDateTime.now().minusMonths(1));
+        Integer daysOfMinus2 = monthDays(LocalDateTime.now().minusMonths(2));
+        Integer daysOfMinus3 = monthDays(LocalDateTime.now().minusMonths(3));
+        // if(allRejected && state.equals(State.REJECTED)){
+        //     for(int i=0; i<days; i++){
+        //         history.put(LocalDateTime.now().minusDays(days-i), State.REJECTED);
+        //     }
+        // } else if(!allRejected && state.equals(State.REJECTED)) {
+        //     for(int i=0; i<days; i++){
+        //         if(i > 15){
+        //             history.put(LocalDateTime.now().minusDays(days-i), State.ACCEPTED);
+        //         }else{
+        //             history.put(LocalDateTime.now().minusDays(days-i), State.REJECTED);
+        //         }
+        //     }
+        // } else {
+        //}
+        for(int i=1; i<=daysOfMinus3; i++){
+            history.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(i), State.ACCEPTED);
+        }
+        for(int i=1; i<=daysOfMinus2; i++){
+            history.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(i), State.ACCEPTED);
+        }
+        for(int i=1; i<=daysOfCurrentPayment; i++){
+            history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.ACCEPTED);
+        }
+        
         List<CasePayment> paymentHistory = new ArrayList<>();
         CasePayment payment1 = new CasePayment();  
         payment1.setPayment(BigDecimal.valueOf(150.00));
-        payment1.setPaymentDate(LocalDateTime.of(2020, 8, 1, 0, 0, 2));
+        payment1.setPaymentDate(LocalDateTime.now().minusMonths(2).withDayOfMonth(1));
         payment1.setState(State.PAID);
         CasePayment payment2 = new CasePayment();    
         payment2.setPayment(BigDecimal.valueOf(150.00));
-        payment2.setPaymentDate(LocalDateTime.of(2020, 9, 1, 0, 0, 2));
+        payment2.setPaymentDate(LocalDateTime.now().minusMonths(1).withDayOfMonth(1));
         payment2.setState(State.PAID);
-        CasePayment payment3 = new CasePayment();    
-        payment3.setPayment(BigDecimal.valueOf(150.00));
-        payment3.setPaymentDate(LocalDateTime.of(2020, 10, 1, 0, 0, 2));
-        payment3.setState(State.PAID);
+        // CasePayment payment3 = new CasePayment();    
+        // payment3.setPayment(BigDecimal.valueOf(150.00));
+        // payment3.setPaymentDate(LocalDateTime.of(2020, 10, 1, 0, 0, 2));
+        // payment3.setState(State.PAID);
         paymentHistory.add(payment1);
         paymentHistory.add(payment2);
-        paymentHistory.add(payment3);
+        //paymentHistory.add(payment3);
         monitoredCase.setPaymentHistory(paymentHistory);
         monitoredCase.setOffset(BigDecimal.ZERO);
 
         return monitoredCase;
+
     }
 
     private SsiApplicationTest generateSsiApp(){
         SsiApplicationTest ssiApp = new SsiApplicationTest();
         ssiApp.setOtherBenefitsR("600");
         LinkedHashMap<LocalDateTime, String> otherBenHistory = new LinkedHashMap<>();
-        otherBenHistory.put(LocalDateTime.of(2020, 7, 1, 1, 1, 1), "500");
-        otherBenHistory.put(LocalDateTime.of(2020, 8, 16, 1, 1, 1), "600");
+        otherBenHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "500");
+        //otherBenHistory.put(LocalDateTime.of(2020, 6, 15, 1, 1, 1), "550");
+        otherBenHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(7), "600");
         ssiApp.setOtherBenefitsRHistory(otherBenHistory);
         // ssiApp.setUnemploymentBenefitR("5");
         // ssiApp.setErgomeR("5");
@@ -313,8 +265,9 @@ public class TestMonitorUtils {
         ssiApp.setPensionsR("2500");
 
         LinkedHashMap<LocalDateTime, String> pensionHistory = new LinkedHashMap<>();
-        pensionHistory.put(LocalDateTime.of(2020, 7, 1, 1, 1, 1), "2400");
-        pensionHistory.put(LocalDateTime.of(2020, 8, 12, 1, 1, 1), "2500");
+        pensionHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "2400");
+        pensionHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(12), "2450");
+        pensionHistory.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(12), "2500");
         ssiApp.setPensionsRHistory(pensionHistory);
         //ssiApp.setFreelanceR("500");
         //ssiApp.setDepositsA("50");
@@ -336,9 +289,159 @@ public class TestMonitorUtils {
 
         return ssiApp;
     }
-    //4.84 53.24
-    //141.67 4.57 91.4
 
-    //29.96
+    // private Case generateCase(){
+    //     Case monitoredCase = new Case();
+    //     LinkedHashMap<LocalDateTime, State> history = new LinkedHashMap<>();
+    //     history.put(LocalDateTime.of(2020, 7, 1, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 2, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 3, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 4, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 5, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 6, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 7, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 8, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 9, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 10, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 11, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 12, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 13, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 14, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 15, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 16, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 17, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 18, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 19, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 20, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 21, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 22, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 23, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 24, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 25, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 26, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 27, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 28, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 29, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 30, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 7, 31, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 1, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 2, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 3, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 4, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 5, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 6, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 7, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 8, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 9, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 10, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 11, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 12, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 13, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 14, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 15, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 16, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 17, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 18, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 19, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 20, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 21, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 22, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 23, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 24, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 25, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 26, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 27, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 28, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 29, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 30, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 8, 31, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 1, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 2, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 3, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 4, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 5, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 6, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 7, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 8, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 9, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 10, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 11, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 12, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 13, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 14, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 15, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 16, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 17, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 18, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 19, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 20, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 21, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 22, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 23, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 24, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 25, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 26, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 27, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 28, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 29, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 9, 30, 1, 1), State.ACCEPTED);
+    //     history.put(LocalDateTime.of(2020, 10, 1, 1, 1), State.ACCEPTED);
+
+    //     monitoredCase.setHistory(history);
+
+    //     List<CasePayment> paymentHistory = new ArrayList<>();
+    //     CasePayment payment1 = new CasePayment();  
+    //     payment1.setPayment(BigDecimal.valueOf(150.00));
+    //     payment1.setPaymentDate(LocalDateTime.of(2020, 8, 1, 0, 0, 2));
+    //     payment1.setState(State.PAID);
+    //     CasePayment payment2 = new CasePayment();    
+    //     payment2.setPayment(BigDecimal.valueOf(150.00));
+    //     payment2.setPaymentDate(LocalDateTime.of(2020, 9, 1, 0, 0, 2));
+    //     payment2.setState(State.PAID);
+    //     // CasePayment payment3 = new CasePayment();    
+    //     // payment3.setPayment(BigDecimal.valueOf(150.00));
+    //     // payment3.setPaymentDate(LocalDateTime.of(2020, 10, 1, 0, 0, 2));
+    //     // payment3.setState(State.PAID);
+    //     paymentHistory.add(payment1);
+    //     paymentHistory.add(payment2);
+    //     //paymentHistory.add(payment3);
+    //     monitoredCase.setPaymentHistory(paymentHistory);
+    //     monitoredCase.setOffset(BigDecimal.ZERO);
+
+    //     return monitoredCase;
+    // }
+
+    
+
+    private Integer monthDays(LocalDateTime date) {
+
+        int month = date.getMonthValue();
+        int year = date.getYear();
+        int numDays = 0;
+
+        switch (month) {
+            case 1: case 3: case 5:
+            case 7: case 8: case 10:
+            case 12:
+                numDays = 31;
+                break;
+            case 4: case 6:
+            case 9: case 11:
+                numDays = 30;
+                break;
+            case 2:
+                if (((year % 4 == 0) && 
+                     !(year % 100 == 0))
+                     || (year % 400 == 0))
+                    numDays = 29;
+                else
+                    numDays = 28;
+                break;
+            default:
+                log.error("Invalid month.");
+                break;
+        }
+        return numDays;
+    }
 
 }
