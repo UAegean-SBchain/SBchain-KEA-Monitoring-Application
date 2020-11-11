@@ -1,6 +1,7 @@
-package com.example.ethereumserviceapp.utils;
+package com.example.ethereumserviceapp.model;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -15,4 +16,6 @@ public class PaymentCredential {
     private String name;
     private String value;
     private Integer days;
+    private String afm;
+    private List<HouseholdMember> household;
 }

@@ -11,6 +11,7 @@ import java.util.Map;
 
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.CasePayment;
+import com.example.ethereumserviceapp.model.HouseholdMember;
 import com.example.ethereumserviceapp.model.State;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.model.entities.SsiApplicationTest;
@@ -26,144 +27,23 @@ import lombok.extern.slf4j.Slf4j;
 public class TestMonitorUtils {
 
     @Test
-    public void testOffsetPayment(){
-        Case monitoredCase = new Case();
-        LinkedHashMap<LocalDateTime, State> history = new LinkedHashMap<>();
-        history.put(LocalDateTime.of(2020, 7, 1, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 2, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 3, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 4, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 5, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 6, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 7, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 8, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 9, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 10, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 11, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 12, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 13, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 14, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 15, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 16, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 17, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 18, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 19, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 20, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 21, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 22, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 23, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 24, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 25, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 26, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 27, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 28, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 29, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 30, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 7, 31, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 1, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 2, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 3, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 4, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 5, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 6, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 7, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 8, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 9, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 10, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 11, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 12, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 13, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 14, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 15, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 16, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 17, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 18, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 19, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 20, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 21, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 22, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 23, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 24, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 25, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 26, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 27, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 28, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 29, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 30, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 8, 31, 1, 1), State.ACCEPTED);
-        history.put(LocalDateTime.of(2020, 9, 1, 1, 1), State.ACCEPTED);
-
-        monitoredCase.setHistory(history);
-
-        List<CasePayment> paymentHistory = new ArrayList<>();
-        CasePayment payment1 = new CasePayment();  
-        payment1.setPayment(BigDecimal.valueOf(150.00));
-        payment1.setPaymentDate(LocalDateTime.of(2020, 8, 1, 0, 0, 2));
-        CasePayment payment2 = new CasePayment();    
-        payment2.setPayment(BigDecimal.valueOf(150.00));
-        payment2.setPaymentDate(LocalDateTime.of(2020, 9, 1, 0, 0, 2));
-        paymentHistory.add(payment1);
-        paymentHistory.add(payment2);
-        monitoredCase.setPaymentHistory(paymentHistory);
-        monitoredCase.setOffset(BigDecimal.valueOf(0));
-
-        SsiApplication ssiApp = new SsiApplication();
-        // ssiApp.setOtherBenefitsR("5");
-        // ssiApp.setUnemploymentBenefitR("5");
-        // ssiApp.setErgomeR("5");
-        // ssiApp.setRentIncomeR("5");
-        // ssiApp.setOtherIncomeR("5");
-        //ssiApp.setUuid(uuid);
-        ssiApp.setLuxury("false");
-        ssiApp.setTotalIncome("10");
-        ssiApp.setHospitalized("true");
-        ssiApp.setUnemployed("true");
-        ssiApp.setEmploymentStatus("unemployed");
-        ssiApp.setTaxisAfm("taxisAfm");
-        //ssiApp.setSalariesR("2000");
-        ssiApp.setPensionsR("2400");
-        //ssiApp.setFreelanceR("500");
-        //ssiApp.setDepositsA("50");
-        //ssiApp.setOtherBenefitsR("480");
-        Map<String, String> householdVal1 = new HashMap<>();
-        householdVal1.put("adult1", "35");
-        Map<String, String> householdVal2 = new HashMap<>();
-        householdVal2.put("adult2", "28");
-        Map<String, String> householdVal3 = new HashMap<>();
-        householdVal3.put("adult3", "18");
-        Map<String, String> householdVal4 = new HashMap<>();
-        householdVal4.put("minor1", "10");
-        Map[] householdArray = new Map[3];
-        householdArray[0] = householdVal1;
-        householdArray[1] = householdVal2;
-        householdArray[2] = householdVal4;
-        //householdArray[3] = householdVal4;
-        ssiApp.setHouseholdComposition(householdArray);
-        // BigDecimal salaries = BigDecimal.valueOf(Long.parseLong(ssiApp.getSalariesR())).subtract(BigDecimal.valueOf(Long.parseLong(ssiApp.getSalariesR())).multiply(BigDecimal.valueOf(0.2)));
-        
-        // BigDecimal pensions = BigDecimal.valueOf(Long.parseLong(ssiApp.getPensionsR()));
-
-        // BigDecimal farming = BigDecimal.valueOf(Long.parseLong(ssiApp.getFarmingR()));
-        // BigDecimal freelance = BigDecimal.valueOf(Long.parseLong(ssiApp.getFreelanceR()));
-        // BigDecimal other = BigDecimal.valueOf(Long.parseLong(ssiApp.getOtherBenefitsR()));
-        // BigDecimal deposits = BigDecimal.valueOf(Long.parseLong(ssiApp.getDepositsA()));
-        // BigDecimal domRealEstate = BigDecimal.valueOf(Long.parseLong(ssiApp.getDomesticRealEstateA()));
-        // BigDecimal foreignRealEstate = BigDecimal.valueOf(Long.parseLong(ssiApp.getForeignRealEstateA()));
-        MonitorUtils.updateOffset(LocalDate.of(2020, 8, 12), monitoredCase, ssiApp);
-
-        log.info("offset :{}", monitoredCase.getOffset());
-
-    }
-
-    @Test
     public void testOffsetPayment2(){
 
         Case monitoredCase = generateMockCase("2WiYi1", State.ACCEPTED);
-        SsiApplicationTest ssiApp = generateSsiApp();
+        SsiApplication ssiApp1 = generateSsiApp1();
+        SsiApplication ssiApp2 = generateSsiApp2();
+        SsiApplication ssiApp3 = generateSsiApp3();
+        SsiApplication ssiApp4 = generateSsiApp4();
+
+        List<SsiApplication> ssiApps = new ArrayList<>();
+        ssiApps.add(ssiApp1);
+        ssiApps.add(ssiApp2);
+        //ssiApps.add(ssiApp3);
+        ssiApps.add(ssiApp4);
 
         //log.info("ssiApp before :{}", ssiApp);
 
-        MonitorUtils.calculateOffset(monitoredCase, ssiApp);
+        MonitorUtils.calculateOffset2(monitoredCase, ssiApp1, ssiApps);
 
         log.info("xxxxxxxxxxxxxxxxxxx offset :{}", monitoredCase.getOffset());
         //log.info("ssiApp after :{}", ssiApp);
@@ -174,13 +54,20 @@ public class TestMonitorUtils {
     public void testCalcualtePaymentWithoutOffset(){
 
         Case monitoredCase = generateMockCase("2WiYi1", State.ACCEPTED);
-        SsiApplicationTest ssiApp = generateSsiApp();
+        SsiApplication ssiApp1 = generateSsiApp1();
+        SsiApplication ssiApp2 = generateSsiApp2();
+        SsiApplication ssiApp3 = generateSsiApp3();
+        SsiApplication ssiApp4 = generateSsiApp4();
 
-        //log.info("ssiApp before :{}", ssiApp);
+        List<SsiApplication> ssiApps = new ArrayList<>();
+        ssiApps.add(ssiApp1);
+        ssiApps.add(ssiApp2);
+        //ssiApps.add(ssiApp3);
+        ssiApps.add(ssiApp4);
 
-        BigDecimal payment = MonitorUtils.calculateOffset2(monitoredCase, ssiApp, BigDecimal.valueOf(130));
+        BigDecimal payment = MonitorUtils.calculateCurrentPayment2(monitoredCase, ssiApp1, ssiApps);
 
-        log.info("xxxxxxxxxxxxxxxxxxx offset :{}", payment);
+        log.info("xxxxxxxxxxxxxxxxxxx payment :{}", payment);
         //log.info("ssiApp after :{}", ssiApp);
 
     }
@@ -195,6 +82,7 @@ public class TestMonitorUtils {
         Integer daysOfCurrentPayment = monthDays(LocalDateTime.now().minusMonths(1));
         Integer daysOfMinus2 = monthDays(LocalDateTime.now().minusMonths(2));
         Integer daysOfMinus3 = monthDays(LocalDateTime.now().minusMonths(3));
+
         // if(allRejected && state.equals(State.REJECTED)){
         //     for(int i=0; i<days; i++){
         //         history.put(LocalDateTime.now().minusDays(days-i), State.REJECTED);
@@ -218,7 +106,7 @@ public class TestMonitorUtils {
         for(int i=1; i<=daysOfCurrentPayment; i++){
             history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.ACCEPTED);
         }
-        
+        monitoredCase.setHistory(history);
         List<CasePayment> paymentHistory = new ArrayList<>();
         CasePayment payment1 = new CasePayment();  
         payment1.setPayment(BigDecimal.valueOf(150.00));
@@ -242,13 +130,13 @@ public class TestMonitorUtils {
 
     }
 
-    private SsiApplicationTest generateSsiApp(){
-        SsiApplicationTest ssiApp = new SsiApplicationTest();
-        ssiApp.setOtherBenefitsR("600");
+    private SsiApplication generateSsiApp1(){
+        SsiApplication ssiApp = new SsiApplication();
+        ssiApp.setOtherBenefitsR("150");
         LinkedHashMap<LocalDateTime, String> otherBenHistory = new LinkedHashMap<>();
-        otherBenHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "500");
+        otherBenHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "100");
         //otherBenHistory.put(LocalDateTime.of(2020, 6, 15, 1, 1, 1), "550");
-        otherBenHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(7), "600");
+        otherBenHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(7), "150");
         ssiApp.setOtherBenefitsRHistory(otherBenHistory);
         // ssiApp.setUnemploymentBenefitR("5");
         // ssiApp.setErgomeR("5");
@@ -260,158 +148,267 @@ public class TestMonitorUtils {
         ssiApp.setHospitalized("true");
         ssiApp.setUnemployed("true");
         ssiApp.setEmploymentStatus("unemployed");
-        ssiApp.setTaxisAfm("taxisAfm");
-        //ssiApp.setSalariesR("2000");
-        ssiApp.setPensionsR("2500");
+        ssiApp.setTaxisAfm("123456");
+        //ssiApp.setSalariesR("0.5");
+        ssiApp.setPensionsR("650");
 
         LinkedHashMap<LocalDateTime, String> pensionHistory = new LinkedHashMap<>();
-        pensionHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "2400");
-        pensionHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(12), "2450");
-        pensionHistory.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(12), "2500");
+        pensionHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "500");
+        pensionHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(12), "600");
+        pensionHistory.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(12), "650");
         ssiApp.setPensionsRHistory(pensionHistory);
+        
+        HouseholdMember member1 = new HouseholdMember();
+        member1.setAfm("123456");
+        member1.setName("Jimmy");
+        member1.setSurname("Page");
+        member1.setDateOfBirth("05/05/1953");
+        HouseholdMember member2 = new HouseholdMember();
+        member2.setAfm("678901");
+        member2.setName("Richie");
+        member2.setSurname("Blackmore");
+        member2.setDateOfBirth("12/08/1960");
+        HouseholdMember member3 = new HouseholdMember();
+        member3.setAfm("164582");
+        member3.setName("James");
+        member3.setSurname("Hetfield");
+        member3.setDateOfBirth("17/12/2005");
+        HouseholdMember member4 = new HouseholdMember();
+        member4.setAfm("789456");
+        member4.setName("Rory");
+        member4.setSurname("Gallagher");
+        member4.setDateOfBirth("24/10/1970");
+        List<HouseholdMember> household = new ArrayList<>();
+        household.add(member1);
+        household.add(member2);
+        household.add(member3);
+        //household.add(member4);
+
+        ssiApp.setHouseholdPrincipal(member1);
+        ssiApp.setHouseholdComposition(household);
+
+        LinkedHashMap<LocalDateTime, List<HouseholdMember>> housholdHistory = new LinkedHashMap<>();
+        List<HouseholdMember> householdH = new ArrayList<>();
+        householdH.add(member1);
+        householdH.add(member2);
+        householdH.add(member3);
+        householdH.add(member4);
+        housholdHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), householdH);
+        housholdHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(11), household);
+
+        ssiApp.setHouseholdCompositionHistory(housholdHistory);
         //ssiApp.setFreelanceR("500");
         //ssiApp.setDepositsA("50");
         //ssiApp.setOtherBenefitsR("480");
-        Map<String, String> householdVal1 = new HashMap<>();
-        householdVal1.put("adult1", "35");
-        Map<String, String> householdVal2 = new HashMap<>();
-        householdVal2.put("adult2", "28");
-        Map<String, String> householdVal3 = new HashMap<>();
-        householdVal3.put("adult3", "18");
-        Map<String, String> householdVal4 = new HashMap<>();
-        householdVal4.put("minor1", "10");
-        Map[] householdArray = new Map[3];
-        householdArray[0] = householdVal1;
-        householdArray[1] = householdVal2;
-        householdArray[2] = householdVal4;
+        // Map<String, String> householdVal1 = new HashMap<>();//34.01
+        // householdVal1.put("adult1", "35");
+        // Map<String, String> householdVal2 = new HashMap<>();
+        // householdVal2.put("adult2", "28");
+        // Map<String, String> householdVal3 = new HashMap<>();
+        // householdVal3.put("adult3", "18");
+        // Map<String, String> householdVal4 = new HashMap<>();
+        // householdVal4.put("minor1", "10");
+        // Map[] householdArray = new Map[3];
+        // householdArray[0] = householdVal1;
+        // householdArray[1] = householdVal2;
+        // householdArray[2] = householdVal4;
         //householdArray[3] = householdVal4;
-        ssiApp.setHouseholdComposition(householdArray);
+        //ssiApp.setHouseholdComposition(householdArray);
 
         return ssiApp;
     }
 
-    // private Case generateCase(){
-    //     Case monitoredCase = new Case();
-    //     LinkedHashMap<LocalDateTime, State> history = new LinkedHashMap<>();
-    //     history.put(LocalDateTime.of(2020, 7, 1, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 2, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 3, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 4, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 5, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 6, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 7, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 8, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 9, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 10, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 11, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 12, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 13, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 14, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 15, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 16, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 17, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 18, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 19, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 20, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 21, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 22, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 23, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 24, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 25, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 26, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 27, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 28, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 29, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 30, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 7, 31, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 1, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 2, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 3, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 4, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 5, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 6, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 7, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 8, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 9, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 10, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 11, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 12, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 13, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 14, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 15, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 16, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 17, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 18, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 19, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 20, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 21, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 22, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 23, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 24, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 25, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 26, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 27, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 28, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 29, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 30, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 8, 31, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 1, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 2, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 3, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 4, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 5, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 6, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 7, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 8, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 9, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 10, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 11, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 12, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 13, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 14, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 15, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 16, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 17, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 18, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 19, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 20, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 21, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 22, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 23, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 24, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 25, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 26, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 27, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 28, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 29, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 9, 30, 1, 1), State.ACCEPTED);
-    //     history.put(LocalDateTime.of(2020, 10, 1, 1, 1), State.ACCEPTED);
+    private SsiApplication generateSsiApp2(){
+        SsiApplication ssiApp = new SsiApplication();
+        ssiApp.setOtherBenefitsR("120");
+        LinkedHashMap<LocalDateTime, String> otherBenHistory = new LinkedHashMap<>();
+        otherBenHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "150");
+        //otherBenHistory.put(LocalDateTime.of(2020, 6, 15, 1, 1, 1), "550");
+        otherBenHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(7), "120");
+        ssiApp.setOtherBenefitsRHistory(otherBenHistory);
+        ssiApp.setLuxury("false");
+        ssiApp.setTotalIncome("10");
+        ssiApp.setHospitalized("true");
+        ssiApp.setUnemployed("true");
+        ssiApp.setEmploymentStatus("unemployed");
+        ssiApp.setTaxisAfm("678901");
+        //ssiApp.setSalariesR("2000");
+        ssiApp.setPensionsR("700");
 
-    //     monitoredCase.setHistory(history);
+        LinkedHashMap<LocalDateTime, String> pensionHistory = new LinkedHashMap<>();
+        pensionHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "600");
+        pensionHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(5), "700");
+        ssiApp.setPensionsRHistory(pensionHistory);
+        
+        HouseholdMember member1 = new HouseholdMember();
+        member1.setAfm("123456");
+        member1.setName("Jimmy");
+        member1.setSurname("Page");
+        member1.setDateOfBirth("05/05/1953");
+        HouseholdMember member2 = new HouseholdMember();
+        member2.setAfm("678901");
+        member2.setName("Richie");
+        member2.setSurname("Blackmore");
+        member2.setDateOfBirth("12/08/1960");
+        HouseholdMember member3 = new HouseholdMember();
+        member3.setAfm("164582");
+        member3.setName("James");
+        member3.setSurname("Hetfield");
+        member3.setDateOfBirth("17/12/2005");
+        HouseholdMember member4 = new HouseholdMember();
+        member4.setAfm("789456");
+        member4.setName("Rory");
+        member4.setSurname("Gallagher");
+        member4.setDateOfBirth("24/10/1970");
+        List<HouseholdMember> household = new ArrayList<>();
+        household.add(member1);
+        household.add(member2);
+        household.add(member3);
+        //household.add(member4);
 
-    //     List<CasePayment> paymentHistory = new ArrayList<>();
-    //     CasePayment payment1 = new CasePayment();  
-    //     payment1.setPayment(BigDecimal.valueOf(150.00));
-    //     payment1.setPaymentDate(LocalDateTime.of(2020, 8, 1, 0, 0, 2));
-    //     payment1.setState(State.PAID);
-    //     CasePayment payment2 = new CasePayment();    
-    //     payment2.setPayment(BigDecimal.valueOf(150.00));
-    //     payment2.setPaymentDate(LocalDateTime.of(2020, 9, 1, 0, 0, 2));
-    //     payment2.setState(State.PAID);
-    //     // CasePayment payment3 = new CasePayment();    
-    //     // payment3.setPayment(BigDecimal.valueOf(150.00));
-    //     // payment3.setPaymentDate(LocalDateTime.of(2020, 10, 1, 0, 0, 2));
-    //     // payment3.setState(State.PAID);
-    //     paymentHistory.add(payment1);
-    //     paymentHistory.add(payment2);
-    //     //paymentHistory.add(payment3);
-    //     monitoredCase.setPaymentHistory(paymentHistory);
-    //     monitoredCase.setOffset(BigDecimal.ZERO);
+        ssiApp.setHouseholdPrincipal(member1);
+        ssiApp.setHouseholdComposition(household);
 
-    //     return monitoredCase;
-    // }
+        LinkedHashMap<LocalDateTime, List<HouseholdMember>> housholdHistory = new LinkedHashMap<>();
+        List<HouseholdMember> householdH = new ArrayList<>();
+        householdH.add(member1);
+        householdH.add(member2);
+        householdH.add(member3);
+        householdH.add(member4);
+        housholdHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), householdH);
+        housholdHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(11), household);
 
-    
+        ssiApp.setHouseholdCompositionHistory(housholdHistory);
+
+        return ssiApp;
+    }
+
+    private SsiApplication generateSsiApp3(){
+        SsiApplication ssiApp = new SsiApplication();
+        ssiApp.setOtherBenefitsR("200");
+        LinkedHashMap<LocalDateTime, String> otherBenHistory = new LinkedHashMap<>();
+        otherBenHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "150");
+        //otherBenHistory.put(LocalDateTime.of(2020, 6, 15, 1, 1, 1), "550");
+        otherBenHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(7), "200");
+        ssiApp.setOtherBenefitsRHistory(otherBenHistory);
+        ssiApp.setLuxury("false");
+        ssiApp.setTotalIncome("10");
+        ssiApp.setHospitalized("true");
+        ssiApp.setUnemployed("true");
+        ssiApp.setEmploymentStatus("unemployed");
+        ssiApp.setTaxisAfm("164582");
+        //ssiApp.setSalariesR("2000");
+        ssiApp.setPensionsR("0");
+
+        LinkedHashMap<LocalDateTime, String> pensionHistory = new LinkedHashMap<>();
+        pensionHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "0");
+        ssiApp.setPensionsRHistory(pensionHistory);
+        
+        HouseholdMember member1 = new HouseholdMember();
+        member1.setAfm("123456");
+        member1.setName("Jimmy");
+        member1.setSurname("Page");
+        member1.setDateOfBirth("05/05/1953");
+        HouseholdMember member2 = new HouseholdMember();
+        member2.setAfm("678901");
+        member2.setName("Richie");
+        member2.setSurname("Blackmore");
+        member2.setDateOfBirth("12/08/1960");
+        HouseholdMember member3 = new HouseholdMember();
+        member3.setAfm("164582");
+        member3.setName("James");
+        member3.setSurname("Hetfield");
+        member3.setDateOfBirth("17/12/2005");
+        HouseholdMember member4 = new HouseholdMember();
+        member4.setAfm("789456");
+        member4.setName("Rory");
+        member4.setSurname("Gallagher");
+        member4.setDateOfBirth("24/10/1970");
+        List<HouseholdMember> household = new ArrayList<>();
+        household.add(member1);
+        household.add(member2);
+        household.add(member3);
+        //household.add(member4);
+
+        ssiApp.setHouseholdPrincipal(member1);
+        ssiApp.setHouseholdComposition(household);
+
+        LinkedHashMap<LocalDateTime, List<HouseholdMember>> housholdHistory = new LinkedHashMap<>();
+        List<HouseholdMember> householdH = new ArrayList<>();
+        householdH.add(member1);
+        householdH.add(member2);
+        householdH.add(member3);
+        householdH.add(member4);
+        housholdHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), householdH);
+        housholdHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(11), household);
+
+        ssiApp.setHouseholdCompositionHistory(housholdHistory);
+
+        return ssiApp;
+    }
+
+    private SsiApplication generateSsiApp4(){
+        SsiApplication ssiApp = new SsiApplication();
+        ssiApp.setOtherBenefitsR("150");
+        LinkedHashMap<LocalDateTime, String> otherBenHistory = new LinkedHashMap<>();
+        otherBenHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "150");
+        //otherBenHistory.put(LocalDateTime.of(2020, 6, 15, 1, 1, 1), "550");
+        ssiApp.setOtherBenefitsRHistory(otherBenHistory);
+        ssiApp.setLuxury("false");
+        ssiApp.setTotalIncome("10");
+        ssiApp.setHospitalized("true");
+        ssiApp.setUnemployed("true");
+        ssiApp.setEmploymentStatus("unemployed");
+        ssiApp.setTaxisAfm("789456");
+        //ssiApp.setSalariesR("2000");
+        ssiApp.setPensionsR("200");
+
+        LinkedHashMap<LocalDateTime, String> pensionHistory = new LinkedHashMap<>();
+        pensionHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "200");
+        ssiApp.setPensionsRHistory(pensionHistory);
+        
+        HouseholdMember member1 = new HouseholdMember();
+        member1.setAfm("123456");
+        member1.setName("Jimmy");
+        member1.setSurname("Page");
+        member1.setDateOfBirth("05/05/1953");
+        HouseholdMember member2 = new HouseholdMember();
+        member2.setAfm("678901");
+        member2.setName("Richie");
+        member2.setSurname("Blackmore");
+        member2.setDateOfBirth("12/08/1960");
+        HouseholdMember member3 = new HouseholdMember();
+        member3.setAfm("164582");
+        member3.setName("James");
+        member3.setSurname("Hetfield");
+        member3.setDateOfBirth("17/12/2005");
+        HouseholdMember member4 = new HouseholdMember();
+        member4.setAfm("789456");
+        member4.setName("Rory");
+        member4.setSurname("Gallagher");
+        member4.setDateOfBirth("24/10/1970");
+        List<HouseholdMember> household = new ArrayList<>();
+        household.add(member1);
+        household.add(member2);
+        household.add(member3);
+        //household.add(member4);
+
+        ssiApp.setHouseholdPrincipal(member1);
+        ssiApp.setHouseholdComposition(household);
+
+        LinkedHashMap<LocalDateTime, List<HouseholdMember>> housholdHistory = new LinkedHashMap<>();
+        List<HouseholdMember> householdH = new ArrayList<>();
+        householdH.add(member1);
+        householdH.add(member2);
+        householdH.add(member3);
+        householdH.add(member4);
+        housholdHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), householdH);
+        housholdHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(11), household);
+
+        ssiApp.setHouseholdCompositionHistory(housholdHistory);
+
+        return ssiApp;
+    }
 
     private Integer monthDays(LocalDateTime date) {
 

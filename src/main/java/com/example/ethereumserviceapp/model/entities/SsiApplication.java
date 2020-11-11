@@ -1,14 +1,20 @@
 package com.example.ethereumserviceapp.model.entities;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.example.ethereumserviceapp.model.HouseholdMember;
+
+import org.springframework.data.annotation.Id;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.springframework.data.annotation.Id;
 
 @ToString
 @Getter
@@ -101,9 +107,19 @@ public class SsiApplication {
     private String foreignRealEstateA;
     private String vehicleValueA;
     private String investmentsA;
+    private LinkedHashMap<LocalDateTime, String> salariesRHistory;
+    private LinkedHashMap<LocalDateTime, String> pensionsRHistory;
+    private LinkedHashMap<LocalDateTime, String> freelanceRHistory;
+    private LinkedHashMap<LocalDateTime, String> otherBenefitsRHistory;
+    private LinkedHashMap<LocalDateTime, String> depositsAHistory;
+    private LinkedHashMap<LocalDateTime, String> domesticRealEstateAHistory;
+    private LinkedHashMap<LocalDateTime, String> foreignRealEstateAHistory;
 
     //household composition
-    private Map<String, String>[] householdComposition;
+    private HouseholdMember householdPrincipal;
+    private List<HouseholdMember> householdComposition;
+    //private Map<String, String>[] householdComposition;
+    private LinkedHashMap<LocalDateTime,List<HouseholdMember>> householdCompositionHistory;
 
     //income guarantee
     private String monthlyGuarantee;

@@ -15,13 +15,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.Optional;
 
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.CredsAndExp;
+import com.example.ethereumserviceapp.model.HouseholdMember;
 import com.example.ethereumserviceapp.model.State;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
-import com.example.ethereumserviceapp.model.entities.SsiApplicationTest;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.service.MongoService;
 import com.example.ethereumserviceapp.service.MonitorService;
@@ -144,9 +145,10 @@ public class MonitorServiceImpl implements MonitorService {
             theCase.get().setDate(LocalDateTime.now());
             if(ssiApp != null){
                 //TODO use new application with history when ready
-                SsiApplicationTest ssiAppTest = new SsiApplicationTest();
+                //SsiApplicationTest ssiAppTest = new SsiApplicationTest();
                 //MonitorUtils.updateOffset(LocalDate.of(2020, 8, 12), theCase.get(), ssiApp);
-                MonitorUtils.calculateOffset(theCase.get(), ssiAppTest);
+                List<SsiApplication> householdApps = mongoServ.findByTaxisAfmIn(ssiApp.getHouseholdComposition().stream().map(h -> h.getAfm()).collect(Collectors.toList()));
+                MonitorUtils.calculateOffset2(theCase.get(), ssiApp, householdApps);
             }
             this.ethServ.updateCase(theCase.get());
             log.info("updated case uuid :{}, date :{}, state :{}, offset:{} ", theCase.get().getUuid(), theCase.get().getDate(), theCase.get().getState(), theCase.get().getOffset());
@@ -168,8 +170,8 @@ public class MonitorServiceImpl implements MonitorService {
             //Date expiresAt = Date.from(Instant.ofEpochSecond(Long.parseLong(credIdAndExp[i].getExp())));
             log.info("credential expires at {}", expiresAt);
             if (!expiresAt.isAfter(LocalDateTime.now())) {
-                //if credentials have expired update case as rejected
-                updateCase(uuid, State.REJECTED, null);
+                //if credentials have expired update case as suspended(paused)
+                updateCase(uuid, State.PAUSED, null);
                 credsOk = false;
                 break;
             }
@@ -189,14 +191,29 @@ public class MonitorServiceImpl implements MonitorService {
 
     private Boolean checkCredentials(Case caseToBePaid, SsiApplication ssiApp){
         //mock household check
-        Map<String, String>[] houseHold = ssiApp.getHouseholdComposition();
-        if(houseHold != null){
-            for(int i = 0; i < houseHold.length; i++){
-                if(houseHold[i].entrySet().stream().anyMatch(h -> h.getValue().equals("deceased"))){
-                    return false;
-                }
-            }
+        // Map<String, String>[] houseHold = ssiApp.getHouseholdComposition();
+        // if(houseHold != null){
+        //     for(int i = 0; i < houseHold.length; i++){
+        //         if(houseHold[i].entrySet().stream().anyMatch(h -> h.getValue().equals("deceased"))){
+        //             return false;
+        //         }
+        //     }
+        // }
+        HouseholdMember principal = ssiApp.getHouseholdPrincipal();
+
+        List<HouseholdMember> household = ssiApp.getHouseholdComposition();
+        if(household == null){
+            return false;
         }
+
+        if(mongoServ.findByHouseholdPrincipalIn(household).size()>1){
+            return false;
+        }
+
+        // if(household.stream().anyMatch(h -> h.getStatus().equals("deceased"))){
+        //     return false;
+        // }
+        
         //external oaed check
         if(!oaedRegistrationCheck(ssiApp.getOaedId())){
             return false;
@@ -217,8 +234,12 @@ public class MonitorServiceImpl implements MonitorService {
         if(BigInteger.valueOf(Long.valueOf(ssiApp.getUnemploymentBenefitR() == null? "0" : ssiApp.getUnemploymentBenefitR())).compareTo(BigInteger.valueOf(300)) > 0 ){
             return false;
         }
+
+        List<SsiApplication> ssiApps = mongoServ.findByTaxisAfmIn(household.stream().map(h -> h.getAfm()).collect(Collectors.toList()));
+        SsiApplication aggregatedSsiApp = EthAppUtils.aggregateHouseholdValues(ssiApps);
+
         //economics check
-        if(EthAppUtils.getTotalMonthlyValue(ssiApp).compareTo(BigDecimal.valueOf(0)) == 0){
+        if(EthAppUtils.getTotalMonthlyValue(aggregatedSsiApp).compareTo(BigDecimal.valueOf(0)) == 0){
             return false;
         }
         //check Ergome benefits
@@ -253,16 +274,24 @@ public class MonitorServiceImpl implements MonitorService {
         }
 
         //check for duplicates in households
-        Map<String, String>[] householdArray = ssiApp.getHouseholdComposition();
-        if(householdArray != null){
-            for(int i=0; i<householdArray.length; i++){
-                Map<String, String> household = householdArray[i];
-                List<SsiApplication> hSsiApp = mongoServ.findByHouseholdCompositionIn(household);
-                if(hSsiApp.size()>1){
-                    return false;
-                }
+        // Map<String, String>[] householdArray = ssiApp.getHouseholdComposition();
+        // if(householdArray != null){
+        //     for(int i=0; i<householdArray.length; i++){
+        //         Map<String, String> household = householdArray[i];
+        //         List<SsiApplication> hSsiApp = mongoServ.findByHouseholdCompositionIn(household);
+        //         if(hSsiApp.size()>1){
+        //             return false;
+        //         }
+        //     }
+        // }
+        for(HouseholdMember member:household){
+            List<SsiApplication> householdDuplicates = mongoServ.findByHouseholdComposition(member);
+            if(householdDuplicates.size()>1){
+                return false;
             }
         }
+         
+
         //check if iban exists in other application
         if(mongoServ.findByIban(ssiApp.getIban()).size() > 1){
             return false;

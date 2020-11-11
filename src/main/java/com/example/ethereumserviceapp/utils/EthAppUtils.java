@@ -3,20 +3,138 @@ package com.example.ethereumserviceapp.utils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.Map;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import com.example.ethereumserviceapp.model.HouseholdMember;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
-import com.example.ethereumserviceapp.model.entities.SsiApplicationTest;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class EthAppUtils {
 
-    public static BigDecimal calculatePayment(Integer days, BigDecimal offset, SsiApplication ssiApp){
+    public static SsiApplication aggregateHouseholdValues(List<SsiApplication> householdApps){
+        // List<String> householdAfms = ssiApp.getHouseholdComposition().stream().map(h -> h.getAfm()).collect(Collectors.toList());
 
-        // BigDecimal paymentThresshold = BigDecimal.valueOf(0);
-        // Map<String, String>[] houseHold = ssiApp.getHouseholdComposition();
+        // List<SsiApplication> householdApss = mongoServ.findByTaxisAfmIn(householdAfms);
+        //SsiApplication ssiApp = householdApps.stream().filter(h -> h.getTaxisAfm().equals(h.getHouseholdPrincipal().getAfm())).collect(Collectors.toList()).get(0);
+        SsiApplication principalApp = householdApps.stream().filter(h -> h.getTaxisAfm().equals(h.getHouseholdPrincipal().getAfm())).collect(Collectors.toList()).get(0);
+        
+        SsiApplication ssiApp = new SsiApplication();
+
+        ssiApp.setHouseholdComposition(principalApp.getHouseholdComposition());
+        ssiApp.setTaxisAfm(principalApp.getTaxisAfm());
+        
+        ssiApp.setSalariesR(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getSalariesR()== null? "0" : x.getSalariesR()).subtract(new BigDecimal(x.getSalariesR()== null? "0" : x.getSalariesR()).multiply(BigDecimal.valueOf(0.2))))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)));
+
+        ssiApp.setPensionsR(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getPensionsR() == null? "0" : x.getPensionsR()))
+        .reduce(BigDecimal.ZERO, BigDecimal::add)));
+
+        ssiApp.setFarmingR(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getFarmingR() == null? "0" : x.getFarmingR()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)));
+
+        ssiApp.setFreelanceR(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getFreelanceR() == null? "0" : x.getFreelanceR()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)));
+
+        ssiApp.setOtherBenefitsR(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getOtherBenefitsR() == null? "0" : x.getOtherBenefitsR()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)));
+
+        ssiApp.setDepositsA(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getDepositsA() == null? "0" : x.getDepositsA()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)));
+
+        ssiApp.setDomesticRealEstateA(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getDomesticRealEstateA() == null? "0" : x.getDomesticRealEstateA()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)));
+
+        ssiApp.setForeignRealEstateA(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getForeignRealEstateA() == null? "0" : x.getForeignRealEstateA()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)));
+
+        return ssiApp;
+    }
+
+    // public static BigDecimal calculatePayment(Integer days, BigDecimal offset, SsiApplication ssiApp){
+
+    //     // BigDecimal paymentThresshold = BigDecimal.valueOf(0);
+    //     // Map<String, String>[] houseHold = ssiApp.getHouseholdComposition();
+    //     // Integer adultCount = 0;
+    //     // Integer minorCount = 0;
+
+    //     // for(int i=0; i<houseHold.length; i++){
+    //     //     if(Integer.valueOf(houseHold[i].entrySet().iterator().next().getValue()) >= 18){
+    //     //         adultCount++;
+    //     //     } else{
+    //     //         minorCount++;
+    //     //     }
+    //     // }
+
+    //     // // remove one adult because the first one has a fixed payment value of 200
+    //     // if(adultCount == 0 && minorCount > 0){
+    //     //     minorCount = adultCount - 1;
+    //     // } else if(adultCount == 1 && minorCount > 0){
+    //     //     minorCount--;
+    //     // } else if ((adultCount == 1  && minorCount == 0) || adultCount >=2 ){
+    //     //     adultCount--;
+    //     // }
+    //     // paymentThresshold = BigDecimal.valueOf(6).multiply(BigDecimal.valueOf(200)
+    //     //     .add((BigDecimal.valueOf(adultCount).multiply(BigDecimal.valueOf(100))
+    //     //     .add(BigDecimal.valueOf(minorCount).multiply(BigDecimal.valueOf(50))))));
+
+    //     Integer numDays = monthDays(LocalDate.now().minusMonths(1));
+
+    //     // BigDecimal totalIncome = (//salaries
+    //     //         BigDecimal.valueOf(Long.parseLong(ssiApp.getSalariesR()== null? "0" : ssiApp.getSalariesR())).subtract(BigDecimal.valueOf(Long.parseLong(ssiApp.getSalariesR()== null? "0" : ssiApp.getSalariesR())).multiply(BigDecimal.valueOf(0.2)))
+    //     //     .add( //pensions
+    //     //         BigDecimal.valueOf(Long.parseLong(ssiApp.getPensionsR() == null? "0" : ssiApp.getPensionsR()))
+    //     //     ).add(//farming
+    //     //         BigDecimal.valueOf(Long.parseLong(ssiApp.getFarmingR() == null? "0" : ssiApp.getFarmingR()))
+    //     //     ).add(//freelance
+    //     //         BigDecimal.valueOf(Long.parseLong(ssiApp.getFreelanceR() == null? "0" : ssiApp.getFreelanceR()))
+    //     //     ).add(//other benefits
+    //     //         BigDecimal.valueOf(Long.parseLong(ssiApp.getOtherBenefitsR() == null? "0" : ssiApp.getOtherBenefitsR()))
+    //     //     ).add(//deposits
+    //     //         BigDecimal.valueOf(Long.parseLong(ssiApp.getDepositsA() == null? "0" : ssiApp.getDepositsA()))
+    //     //     ).add(//domestic real estate
+    //     //         BigDecimal.valueOf(Long.parseLong(ssiApp.getDomesticRealEstateA() == null? "0" : ssiApp.getDomesticRealEstateA()))
+    //     //     ).add(//foreign real estate
+    //     //         BigDecimal.valueOf(Long.parseLong(ssiApp.getForeignRealEstateA() == null? "0" : ssiApp.getForeignRealEstateA()))
+    //     //     )
+    //     //     ).divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
+
+    //     // if(paymentThresshold.compareTo(totalIncome)<= 0){
+    //     //     return BigDecimal.valueOf(0);
+    //     // }
+    //     // BigDecimal totalMonthlyValue = (paymentThresshold.subtract(totalIncome)).divide(BigDecimal.valueOf(6), 2, RoundingMode.HALF_UP);
+
+    //     BigDecimal totalMonthlyValue = getTotalMonthlyValue(ssiApp);
+
+    //     //maximum monthly allowance is 900
+    //     if(totalMonthlyValue.compareTo(BigDecimal.valueOf(900)) > 0){
+    //         totalMonthlyValue = BigDecimal.valueOf(900);
+    //     }
+
+    //     if(numDays == days){
+    //         return totalMonthlyValue;
+    //         //return totalMonthlyValue.subtract(offset);
+    //     }
+    //     BigDecimal totalDailyValue = totalMonthlyValue.divide(BigDecimal.valueOf(numDays), 2, RoundingMode.HALF_UP);
+
+    //     //BigDecimal valueToBePaid = (BigDecimal.valueOf(days).multiply(totalDailyValue)).subtract(offset);
+    //     BigDecimal valueToBePaid = BigDecimal.valueOf(days).multiply(totalDailyValue);
+
+    //     return valueToBePaid;
+    // }
+    static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    //public static final Function<HouseholdMember, Integer> calculateAge = f -> Period.between(LocalDate.parse(f.getDateOfBirth(), formatter), LocalDate).getYears();
+
+    public static BigDecimal getTotalMonthlyValue(SsiApplication ssiApp){
+        BigDecimal paymentThresshold = BigDecimal.valueOf(0);
+        //Map<String, String>[] houseHold = ssiApp.getHouseholdComposition();
+        List<HouseholdMember> household = ssiApp.getHouseholdComposition();
         // Integer adultCount = 0;
         // Integer minorCount = 0;
 
@@ -27,77 +145,11 @@ public class EthAppUtils {
         //         minorCount++;
         //     }
         // }
+        final LocalDate referenceDate= LocalDate.now();
 
-        // // remove one adult because the first one has a fixed payment value of 200
-        // if(adultCount == 0 && minorCount > 0){
-        //     minorCount = adultCount - 1;
-        // } else if(adultCount == 1 && minorCount > 0){
-        //     minorCount--;
-        // } else if ((adultCount == 1  && minorCount == 0) || adultCount >=2 ){
-        //     adultCount--;
-        // }
-        // paymentThresshold = BigDecimal.valueOf(6).multiply(BigDecimal.valueOf(200)
-        //     .add((BigDecimal.valueOf(adultCount).multiply(BigDecimal.valueOf(100))
-        //     .add(BigDecimal.valueOf(minorCount).multiply(BigDecimal.valueOf(50))))));
-
-        Integer numDays = monthDays(LocalDate.now().minusMonths(1));
-
-        // BigDecimal totalIncome = (//salaries
-        //         BigDecimal.valueOf(Long.parseLong(ssiApp.getSalariesR()== null? "0" : ssiApp.getSalariesR())).subtract(BigDecimal.valueOf(Long.parseLong(ssiApp.getSalariesR()== null? "0" : ssiApp.getSalariesR())).multiply(BigDecimal.valueOf(0.2)))
-        //     .add( //pensions
-        //         BigDecimal.valueOf(Long.parseLong(ssiApp.getPensionsR() == null? "0" : ssiApp.getPensionsR()))
-        //     ).add(//farming
-        //         BigDecimal.valueOf(Long.parseLong(ssiApp.getFarmingR() == null? "0" : ssiApp.getFarmingR()))
-        //     ).add(//freelance
-        //         BigDecimal.valueOf(Long.parseLong(ssiApp.getFreelanceR() == null? "0" : ssiApp.getFreelanceR()))
-        //     ).add(//other benefits
-        //         BigDecimal.valueOf(Long.parseLong(ssiApp.getOtherBenefitsR() == null? "0" : ssiApp.getOtherBenefitsR()))
-        //     ).add(//deposits
-        //         BigDecimal.valueOf(Long.parseLong(ssiApp.getDepositsA() == null? "0" : ssiApp.getDepositsA()))
-        //     ).add(//domestic real estate
-        //         BigDecimal.valueOf(Long.parseLong(ssiApp.getDomesticRealEstateA() == null? "0" : ssiApp.getDomesticRealEstateA()))
-        //     ).add(//foreign real estate
-        //         BigDecimal.valueOf(Long.parseLong(ssiApp.getForeignRealEstateA() == null? "0" : ssiApp.getForeignRealEstateA()))
-        //     )
-        //     ).divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
-
-        // if(paymentThresshold.compareTo(totalIncome)<= 0){
-        //     return BigDecimal.valueOf(0);
-        // }
-        // BigDecimal totalMonthlyValue = (paymentThresshold.subtract(totalIncome)).divide(BigDecimal.valueOf(6), 2, RoundingMode.HALF_UP);
-
-        BigDecimal totalMonthlyValue = getTotalMonthlyValue(ssiApp);
-
-        //maximum monthly allowance is 900
-        if(totalMonthlyValue.compareTo(BigDecimal.valueOf(900)) > 0){
-            totalMonthlyValue = BigDecimal.valueOf(900);
-        }
-
-        if(numDays == days){
-            return totalMonthlyValue;
-            //return totalMonthlyValue.subtract(offset);
-        }
-        BigDecimal totalDailyValue = totalMonthlyValue.divide(BigDecimal.valueOf(numDays), 2, RoundingMode.HALF_UP);
-
-        //BigDecimal valueToBePaid = (BigDecimal.valueOf(days).multiply(totalDailyValue)).subtract(offset);
-        BigDecimal valueToBePaid = BigDecimal.valueOf(days).multiply(totalDailyValue);
-
-        return valueToBePaid;
-    }
-
-    public static BigDecimal getTotalMonthlyValue(SsiApplication ssiApp){
-        BigDecimal paymentThresshold = BigDecimal.valueOf(0);
-        Map<String, String>[] houseHold = ssiApp.getHouseholdComposition();
-        Integer adultCount = 0;
-        Integer minorCount = 0;
-
-        for(int i=0; i<houseHold.length; i++){
-            if(Integer.valueOf(houseHold[i].entrySet().iterator().next().getValue()) >= 18){
-                adultCount++;
-            } else{
-                minorCount++;
-            }
-        }
+        Long adults = household.stream().filter(h -> calculateAge(LocalDate.parse(h.getDateOfBirth(), formatter), referenceDate) >= 18).count();
+        Integer adultCount = adults.intValue();
+        Integer minorCount = household.size() - adultCount;
 
         // remove one adult because the first one has a fixed payment value of 200
         if(adultCount == 0 && minorCount > 0){
@@ -138,11 +190,11 @@ public class EthAppUtils {
         return (paymentThresshold.subtract(totalIncome)).divide(BigDecimal.valueOf(6), 2, RoundingMode.HALF_UP);
     }
 
-    public static BigDecimal calculatePayment2(Integer numDays, Integer days, SsiApplicationTest ssiApp, BigDecimal offset){
+    public static BigDecimal calculatePayment(Integer numDays, Integer days, SsiApplication ssiApp){
 
         //Integer numDays = monthDays(LocalDate.now().minusMonths(1));
 
-        BigDecimal totalMonthlyValue = getTotalMonthlyValue2(ssiApp);
+        BigDecimal totalMonthlyValue = getTotalMonthlyValue(ssiApp);
 
         //maximum monthly allowance is 900
         if(totalMonthlyValue.compareTo(BigDecimal.valueOf(900)) > 0){
@@ -161,19 +213,56 @@ public class EthAppUtils {
         return valueToBePaid;
     }
 
-    public static BigDecimal getTotalMonthlyValue2(SsiApplicationTest ssiApp){
-        BigDecimal paymentThresshold = BigDecimal.valueOf(0);
-        Map<String, String>[] houseHold = ssiApp.getHouseholdComposition();
-        Integer adultCount = 0;
-        Integer minorCount = 0;
+    public static BigDecimal calculatePayment2(Integer numDays, Integer days, SsiApplication ssiApp, LocalDate referenceDate){
+        log.info("AAAAAAAAAAAAAAAAAAAAAAA full month days :{}", numDays);
 
-        for(int i=0; i<houseHold.length; i++){
-            if(Integer.valueOf(houseHold[i].entrySet().iterator().next().getValue()) >= 18){
-                adultCount++;
-            } else{
-                minorCount++;
-            }
+        log.info("BBBBBBBBBBBBBBBBBBBBBBB payment days :{}", days);
+        log.info("CCCCCCCCCCCCCCCCCCCCCCC ssiApp :{}", ssiApp);
+
+        log.info("DDDDDDDDDDDDDDDDDDDDDDD referenceDate :{}", referenceDate);
+        //Integer numDays = monthDays(LocalDate.now().minusMonths(1));
+
+        BigDecimal totalMonthlyValue = getTotalMonthlyValue2(ssiApp, referenceDate);
+        log.info("EEEEEEEEEEEEEEEEEEEEEEEE total monthly value :{}", totalMonthlyValue);
+
+        //maximum monthly allowance is 900
+        if(totalMonthlyValue.compareTo(BigDecimal.valueOf(900)) > 0){
+            totalMonthlyValue = BigDecimal.valueOf(900);
         }
+
+        if(numDays == days){
+            return totalMonthlyValue;
+            //return totalMonthlyValue.subtract(offset);
+        }
+        BigDecimal totalDailyValue = totalMonthlyValue.divide(BigDecimal.valueOf(numDays), 2, RoundingMode.HALF_UP);
+
+        //BigDecimal valueToBePaid = (BigDecimal.valueOf(days).multiply(totalDailyValue)).subtract(offset);
+        BigDecimal valueToBePaid = BigDecimal.valueOf(days).multiply(totalDailyValue);
+
+        return valueToBePaid;
+    }
+
+    public static BigDecimal getTotalMonthlyValue2(SsiApplication ssiApp, LocalDate date){
+        BigDecimal paymentThresshold = BigDecimal.valueOf(0);
+        //Map<String, String>[] houseHold = ssiApp.getHouseholdComposition();
+        List<HouseholdMember> household = ssiApp.getHouseholdComposition();
+        log.info("XXXXXXXXXXXXXXXXXXXXXXXXX household :{}", household);
+        // Integer adultCount = 0;
+        // Integer minorCount = 0;
+
+        // for(int i=0; i<houseHold.length; i++){
+        //     if(Integer.valueOf(houseHold[i].entrySet().iterator().next().getValue()) >= 18){
+        //         adultCount++;
+        //     } else{
+        //         minorCount++;
+        //     }
+        // }
+        final LocalDate referenceDate = date == null? LocalDate.now(): date;
+
+        Long adults = household.stream().filter(h -> calculateAge(LocalDate.parse(h.getDateOfBirth(), formatter), referenceDate) >= 18).count();
+        log.info("YYYYYYYYYYYYYYYYYYYYYYYY adults before :{}", adults);
+        Integer adultCount = adults.intValue();
+        Integer minorCount = household.size() - adultCount;
 
         // remove one adult because the first one has a fixed payment value of 200
         if(adultCount == 0 && minorCount > 0){
@@ -185,28 +274,41 @@ public class EthAppUtils {
         } else if(adultCount == 1 && !ssiApp.getParenthood().equals("single")){
             adultCount = adultCount + minorCount -1;
         }
+        log.info("YYYYYYYYYYYYYYYYYYYYYYYY adults after :{}", adultCount);
+        log.info("YYYYYYYYYYYYYYYYYYYYYYYY minor count :{}", minorCount);
         paymentThresshold = BigDecimal.valueOf(6).multiply(BigDecimal.valueOf(200)
             .add((BigDecimal.valueOf(adultCount).multiply(BigDecimal.valueOf(100))
             .add(BigDecimal.valueOf(minorCount).multiply(BigDecimal.valueOf(50))))));
 
-        BigDecimal totalIncome = (//salaries
-                BigDecimal.valueOf(Long.parseLong(ssiApp.getSalariesR()== null? "0" : ssiApp.getSalariesR())).subtract(BigDecimal.valueOf(Long.parseLong(ssiApp.getSalariesR()== null? "0" : ssiApp.getSalariesR())).multiply(BigDecimal.valueOf(0.2)))
-            .add( //pensions
-                BigDecimal.valueOf(Long.parseLong(ssiApp.getPensionsR() == null? "0" : ssiApp.getPensionsR()))
-            ).add(//farming
-                BigDecimal.valueOf(Long.parseLong(ssiApp.getFarmingR() == null? "0" : ssiApp.getFarmingR()))
-            ).add(//freelance
-                BigDecimal.valueOf(Long.parseLong(ssiApp.getFreelanceR() == null? "0" : ssiApp.getFreelanceR()))
-            ).add(//other benefits
-                BigDecimal.valueOf(Long.parseLong(ssiApp.getOtherBenefitsR() == null? "0" : ssiApp.getOtherBenefitsR()))
-            ).add(//deposits
-                BigDecimal.valueOf(Long.parseLong(ssiApp.getDepositsA() == null? "0" : ssiApp.getDepositsA()))
-            ).add(//domestic real estate
-                BigDecimal.valueOf(Long.parseLong(ssiApp.getDomesticRealEstateA() == null? "0" : ssiApp.getDomesticRealEstateA()))
-            ).add(//foreign real estate
-                BigDecimal.valueOf(Long.parseLong(ssiApp.getForeignRealEstateA() == null? "0" : ssiApp.getForeignRealEstateA()))
-            )
-            ).divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
+            log.info("ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ paymentThresshold :{}", paymentThresshold);
+            BigDecimal salaries = new BigDecimal(ssiApp.getSalariesR()== null? "0" : ssiApp.getSalariesR()).subtract(new BigDecimal(ssiApp.getSalariesR()== null? "0" : ssiApp.getSalariesR()).multiply(BigDecimal.valueOf(0.2)));
+            log.info("111 salaries :{}", salaries);
+            BigDecimal pensions = new BigDecimal(ssiApp.getPensionsR() == null? "0" : ssiApp.getPensionsR());
+            log.info("222 pensions :{}", pensions);
+            BigDecimal farming = new BigDecimal(ssiApp.getFarmingR() == null? "0" : ssiApp.getFarmingR());
+            log.info("333 farming :{}", farming);
+            BigDecimal freelance = new BigDecimal(ssiApp.getFreelanceR() == null? "0" : ssiApp.getFreelanceR());
+            log.info("444 freelance :{}", freelance);
+            BigDecimal otherBnfts = new BigDecimal(ssiApp.getOtherBenefitsR() == null? "0" : ssiApp.getOtherBenefitsR());
+            log.info("555 otherBnfts :{}", otherBnfts);
+            BigDecimal deposits = new BigDecimal(ssiApp.getDepositsA() == null? "0" : ssiApp.getDepositsA());
+            log.info("666 deposits :{}", deposits);
+            BigDecimal domesticRe = new BigDecimal(ssiApp.getDomesticRealEstateA() == null? "0" : ssiApp.getDomesticRealEstateA());
+            log.info("777 domesticRe :{}", domesticRe);
+            BigDecimal foreignRe = new BigDecimal(ssiApp.getForeignRealEstateA() == null? "0" : ssiApp.getForeignRealEstateA());
+            log.info("888 foreignRe :{}", foreignRe);
+
+            BigDecimal totalIncome = (salaries.add( 
+                pensions).add(
+                farming).add(
+                freelance).add(
+                otherBnfts).add(
+                deposits).add(
+                domesticRe).add(
+                foreignRe)
+                ).divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
+
+        log.info("SSSSSSSSSSSSSSSSSSSSSSSSSS totalIncome :{}", totalIncome);
 
         if(paymentThresshold.compareTo(totalIncome)<= 0){
             return BigDecimal.valueOf(0);
@@ -243,6 +345,14 @@ public class EthAppUtils {
                 break;
         }
         return numDays;
+    }
+
+    private static Integer calculateAge(LocalDate dateOfBirth, LocalDate referenceDate){
+        if ((dateOfBirth != null) && (referenceDate != null)) {
+            return Period.between(dateOfBirth, referenceDate).getYears();
+        } else {
+            return 0;
+        }
     }
     
 }

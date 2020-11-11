@@ -143,7 +143,7 @@ public class TestPaymentService {
         householdArray[1] = householdVal2;
         householdArray[2] = householdVal4;
         //householdArray[3] = householdVal4;
-        ssiApp.setHouseholdComposition(householdArray);
+        //ssiApp.setHouseholdComposition(householdArray);
 
         
 

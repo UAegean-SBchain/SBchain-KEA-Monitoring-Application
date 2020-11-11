@@ -12,19 +12,25 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.CasePayment;
+import com.example.ethereumserviceapp.model.HouseholdMember;
+import com.example.ethereumserviceapp.model.PaymentCredential;
 import com.example.ethereumserviceapp.model.State;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
-import com.example.ethereumserviceapp.model.entities.SsiApplicationTest;
+import com.example.ethereumserviceapp.service.MongoService;
 
-import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -35,6 +41,13 @@ import lombok.extern.slf4j.Slf4j;
 //@Service
 public class MonitorUtils extends EthAppUtils{
 //mock checks replace with correct ones
+
+    private static MongoService mongoServ;
+
+    @Autowired
+    public MonitorUtils(MongoService mongoS) {
+        MonitorUtils.mongoServ = mongoS;
+    }
 
     public static Boolean isApplicationAccepted(SsiApplication ssiApp) {
         try {
@@ -69,108 +82,173 @@ public class MonitorUtils extends EthAppUtils{
         return true;
     }
 
-    // mock projection
-    public static void updateOffset(LocalDate credentialDate, Case monitoredCase, SsiApplication ssiApp){
+    // public static void calculateOffset(Case monitoredCase, SsiApplication ssiAppTest, List<SsiApplication> householdApps){
 
-        //Mock credential date, this illustrates a date at which a credential has been modified prior to being updated in the system
-        //LocalDate credentialDate = LocalDate.of(2020, 8, 12);
-        LocalDate startOfCredMonth = credentialDate.withDayOfMonth(1);
-        LocalDate endOfCredMonth = credentialDate.withDayOfMonth(monthDays(credentialDate));
-        
-        // this should probably call the payment calculation method and return the value that should have been paid for all paid days with the new credentials
-        //BigDecimal fullMonthProjection = BigDecimal.valueOf(100).setScale(2, RoundingMode.HALF_UP);
+    //     List<PaymentCredential> changedCredentials = alteredCredentialsList(ssiAppTest);
 
-        BigDecimal totalPayment = BigDecimal.ZERO;
-        BigDecimal projectedPayment = BigDecimal.ZERO;
+    //     if(!changedCredentials.isEmpty()){
+    //         //sort the list of altered credentials by date
+    //         List<PaymentCredential> changedCredentialsSorted = changedCredentials.stream().sorted(Comparator.comparing(PaymentCredential::getDate)).collect(Collectors.toList());
 
-        for(CasePayment payment:monitoredCase.getPaymentHistory()){
+    //         //create a map of altered credentials grouped by month, with key the start date of the month and value the credentials that were altered during this month
+    //         Map<LocalDate, List<PaymentCredential>> monthlyGroupMap = changedCredentialsSorted.stream().collect(Collectors.groupingBy(e -> e.getDate().withDayOfMonth(1).toLocalDate()));
+    //         List<CasePayment> paymentHistory = monitoredCase.getPaymentHistory().stream().sorted(Comparator.comparing(CasePayment::getPaymentDate)).collect(Collectors.toList());
             
-            //sum the payment of each month to calculate the total paid amount 
-            totalPayment = totalPayment.add(payment.getPayment());
+    //         monthlyGroupMap.entrySet().forEach(m -> {
+    //             if(m.getKey().compareTo(paymentHistory.get(0).getPaymentDate().toLocalDate()) <= 0){
+    //                 m.getValue().forEach(l ->{
+    //                     householdApps.stream().filter(h -> l.getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0);
+    //                     updateSsiApplication(l.getName(), l.getValue(), ssiAppTest);   
+    //                 });
+    //             }
+    //         });
 
-            //if the payment of the month has failed add it all as offset(don't include it the projected sum)
-            if(payment.getState().equals(State.FAILED)){
-                continue;
-            }
+    //         paymentHistory.forEach(ph -> {
+    //             LocalDate startOfMonth = ph.getPaymentDate().minusMonths(1).withDayOfMonth(1).toLocalDate();
+    //             LocalDate endOfMonth = ph.getPaymentDate().minusMonths(1).withDayOfMonth(monthDays(ph.getPaymentDate().minusMonths(1).toLocalDate())).toLocalDate();
+    //             Integer fullMonthDays = monthDays(startOfMonth);
 
-            // payment concerns the previous month of the actual date of payment
-            LocalDate paymentDate = payment.getPaymentDate().minusMonths(1).toLocalDate();
+    //             if(monthlyGroupMap.get(startOfMonth) == null && startOfMonth.isAfter(monthlyGroupMap.entrySet().iterator().next().getValue().get(0).getDate().toLocalDate())){
+                    
+    //                 Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+    //                     e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 && e.getKey().toLocalDate().compareTo(endOfMonth) <=0 && e.getValue().equals(State.ACCEPTED)).count();
+                    
+    //                 BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDays.intValue(), ssiAppTest);
+    //                 BigDecimal monthlyOffset = ph.getPayment().subtract(offsetPayment);
 
-            // update iff the month of the date is equal or after the date of the modified credential 
-            if(paymentDate.isBefore(startOfCredMonth)){
-                projectedPayment = projectedPayment.add(payment.getPayment());
-                continue; 
-            }
-            BigDecimal fullMonthProjection = calculatePayment(monthDays(paymentDate), BigDecimal.ZERO, ssiApp);
-            if(fullMonthProjection == payment.getPayment()){
-                projectedPayment = projectedPayment.add(payment.getPayment());
-                continue; 
-            }
+    //                 monitoredCase.setOffset(monitoredCase.getOffset().add(monthlyOffset));
+    //             }
 
-            // if the date of the payment is on the same month as the altered credential, calculate the payment only of the offset days
-            if(paymentDate.isBefore(endOfCredMonth)){
-           
-                Long paidDays = monitoredCase.getHistory().entrySet().stream().filter(
-                    e -> e.getKey().toLocalDate().compareTo(startOfCredMonth) >=0 && e.getKey().toLocalDate().compareTo(endOfCredMonth) <=0 && e.getValue().equals(State.ACCEPTED)).count();
+    //             if(monthlyGroupMap.get(startOfMonth)!= null){
+    //                 Long nonOffsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+    //                         e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(1).toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
+                        
+    //                 CasePayment payment = monitoredCase.getPaymentHistory().stream()
+    //                     .filter(p -> p.getPaymentDate().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(1).toLocalDate()) >= 0
+    //                     && p.getPaymentDate().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(monthDays(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate())).toLocalDate()) <= 0)
+    //                     .collect(Collectors.toList()).get(0);
 
-                Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                e -> e.getKey().toLocalDate().compareTo(credentialDate) >= 0 && e.getKey().toLocalDate().compareTo(endOfCredMonth) <=0 && e.getValue().equals(State.ACCEPTED)).count();
+    //                 BigDecimal correctedPayment = (payment.getPayment()
+    //                     .divide(BigDecimal.valueOf(monthDays(payment.getPaymentDate().toLocalDate())), 2, RoundingMode.HALF_UP))
+    //                     .multiply(BigDecimal.valueOf(nonOffsetDays));
+                    
+    //                 for(int i = 0; i< monthlyGroupMap.get(startOfMonth).size(); i++){
+                        
+    //                     if( i+1 <  monthlyGroupMap.get(startOfMonth).size() ) {
+    //                         final int innerI = i;
+    //                         Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+    //                             e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI+1).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
+                            
+    //                         updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), ssiAppTest);   
+    //                         BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDays.intValue(), ssiAppTest);
+    //                         correctedPayment = correctedPayment.add(offsetPayment);
+    //                     } else {
+    //                         final int innerI = i;
+    //                         Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+    //                             e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().withDayOfMonth(monthDays(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate())).toLocalDate()) <=0 && e.getValue().equals(State.ACCEPTED)).count();
+                            
+    //                         updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), ssiAppTest);   
+                            
+    //                         BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDays.intValue(), ssiAppTest);
+    //                         correctedPayment = correctedPayment.add(offsetPayment);
+    //                     }
+    //                 }
+
+    //                 BigDecimal monthlyOffset = ph.getPayment().subtract(correctedPayment);
+
+    //                 monitoredCase.setOffset(monitoredCase.getOffset().add(monthlyOffset));
+
+    //             }
+    //         });
+    //     }
+    // }
+
+    // public static BigDecimal calculateCurrentPayment(Case monitoredCase, SsiApplication ssiAppTest){
         
-                // Long paidDays = monitoredCase.getHistory().entrySet().stream().filter(
-                //     e -> e.getKey().getMonthValue() == credentialDate.getMonthValue() && e.getKey().isAfter(startOfCredMonth) && e.getValue().equals(State.ACCEPTED)).count();
+    //     LocalDate startOfPayment = LocalDate.now().minusMonths(1).withDayOfMonth(1);
+    //     Integer monthDays = monthDays(startOfPayment);
+    //     LocalDate endOfPayment = LocalDate.now().minusMonths(1).withDayOfMonth(monthDays);
+    //     Long acceptedDays = monitoredCase.getHistory().entrySet().stream().filter(
+    //                     e -> e.getKey().toLocalDate().compareTo(startOfPayment) >= 0 && e.getKey().toLocalDate().compareTo(endOfPayment) <=0 && e.getValue().equals(State.ACCEPTED)).count();
+                    
+    //     BigDecimal projectedPayment = calculatePayment(monthDays, acceptedDays.intValue(), ssiAppTest);
 
-                // Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                //     e -> e.getKey().getMonthValue() == credentialDate.getMonthValue() && e.getKey().getYear() == credentialDate.getYear() && e.getKey().getDayOfMonth()>=credentialDate.getDayOfMonth() && e.getValue().equals(State.ACCEPTED)).count();
-               
-                BigDecimal paymentPerDayActual = payment.getPayment().divide(BigDecimal.valueOf(paidDays), 2, RoundingMode.HALF_UP);
+    //     List<PaymentCredential> changedCredentials = alteredCredentialsList(ssiAppTest);
+        
+    //     BigDecimal correctedPayment = BigDecimal.ZERO;
 
-                projectedPayment = projectedPayment.add((BigDecimal.valueOf(paidDays - offsetDays ).multiply(paymentPerDayActual))
-                .add(BigDecimal.valueOf(offsetDays).multiply(fullMonthProjection.divide(BigDecimal.valueOf(paidDays), 2, RoundingMode.HALF_UP))));
-                
-            } else{
-                Long paidDays = monitoredCase.getHistory().entrySet().stream().filter(
-                    e -> e.getKey().toLocalDate().compareTo(paymentDate.withDayOfMonth(1)) >=0 && e.getKey().toLocalDate().compareTo(paymentDate.withDayOfMonth(monthDays(paymentDate))) <=0 && e.getValue().equals(State.ACCEPTED)).count();
+    //     if(changedCredentials.isEmpty() || !changedCredentials.stream().anyMatch(c -> c.getDate().withDayOfMonth(1).toLocalDate().equals(startOfPayment))){
+    //         return projectedPayment;
+    //     }
+    //     //sort the list of altered credentials by date
+    //     List<PaymentCredential> changedCredentialsSorted = changedCredentials.stream().sorted(Comparator.comparing(PaymentCredential::getDate)).collect(Collectors.toList());
+    //     //create a map of altered credentials grouped by month, with key the start date of the month and value the credentials that were altered during this month
+    //     Map<LocalDate, List<PaymentCredential>> monthlyGroupMap = changedCredentialsSorted.stream().collect(Collectors.groupingBy(e -> e.getDate().withDayOfMonth(1).toLocalDate()));
+        
+    //     List<CasePayment> paymentHistory = monitoredCase.getPaymentHistory().stream().sorted(Comparator.comparing(CasePayment::getPaymentDate)).collect(Collectors.toList());
+        
+    //     CasePayment currentPayment = new CasePayment();
+    //     currentPayment.setPaymentDate(LocalDateTime.now());
+    //     currentPayment.setPayment(projectedPayment);
+    //     paymentHistory.add(currentPayment);
 
-                // add the projected payment for all accepted dates during this month
-                projectedPayment = projectedPayment.add(fullMonthProjection.divide(BigDecimal.valueOf(monthDays(paymentDate)), 2, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(paidDays)));
-            } 
-        }
-        BigDecimal newOffset = totalPayment.subtract(projectedPayment);
-        monitoredCase.setOffset(monitoredCase.getOffset().add(newOffset));
-        // if the offset in the case is diffrenent than the calculated offset the update the offset 
-        // if(newOffset.compareTo(monitoredCase.getOffset()) != 0){
-        //     monitoredCase.setOffset(newOffset);
-        // }
-    }
+    //     monthlyGroupMap.entrySet().forEach(m -> {
+    //         if(m.getKey().compareTo(paymentHistory.get(0).getPaymentDate().toLocalDate()) <= 0){
+    //             m.getValue().forEach(l ->{
+    //                 updateSsiApplication(l.getName(), l.getValue(), ssiAppTest);   
+    //             });
+    //         }
+    //     });
 
-    public static void calculateCurrentMonthOffset(LocalDate credentialDate, Case monitoredCase, SsiApplication ssiApp, BigDecimal projection){
+    //     for(CasePayment payment : paymentHistory){
+    //         LocalDate startOfMonth = payment.getPaymentDate().minusMonths(1).withDayOfMonth(1).toLocalDate();
+    //         Integer fullMonthDays = monthDays(startOfMonth);
 
-        LocalDate startOfMonth = LocalDate.now().minusMonths(1).withDayOfMonth(1);
-        LocalDate endOfMonth = LocalDate.now().minusMonths(1).withDayOfMonth(monthDays(startOfMonth));
+    //         if(monthlyGroupMap.get(startOfMonth)!= null){
+    //             if(!startOfMonth.isEqual(startOfPayment)){
+    //                 continue;   
+    //             }
+    //             Long nonOffsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+    //                     e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(1).toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
+                    
+    //             correctedPayment = calculatePayment(fullMonthDays, nonOffsetDays.intValue(), ssiAppTest);
+    //             for(int i = 0; i< monthlyGroupMap.get(startOfMonth).size(); i++){
+    //                 if( i+1 <  monthlyGroupMap.get(startOfMonth).size() ) {
+    //                     if(!startOfMonth.isEqual(startOfPayment)){
+    //                         updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), ssiAppTest);
+    //                         continue;   
+    //                     }
+                    
+    //                     final int innerI = i;
+    //                     Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+    //                         e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI+1).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
+                        
+    //                     updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), ssiAppTest);   
+    //                     BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDays.intValue(), ssiAppTest);
+    //                     correctedPayment = correctedPayment.add(offsetPayment);
+    //                 } else {
+    //                     if(!startOfMonth.isEqual(startOfPayment)){
+    //                         updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), ssiAppTest); 
+    //                         continue;   
+    //                     }
+    //                     final int innerI = i;
+    //                     Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+    //                         e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().withDayOfMonth(monthDays(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate())).toLocalDate()) <=0 && e.getValue().equals(State.ACCEPTED)).count();
+                        
+    //                     updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), ssiAppTest);   
+                        
+    //                     BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDays.intValue(), ssiAppTest);
+    //                     correctedPayment = correctedPayment.add(offsetPayment);
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        if(credentialDate.compareTo(startOfMonth) >= 0){
+    //     return correctedPayment;
+    // }
 
-            Long paidDays = monitoredCase.getHistory().entrySet().stream().filter(
-                e -> e.getKey().toLocalDate().compareTo(startOfMonth) >=0 && e.getKey().toLocalDate().compareTo(endOfMonth) <=0 && e.getValue().equals(State.ACCEPTED)).count();
+    // private static List<PaymentCredential> alteredCredentialsList(SsiApplication ssiAppTest){
 
-            Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-            e -> e.getKey().toLocalDate().compareTo(credentialDate) <= 0 && e.getKey().toLocalDate().compareTo(startOfMonth) >=0 && e.getValue().equals(State.ACCEPTED)).count();
-    
-            // projection of what the payment would be with the old credential
-            BigDecimal fullMonthProjectionOld = calculatePayment(monthDays(startOfMonth), BigDecimal.ZERO, ssiApp);
-
-            BigDecimal paymentPerDayOld = fullMonthProjectionOld.divide(BigDecimal.valueOf(paidDays), 2, RoundingMode.HALF_UP);
-            BigDecimal paymentPerDayNew = projection.divide(BigDecimal.valueOf(paidDays), 2, RoundingMode.HALF_UP);
-
-            // the payment value that should be paid this month without any offset
-            BigDecimal actualPayment = paymentPerDayOld.multiply(BigDecimal.valueOf(offsetDays)).add(paymentPerDayNew.multiply(BigDecimal.valueOf(paidDays - offsetDays)));
-
-            //add the difference between the projection and the actual payment value to the offset 
-            monitoredCase.setOffset(monitoredCase.getOffset().add(projection.subtract(actualPayment)));
-        }
-    }
-
-    // public static void calculateCurrentMonthOffset2(Case monitoredCase, SsiApplicationTest ssiAppTest){
     //     List<PaymentCredential> changedCredentials = new ArrayList<>();
 
     //     Map<String, LinkedHashMap<LocalDateTime, String>> credHistoriesMap = new HashMap<>();
@@ -200,441 +278,148 @@ public class MonitorUtils extends EthAppUtils{
     //     if(!credHistoriesMap.isEmpty()){
     //         credHistoriesMap.entrySet().forEach(e -> {
     //             if(e.getValue().size()>1){
-    //                 e.getValue().entrySet().forEach(h ->{
-    //                     if(h.getKey().toLocalDate().isAfter(LocalDate.now().minusMonths(1))){
-    //                         PaymentCredential credential = new PaymentCredential();
-    //                         credential.setDate(h.getKey()); 
-    //                         credential.setValue(h.getValue());
-    //                         credential.setName(e.getKey());
-    //                         changedCredentials.add(credential);
-    //                     }
+    //                 e.getValue().entrySet().stream().skip(1).forEach(p -> {
+    //                     PaymentCredential credential = new PaymentCredential();
+    //                     credential.setDate(p.getKey()); 
+    //                     credential.setValue(p.getValue());
+    //                     credential.setName(e.getKey());
+    //                     changedCredentials.add(credential);
     //                 });
+    //                 updateSsiApplication(e.getKey(), e.getValue().entrySet().iterator().next().getValue(), ssiAppTest);
     //             }
     //         });
     //     }
 
-    //     List<PaymentCredential> changedCredentialsSorted = changedCredentials.stream().sorted(Comparator.comparing(PaymentCredential::getDate)).collect(Collectors.toList());
-    //     Map<String, List<PaymentCredential>> nameGroupMap = changedCredentialsSorted.stream().collect(Collectors.groupingBy(e -> e.getName()));
-    //     nameGroupMap.entrySet().forEach(h -> {
-    //         updateSsiApplication(h.getKey(), h.getValue().get(0).getValue(), ssiAppTest);
-    //     });
+    //     return changedCredentials;
+    // }
 
-    //     LocalDate startOfMonth = LocalDate.now().withDayOfMonth(1).minusMonths(1);
-    //     Boolean firstRun = true;
-    //     Long days = 0L;
-    //     for(PaymentCredential cred:changedCredentialsSorted){
-    //         if(firstRun){
-    //             days = monitoredCase.getHistory().entrySet().stream().filter(
-    //                 e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 && e.getKey().toLocalDate().compareTo(cred.getDate().toLocalDate()) < 0 && e.getValue().equals(State.ACCEPTED)).count();
-                    
-    //             firstRun = false;
-    //         } else {
-    //             days = monitoredCase.getHistory().entrySet().stream().filter(
-    //                 e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 && e.getKey().toLocalDate().compareTo(cred.getDate().toLocalDate()) < 0 && e.getValue().equals(State.ACCEPTED)).count();
-                
-    //         }
+    // private static void updateSsiApplication(String name, String value, SsiApplication ssiAppTest){
+    //     switch(name) {
+    //         case "pension":
+    //         ssiAppTest.setPensionsR(value);
+    //         break;
+    //         case "salaries":
+    //         ssiAppTest.setSalariesR(value);
+    //         break;
+    //         case "otherBnfts":
+    //         ssiAppTest.setOtherBenefitsR(value);
+    //         break;
+    //         case "freelance":
+    //         ssiAppTest.setFreelanceR(value);
+    //         break;
+    //         case "deposits":
+    //         ssiAppTest.setDepositsA(value);
+    //         break;
+    //         case "domesticRE":
+    //         ssiAppTest.setDomesticRealEstateA(value);
+    //         break;
+    //         case "foreignRE":
+    //         ssiAppTest.setForeignRealEstateA(value);
+    //         break;
     //     }
-
-    //     for(int i = 0; i< changedCredentialsSorted.size(); i++){
-                        
-    //         if( i+1 <  changedCredentialsSorted.size() ) {
-    //             //m.getValue().get(i).setDays(m.getValue().get(i+1).getDate().getDayOfMonth() - m.getValue().get(i).getDate().getDayOfMonth());
-            
-    //             final int innerI = i;
-    //             Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-    //                 e -> e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(i).getDate().toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(i+1).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
-                
-    //             updateSsiApplication(changedCredentialsSorted.get(i).getName(), changedCredentialsSorted.get(i).getValue(), ssiAppTest);   
-    //             BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, BigDecimal.ZERO);
-    //             correctedPayment = correctedPayment.add(offsetPayment);
-    //             log.info("yyyyyyyyyyyyyyyyyyyyyy offsetPayment :{}", offsetPayment);
-    //         } else {
-    //             final int innerI = i;
-    //             Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-    //                 e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().withDayOfMonth(monthDays(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate())).toLocalDate()) <=0 && e.getValue().equals(State.ACCEPTED)).count();
-                
-    //             updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), ssiAppTest);   
-                
-    //             BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, BigDecimal.ZERO);
-    //             correctedPayment = correctedPayment.add(offsetPayment);
-    //             log.info("zzzzzzzzzzzzzzzzzzzzzzz last offsetPayment :{}", offsetPayment);
-    //         }
-    //         log.info("fffffffffffffffffffffffffff correctedPayment:{}", correctedPayment);
-    //     }
-
-
-
-
-        // changedCredentialsSorted.forEach(s -> {
-        //     if(firstRun){
-        //         Long days = monitoredCase.getHistory().entrySet().stream().filter(
-        //                 e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 && e.getKey().toLocalDate().compareTo(s.getDate().toLocalDate()) < 0 && e.getValue().equals(State.ACCEPTED)).count();
-                    
-        //         firstRun = false;
-        //     }
-            
-        // });
-
-    //}
-
-    public static void calculateOffset(Case monitoredCase, SsiApplicationTest ssiAppTest){
+    // }
+    
+    private static List<PaymentCredential> alteredCredentialsList3(SsiApplication ssiAppTest, List<SsiApplication> householdApps){
 
         List<PaymentCredential> changedCredentials = new ArrayList<>();
 
-        Map<String, LinkedHashMap<LocalDateTime, String>> credHistoriesMap = new HashMap<>();
-        if(ssiAppTest.getPensionsRHistory()!=null){
-            credHistoriesMap.put("pension", ssiAppTest.getPensionsRHistory());
-        }
-        if(ssiAppTest.getSalariesRHistory()!=null){
-            credHistoriesMap.put("salaries", ssiAppTest.getSalariesRHistory());
-        }
-        if(ssiAppTest.getOtherBenefitsRHistory()!=null){
-            credHistoriesMap.put("otherBnfts", ssiAppTest.getOtherBenefitsRHistory());
-        }
-        if(ssiAppTest.getFreelanceRHistory()!=null){
-            credHistoriesMap.put("freelance", ssiAppTest.getFreelanceRHistory());
-        }
-        if(ssiAppTest.getDepositsAHistory()!=null){
-            credHistoriesMap.put("deposits", ssiAppTest.getDepositsAHistory());
-        }
-        if(ssiAppTest.getDomesticRealEstateAHistory()!=null){
-            credHistoriesMap.put("domesticRE", ssiAppTest.getDomesticRealEstateAHistory());
-        }
-        if(ssiAppTest.getForeignRealEstateAHistory()!=null){
-            credHistoriesMap.put("foreignRE", ssiAppTest.getForeignRealEstateAHistory());
-        }
-
-        //if there are altered credentials (credential history size > 1) set the credential date and value to the default (first value) and add it to the list of changed credentials
-        if(!credHistoriesMap.isEmpty()){
-            credHistoriesMap.entrySet().forEach(e -> {
-                if(e.getValue().size()>1){
-                    e.getValue().entrySet().stream().skip(1).forEach(p -> {
-                        PaymentCredential credential = new PaymentCredential();
-                        credential.setDate(p.getKey()); 
-                        credential.setValue(p.getValue());
-                        credential.setName(e.getKey());
-                        changedCredentials.add(credential);
-                    });
-                    updateSsiApplication(e.getKey(), e.getValue().entrySet().iterator().next().getValue(), ssiAppTest);
-                }
+        if(ssiAppTest.getHouseholdCompositionHistory()!=null){
+            ssiAppTest.getHouseholdCompositionHistory().entrySet().stream().skip(1).forEach(p -> {
+                PaymentCredential credential = new PaymentCredential();
+                credential.setDate(p.getKey()); 
+                //credential.setValue(p.getValue());
+                credential.setName("household");
+                credential.setHousehold(p.getValue());
+                changedCredentials.add(credential);
             });
+            updateSsiApplication2("household", null, ssiAppTest, ssiAppTest.getHouseholdCompositionHistory().entrySet().iterator().next().getValue());
         }
 
-        if(!changedCredentials.isEmpty()){
-            //sort the list of altered credentials by date
-            List<PaymentCredential> changedCredentialsSorted = changedCredentials.stream().sorted(Comparator.comparing(PaymentCredential::getDate)).collect(Collectors.toList());
-            log.info("ssssssssssssssssssssssss changedCredentialsSorted :{}", changedCredentialsSorted);
-            //create a map of altered credentials grouped by month, with key the start date of the month and value the credentials that were altered during this month
-            Map<LocalDate, List<PaymentCredential>> monthlyGroupMap = changedCredentialsSorted.stream().collect(Collectors.groupingBy(e -> e.getDate().withDayOfMonth(1).toLocalDate()));
-            
-            log.info("aaaaaaaaaaaaaaaaaaaaaaaa monthlyGroupMap :{}", monthlyGroupMap);
+        householdApps.forEach(h -> {
+            Map<String, LinkedHashMap<LocalDateTime, String>> credHistoriesMap = new HashMap<>();
+            if(h.getPensionsRHistory()!=null){
+                credHistoriesMap.put("pension", h.getPensionsRHistory());
+            }
+            if(h.getSalariesRHistory()!=null){
+                credHistoriesMap.put("salaries", h.getSalariesRHistory());
+            }
+            if(h.getOtherBenefitsRHistory()!=null){
+                credHistoriesMap.put("otherBnfts", h.getOtherBenefitsRHistory());
+            }
+            if(h.getFreelanceRHistory()!=null){
+                credHistoriesMap.put("freelance", h.getFreelanceRHistory());
+            }
+            if(h.getDepositsAHistory()!=null){
+                credHistoriesMap.put("deposits", h.getDepositsAHistory());
+            }
+            if(h.getDomesticRealEstateAHistory()!=null){
+                credHistoriesMap.put("domesticRE", h.getDomesticRealEstateAHistory());
+            }
+            if(h.getForeignRealEstateAHistory()!=null){
+                credHistoriesMap.put("foreignRE", h.getForeignRealEstateAHistory());
+            }
 
-            List<CasePayment> paymentHistory = monitoredCase.getPaymentHistory().stream().sorted(Comparator.comparing(CasePayment::getPaymentDate)).collect(Collectors.toList());
-            
-            // if(currentProjection != null){
-            //     CasePayment currentPayment = new CasePayment();
-            //     currentPayment.setPaymentDate(LocalDateTime.now());
-            //     currentPayment.setPayment(currentProjection);
-                
-            //     if(monitoredCase.getPaymentHistory() != null && !monitoredCase.getPaymentHistory().isEmpty()){
-                    
-            //     }
-            //     paymentHistory.add(currentPayment);
-            // }
-            
-
-            monthlyGroupMap.entrySet().forEach(m -> {
-                if(m.getKey().compareTo(paymentHistory.get(0).getPaymentDate().toLocalDate()) <= 0){
-                    m.getValue().forEach(l ->{
-                        updateSsiApplication(l.getName(), l.getValue(), ssiAppTest);   
-                    });
-                }
-            });
-
-            paymentHistory.forEach(ph -> {
-                LocalDate startOfMonth = ph.getPaymentDate().minusMonths(1).withDayOfMonth(1).toLocalDate();
-                LocalDate endOfMonth = ph.getPaymentDate().minusMonths(1).withDayOfMonth(monthDays(ph.getPaymentDate().minusMonths(1).toLocalDate())).toLocalDate();
-                Integer fullMonthDays = monthDays(startOfMonth);
-                log.info("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkk startOfMonth :{}", startOfMonth);
-log.info("jjjjjjjjjjjjjjjjjjjjjjj monthlyGroupMap.get(startOfMonth) :{}", monthlyGroupMap.get(startOfMonth));
-
-                if(monthlyGroupMap.get(startOfMonth) == null && startOfMonth.isAfter(monthlyGroupMap.entrySet().iterator().next().getValue().get(0).getDate().toLocalDate())){
-                    
-                    Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                        e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 && e.getKey().toLocalDate().compareTo(endOfMonth) <=0 && e.getValue().equals(State.ACCEPTED)).count();
-                    log.info("hhhhhhhhhhhhhhhhhhhhhhhhh after credentials offsetDays :{}", offsetDays);
-                    BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, BigDecimal.ZERO);
-                    log.info("llllllllllllllllllllllllllll after credentials offsetPayment :{}", offsetPayment);
-
-                    BigDecimal monthlyOffset = ph.getPayment().subtract(offsetPayment);
-
-                    monitoredCase.setOffset(monitoredCase.getOffset().add(monthlyOffset));
-                }
-
-                if(monthlyGroupMap.get(startOfMonth)!= null){
-                    Long nonOffsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                            e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(1).toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
-                        
-                    //BigDecimal correctedPayment = calculatePayment2(nonOffsetDays.intValue(), ssiAppTest, BigDecimal.ZERO);
-
-                    CasePayment payment = monitoredCase.getPaymentHistory().stream()
-                        .filter(p -> p.getPaymentDate().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(1).toLocalDate()) >= 0
-                        && p.getPaymentDate().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(monthDays(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate())).toLocalDate()) <= 0)
-                        .collect(Collectors.toList()).get(0);
-
-                    BigDecimal correctedPayment = (payment.getPayment()
-                        .divide(BigDecimal.valueOf(monthDays(payment.getPaymentDate().toLocalDate())), 2, RoundingMode.HALF_UP))
-                        .multiply(BigDecimal.valueOf(nonOffsetDays));
-                    log.info("gggggggggggggggggggggg corrected payment start :{}", correctedPayment);
-                    for(int i = 0; i< monthlyGroupMap.get(startOfMonth).size(); i++){
-                        
-                        if( i+1 <  monthlyGroupMap.get(startOfMonth).size() ) {
-                            //m.getValue().get(i).setDays(m.getValue().get(i+1).getDate().getDayOfMonth() - m.getValue().get(i).getDate().getDayOfMonth());
-                        
-                            final int innerI = i;
-                            Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                                e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI+1).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
-                            
-                            updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), ssiAppTest);   
-                            BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, BigDecimal.ZERO);
-                            correctedPayment = correctedPayment.add(offsetPayment);
-                            log.info("yyyyyyyyyyyyyyyyyyyyyy offsetPayment :{}", offsetPayment);
-                        } else {
-                            final int innerI = i;
-                            Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                                e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().withDayOfMonth(monthDays(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate())).toLocalDate()) <=0 && e.getValue().equals(State.ACCEPTED)).count();
-                            
-                            updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), ssiAppTest);   
-                            
-                            BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, BigDecimal.ZERO);
-                            correctedPayment = correctedPayment.add(offsetPayment);
-                            log.info("zzzzzzzzzzzzzzzzzzzzzzz last offsetPayment :{}", offsetPayment);
-                        }
-                        log.info("fffffffffffffffffffffffffff correctedPayment:{}", correctedPayment);
+            //if there are altered credentials (credential history size > 1) set the credential date and value to the default (first value) and add it to the list of changed credentials
+            if(!credHistoriesMap.isEmpty()){
+                credHistoriesMap.entrySet().forEach(e -> {
+                    if(e.getValue().size()>1){
+                        e.getValue().entrySet().stream().skip(1).forEach(p -> {
+                            PaymentCredential credential = new PaymentCredential();
+                            credential.setDate(p.getKey()); 
+                            credential.setValue(p.getValue());
+                            credential.setName(e.getKey());
+                            credential.setAfm(h.getTaxisAfm());
+                            changedCredentials.add(credential);
+                        });
+                        updateSsiApplication2(e.getKey(), e.getValue().entrySet().iterator().next().getValue(), h, null);
                     }
-
-                    BigDecimal monthlyOffset = ph.getPayment().subtract(correctedPayment);
-
-                    monitoredCase.setOffset(monitoredCase.getOffset().add(monthlyOffset));
-
-                }
-            });
-
-
-            // monthlyGroupMap.entrySet().forEach(m -> {
-            //     Long nonOffsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-            //                 e -> e.getKey().toLocalDate().compareTo(m.getValue().get(0).getDate().withDayOfMonth(1).toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(m.getValue().get(0).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
-                        
-            //     //BigDecimal correctedPayment = calculatePayment2(nonOffsetDays.intValue(), ssiAppTest, BigDecimal.ZERO);
-
-            //     CasePayment payment = monitoredCase.getPaymentHistory().stream()
-            //         .filter(p -> p.getPaymentDate().toLocalDate().compareTo(m.getValue().get(0).getDate().withDayOfMonth(1).toLocalDate()) >= 0
-            //         && p.getPaymentDate().toLocalDate().compareTo(m.getValue().get(0).getDate().withDayOfMonth(monthDays(m.getValue().get(0).getDate().toLocalDate())).toLocalDate()) <= 0)
-            //         .collect(Collectors.toList()).get(0);
-
-            //     BigDecimal correctedPayment = (payment.getPayment()
-            //         .divide(BigDecimal.valueOf(monthDays(payment.getPaymentDate().toLocalDate())), 2, RoundingMode.HALF_UP))
-            //         .multiply(BigDecimal.valueOf(nonOffsetDays));
-            //     log.info("gggggggggggggggggggggg corrected payment start :{}", correctedPayment);
-            //     for(int i = 0; i< m.getValue().size(); i++){
-                    
-            //         if( i+1 <  m.getValue().size() ) {
-            //             //m.getValue().get(i).setDays(m.getValue().get(i+1).getDate().getDayOfMonth() - m.getValue().get(i).getDate().getDayOfMonth());
-                    
-            //             final int innerI = i;
-            //             Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-            //                 e -> e.getKey().toLocalDate().compareTo(m.getValue().get(innerI).getDate().toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(m.getValue().get(innerI+1).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
-                        
-            //             updateSsiApplication(m.getValue().get(i).getName(), m.getValue().get(i).getValue(), ssiAppTest);   
-            //             BigDecimal offsetPayment = calculatePayment2(offsetDays.intValue(), ssiAppTest, BigDecimal.ZERO);
-            //             correctedPayment = correctedPayment.add(offsetPayment);
-            //             log.info("yyyyyyyyyyyyyyyyyyyyyy offsetPayment :{}", offsetPayment);
-            //         } else {
-            //             final int innerI = i;
-            //             Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-            //                 e -> e.getKey().toLocalDate().compareTo(m.getValue().get(innerI).getDate().toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(m.getValue().get(innerI).getDate().withDayOfMonth(monthDays(m.getValue().get(innerI).getDate().toLocalDate())).toLocalDate()) <=0 && e.getValue().equals(State.ACCEPTED)).count();
-                        
-            //             updateSsiApplication(m.getValue().get(i).getName(), m.getValue().get(i).getValue(), ssiAppTest);   
-                        
-            //             BigDecimal offsetPayment = calculatePayment2(offsetDays.intValue(), ssiAppTest, BigDecimal.ZERO);
-            //             correctedPayment = correctedPayment.add(offsetPayment);
-            //             log.info("zzzzzzzzzzzzzzzzzzzzzzz last offsetPayment :{}", offsetPayment);
-            //         }
-            //         log.info("fffffffffffffffffffffffffff correctedPayment:{}", correctedPayment);
-            //     }
-            // });
-        }
-    }
-
-    public static BigDecimal calculateOffset2(Case monitoredCase, SsiApplicationTest ssiAppTest, BigDecimal projectedPayment){
-
-        List<PaymentCredential> changedCredentials = new ArrayList<>();
-
-        Map<String, LinkedHashMap<LocalDateTime, String>> credHistoriesMap = new HashMap<>();
-        if(ssiAppTest.getPensionsRHistory()!=null){
-            credHistoriesMap.put("pension", ssiAppTest.getPensionsRHistory());
-        }
-        if(ssiAppTest.getSalariesRHistory()!=null){
-            credHistoriesMap.put("salaries", ssiAppTest.getSalariesRHistory());
-        }
-        if(ssiAppTest.getOtherBenefitsRHistory()!=null){
-            credHistoriesMap.put("otherBnfts", ssiAppTest.getOtherBenefitsRHistory());
-        }
-        if(ssiAppTest.getFreelanceRHistory()!=null){
-            credHistoriesMap.put("freelance", ssiAppTest.getFreelanceRHistory());
-        }
-        if(ssiAppTest.getDepositsAHistory()!=null){
-            credHistoriesMap.put("deposits", ssiAppTest.getDepositsAHistory());
-        }
-        if(ssiAppTest.getDomesticRealEstateAHistory()!=null){
-            credHistoriesMap.put("domesticRE", ssiAppTest.getDomesticRealEstateAHistory());
-        }
-        if(ssiAppTest.getForeignRealEstateAHistory()!=null){
-            credHistoriesMap.put("foreignRE", ssiAppTest.getForeignRealEstateAHistory());
-        }
-
-        //if there are altered credentials (credential history size > 1) set the credential date and value to the default (first value) and add it to the list of changed credentials
-        if(!credHistoriesMap.isEmpty()){
-            credHistoriesMap.entrySet().forEach(e -> {
-                if(e.getValue().size()>1){
-                    e.getValue().entrySet().stream().skip(1).forEach(p -> {
-                        PaymentCredential credential = new PaymentCredential();
-                        credential.setDate(p.getKey()); 
-                        credential.setValue(p.getValue());
-                        credential.setName(e.getKey());
-                        changedCredentials.add(credential);
-                    });
-                    updateSsiApplication(e.getKey(), e.getValue().entrySet().iterator().next().getValue(), ssiAppTest);
-                }
-            });
-        }
-
-        LocalDate startOfPayment = LocalDate.now().minusMonths(1).withDayOfMonth(1);
-
-        BigDecimal correctedPayment = BigDecimal.ZERO;
-
-        if(changedCredentials.isEmpty() || !changedCredentials.stream().anyMatch(c -> c.getDate().withDayOfMonth(1).toLocalDate().equals(startOfPayment))){
-            return projectedPayment;
-        }
-        //sort the list of altered credentials by date
-        List<PaymentCredential> changedCredentialsSorted = changedCredentials.stream().sorted(Comparator.comparing(PaymentCredential::getDate)).collect(Collectors.toList());
-        log.info("ssssssssssssssssssssssss changedCredentialsSorted :{}", changedCredentialsSorted);
-        //create a map of altered credentials grouped by month, with key the start date of the month and value the credentials that were altered during this month
-        Map<LocalDate, List<PaymentCredential>> monthlyGroupMap = changedCredentialsSorted.stream().collect(Collectors.groupingBy(e -> e.getDate().withDayOfMonth(1).toLocalDate()));
-        
-        log.info("aaaaaaaaaaaaaaaaaaaaaaaa monthlyGroupMap :{}", monthlyGroupMap);
-
-        List<CasePayment> paymentHistory = monitoredCase.getPaymentHistory().stream().sorted(Comparator.comparing(CasePayment::getPaymentDate)).collect(Collectors.toList());
-        
-        CasePayment currentPayment = new CasePayment();
-        currentPayment.setPaymentDate(LocalDateTime.now());
-        currentPayment.setPayment(projectedPayment);
-        
-        // if(monitoredCase.getPaymentHistory() != null && !monitoredCase.getPaymentHistory().isEmpty()){
-            
-        // }
-        paymentHistory.add(currentPayment);
-        
-
-        monthlyGroupMap.entrySet().forEach(m -> {
-            if(m.getKey().compareTo(paymentHistory.get(0).getPaymentDate().toLocalDate()) <= 0){
-                m.getValue().forEach(l ->{
-                    updateSsiApplication(l.getName(), l.getValue(), ssiAppTest);   
                 });
             }
         });
 
-        for(CasePayment payment : paymentHistory){
-            
-            LocalDate startOfMonth = payment.getPaymentDate().minusMonths(1).withDayOfMonth(1).toLocalDate();
-            //LocalDate endOfMonth = payment.getPaymentDate().minusMonths(1).withDayOfMonth(monthDays(payment.getPaymentDate().minusMonths(1).toLocalDate())).toLocalDate();
-            Integer fullMonthDays = monthDays(startOfMonth);
-            log.info("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkk startOfMonth :{}", startOfMonth);
-            log.info("jjjjjjjjjjjjjjjjjjjjjjj monthlyGroupMap.get(startOfMonth) :{}", monthlyGroupMap.get(startOfMonth));
+        
 
-            // if(monthlyGroupMap.get(startOfMonth) == null && startOfMonth.isAfter(monthlyGroupMap.entrySet().iterator().next().getValue().get(0).getDate().toLocalDate())){
-                
-            //     Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-            //         e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 && e.getKey().toLocalDate().compareTo(endOfMonth) <=0 && e.getValue().equals(State.ACCEPTED)).count();
-            //     log.info("hhhhhhhhhhhhhhhhhhhhhhhhh after credentials offsetDays :{}", offsetDays);
-            //     BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, BigDecimal.ZERO);
-            //     log.info("llllllllllllllllllllllllllll after credentials offsetPayment :{}", offsetPayment);
+        List<String> othrBnfts = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
+        List<String> pensions = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
+        log.info("ggggggggggggggggggggggggg household before any aggregation apps benefits:{}, pensions :{}", othrBnfts, pensions);
+        log.info("hhhhhhhhhhhhhhhhhhhhhhhhh ssiapp before aggregate :{}", ssiAppTest);
+        ssiAppTest = aggregateHouseholdValues(householdApps);
 
-            //     BigDecimal monthlyOffset = ph.getPayment().subtract(offsetPayment);
+        List<String> othrBnftsA = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
+        List<String> pensionsA = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
+        log.info("ggggggggggggggggggggggggg household after aggregation apps benefits:{}, pensions :{}", othrBnftsA, pensionsA);
+        log.info("hhhhhhhhhhhhhhhhhhhhhhhhh ssiapp after aggregate :{}", ssiAppTest);
 
-            //     monitoredCase.setOffset(monitoredCase.getOffset().add(monthlyOffset));
-            // }
-
-            if(monthlyGroupMap.get(startOfMonth)!= null){
-                if(!startOfMonth.isEqual(startOfPayment)){
-                    //updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), ssiAppTest);
-                    continue;   
-                }
-                Long nonOffsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                        e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(1).toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
-                    
-                correctedPayment = calculatePayment2(fullMonthDays, nonOffsetDays.intValue(), ssiAppTest, BigDecimal.ZERO);
-
-                // CasePayment payment = monitoredCase.getPaymentHistory().stream()
-                //     .filter(p -> p.getPaymentDate().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(1).toLocalDate()) >= 0
-                //     && p.getPaymentDate().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(monthDays(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate())).toLocalDate()) <= 0)
-                //     .collect(Collectors.toList()).get(0);
-
-                // BigDecimal correctedPayment = (payment.getPayment()
-                //     .divide(BigDecimal.valueOf(monthDays(payment.getPaymentDate().toLocalDate())), 2, RoundingMode.HALF_UP))
-                //     .multiply(BigDecimal.valueOf(nonOffsetDays));
-                log.info("gggggggggggggggggggggg corrected payment start :{}", correctedPayment);
-                for(int i = 0; i< monthlyGroupMap.get(startOfMonth).size(); i++){
-                    
-                    if( i+1 <  monthlyGroupMap.get(startOfMonth).size() ) {
-                        if(!startOfMonth.isEqual(startOfPayment)){
-                            updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), ssiAppTest);
-                            continue;   
-                        }
-                        //m.getValue().get(i).setDays(m.getValue().get(i+1).getDate().getDayOfMonth() - m.getValue().get(i).getDate().getDayOfMonth());
-                    
-                        final int innerI = i;
-                        Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                            e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI+1).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
-                        
-                        updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), ssiAppTest);   
-                        BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, BigDecimal.ZERO);
-                        correctedPayment = correctedPayment.add(offsetPayment);
-                        log.info("yyyyyyyyyyyyyyyyyyyyyy offsetPayment :{}", offsetPayment);
-                    } else {
-                        if(!startOfMonth.isEqual(startOfPayment)){
-                            updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), ssiAppTest); 
-                            continue;   
-                        }
-                        final int innerI = i;
-                        Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                            e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().withDayOfMonth(monthDays(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate())).toLocalDate()) <=0 && e.getValue().equals(State.ACCEPTED)).count();
-                        
-                        updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), ssiAppTest);   
-                        
-                        BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, BigDecimal.ZERO);
-                        correctedPayment = correctedPayment.add(offsetPayment);
-                        log.info("zzzzzzzzzzzzzzzzzzzzzzz last offsetPayment :{}", offsetPayment);
-                    }
-                    log.info("fffffffffffffffffffffffffff correctedPayment:{}", correctedPayment);
-                }
-
-                log.info("fffffffffffffffffffffffffff correctedPayment:{}", correctedPayment);
-
-                
-                // BigDecimal monthlyOffset = ph.getPayment().subtract(correctedPayment);
-
-                // monitoredCase.setOffset(monitoredCase.getOffset().add(monthlyOffset));
-
-            }
-        }
-
-        return correctedPayment;
+        return changedCredentials;
     }
 
+    private static List<SsiApplication> reCalculateHousehold(List<SsiApplication> householdApps, SsiApplication ssiApp ){
+        List<String> newHouseholdAfms = ssiApp.getHouseholdComposition().stream().map(h -> h.getAfm()).collect(Collectors.toList());
+        //householdApps = householdApps.stream().filter(h -> newHouseholdAfms.contains(h.getTaxisAfm())).collect(Collectors.toList());
+        List<SsiApplication> alteredHousehold = new ArrayList<>();
+        for(SsiApplication app:householdApps){
+            if(newHouseholdAfms.contains(app.getTaxisAfm())){
+                app.setHouseholdComposition(ssiApp.getHouseholdComposition());
+                alteredHousehold.add(app);
+            }
+        }
+        return alteredHousehold;
+    }
 
+    private static List<SsiApplication> reCalculateHousehold2(List<SsiApplication> householdApps, List<SsiApplication> allHouseholdApps , SsiApplication ssiApp ){
+        List<String> newHouseholdAfms = ssiApp.getHouseholdComposition().stream().map(h -> h.getAfm()).collect(Collectors.toList());
+        //householdApps = householdApps.stream().filter(h -> newHouseholdAfms.contains(h.getTaxisAfm())).collect(Collectors.toList());
+        List<SsiApplication> alteredHousehold = new ArrayList<>();
+        for(SsiApplication app:householdApps){
+            if(newHouseholdAfms.contains(app.getTaxisAfm())){
+                app.setHouseholdComposition(ssiApp.getHouseholdComposition());
+                alteredHousehold.add(app);
+            }
+        }
+        return alteredHousehold;
+    }
 
-    private static void updateSsiApplication(String name, String value, SsiApplicationTest ssiAppTest){
+    private static void updateSsiApplication2(String name, String value, SsiApplication ssiAppTest, List<HouseholdMember> household ){
         switch(name) {
             case "pension":
             ssiAppTest.setPensionsR(value);
@@ -657,204 +442,560 @@ log.info("jjjjjjjjjjjjjjjjjjjjjjj monthlyGroupMap.get(startOfMonth) :{}", monthl
             case "foreignRE":
             ssiAppTest.setForeignRealEstateA(value);
             break;
+            case "household" :
+            ssiAppTest.setHouseholdComposition(household);
+            break;
         }
     }
 
-    // public static <E> boolean doubleSumChecker(final List<E> elems, final Function<E, BigDecimal> elementsFunc, final BigDecimal result,
-    //         final double precision) {
-    //     final BigDecimal sum = elems.stream().map(elementsFunc).reduce(BigDecimal.ZERO, BigDecimal::add);
 
+    // private static List<PaymentCredential> alteredCredentialsList2(SsiApplication ssiAppTest, List<SsiApplication> householdApps){
 
-    //     return isApproxEqual(sum.doubleValue(), result.doubleValue(), precision);
+    //     List<PaymentCredential> changedCredentials = new ArrayList<>();
+
+    //     householdApps.forEach(h -> {
+    //         Map<String, LinkedHashMap<LocalDateTime, String>> credHistoriesMap = new HashMap<>();
+    //         if(h.getPensionsRHistory()!=null){
+    //             credHistoriesMap.put("pension", h.getPensionsRHistory());
+    //         }
+    //         if(h.getSalariesRHistory()!=null){
+    //             credHistoriesMap.put("salaries", h.getSalariesRHistory());
+    //         }
+    //         if(h.getOtherBenefitsRHistory()!=null){
+    //             credHistoriesMap.put("otherBnfts", h.getOtherBenefitsRHistory());
+    //         }
+    //         if(h.getFreelanceRHistory()!=null){
+    //             credHistoriesMap.put("freelance", h.getFreelanceRHistory());
+    //         }
+    //         if(h.getDepositsAHistory()!=null){
+    //             credHistoriesMap.put("deposits", h.getDepositsAHistory());
+    //         }
+    //         if(h.getDomesticRealEstateAHistory()!=null){
+    //             credHistoriesMap.put("domesticRE", h.getDomesticRealEstateAHistory());
+    //         }
+    //         if(h.getForeignRealEstateAHistory()!=null){
+    //             credHistoriesMap.put("foreignRE", h.getForeignRealEstateAHistory());
+    //         }
+
+    //         //if there are altered credentials (credential history size > 1) set the credential date and value to the default (first value) and add it to the list of changed credentials
+    //         if(!credHistoriesMap.isEmpty()){
+    //             credHistoriesMap.entrySet().forEach(e -> {
+    //                 if(e.getValue().size()>1){
+    //                     e.getValue().entrySet().stream().skip(1).forEach(p -> {
+    //                         PaymentCredential credential = new PaymentCredential();
+    //                         credential.setDate(p.getKey()); 
+    //                         credential.setValue(p.getValue());
+    //                         credential.setName(e.getKey());
+    //                         credential.setAfm(h.getTaxisAfm());
+    //                         changedCredentials.add(credential);
+    //                     });
+    //                     updateSsiApplication(e.getKey(), e.getValue().entrySet().iterator().next().getValue(), h);
+    //                 }
+    //             });
+    //         }
+    //     });
+
+    //     ssiAppTest = aggregateHouseholdValues(householdApps);
+
+    //     return changedCredentials;
     // }
 
-    // //C24ValidationUtils.doubleSumChecker(stdcs, e -> e.getData().getFaild().getVol(), faildVol, precision));
+    public static void calculateOffset2(Case monitoredCase, SsiApplication ssiAppTest/*, List<SsiApplication> householdApps*/){
 
-    // // public static final Function<SettlementFailsParticipantRange1, List<String>> sfpr1VolLeis = f -> f.getHghstInVol() == null ? new ArrayList<>()
-    // // : f.getHghstInVol().stream().map(SettlementFailsParticipant1::getLEI).collect(Collectors.toList());
+        Set<String> allAfms = new HashSet<>();
+        //List<SsiApplication> householdApps = new ArrayList<>();
+        for (Map.Entry<LocalDateTime, List<HouseholdMember>> app : ssiAppTest.getHouseholdCompositionHistory().entrySet()) {
+            for(HouseholdMember member : app.getValue()){
+                allAfms.add(member.getAfm());
+            }
+        }
 
-   
+        List<SsiApplication> allHouseholdApps = mongoServ.findByTaxisAfmIn(allAfms);
+        List<SsiApplication> householdApps = new ArrayList<>();
+        List<String> startAfms = ssiAppTest.getHouseholdCompositionHistory().entrySet().iterator().next().getValue().stream().map(m -> m.getAfm()).collect(Collectors.toList());
+        
+        householdApps = allHouseholdApps.stream().filter(h -> startAfms.contains(h.getTaxisAfm())).collect(Collectors.toList());
 
-    // public static <E> boolean testFunction(final SsiApplicationTest ssiAppTest, final Function<E, LinkedHashMap<String, String>> elementsFunc, final BigDecimal result,
-    //         final double precision) {
-    //     //final BigDecimal sum = elems.stream().map(elementsFunc).reduce(BigDecimal.ZERO, BigDecimal::add);
-    //     public final Function<SsiApplicationTest, LinkedHashMap<String, String>> sfpr1VolLeis = f -> f.get(elementsFunc)  getHghstInVol() == null ? new ArrayList<>()
-    //     : f.getHghstInVol().stream().map(SettlementFailsParticipant1::getLEI).collect(Collectors.toList());
-    //     //LinkedHashMap<String, String> map = 
+        List<PaymentCredential> changedCredentials = alteredCredentialsList3(ssiAppTest, householdApps);
 
-    //     if(ssiAppTest.elementsFunc.size()>1){
-    //         ssiAppTest.getForeignRealEstateAHistory().entrySet().stream().skip(1).forEach(p -> {
-    //             PaymentCredential credential = new PaymentCredential();
-    //             credential.setDate(p.getKey()); 
-    //             credential.setValue(p.getValue());
-    //             credential.setName("foreignRE");
-    //             changedCredentials.add(credential);
-    //         });
-    //         ssiAppTest.setForeignRealEstateA(ssiAppTest.getForeignRealEstateAHistory().entrySet().iterator().next().getValue());
+        if(changedCredentials.isEmpty()){
+            return;
+        }
+        //sort the list of altered credentials by date
+        List<PaymentCredential> changedCredentialsSorted = changedCredentials.stream().sorted(Comparator.comparing(PaymentCredential::getDate)).collect(Collectors.toList());
+        log.info("qqqqqqqqqqqqqqqqqqqqq altered credentials sorted :{}", changedCredentialsSorted);
+        //create a map of altered credentials grouped by month, with key the start date of the month and value the credentials that were altered during this month
+        Map<LocalDate, List<PaymentCredential>> monthlyGroupMap = changedCredentialsSorted.stream().collect(Collectors.groupingBy(e -> e.getDate().withDayOfMonth(1).toLocalDate()));
+        log.info("wwwwwwwwwwwwwwwwwwwwwwwwwwww monthlyGroupMap :{}", monthlyGroupMap);
+        List<CasePayment> paymentHistory = monitoredCase.getPaymentHistory().stream().sorted(Comparator.comparing(CasePayment::getPaymentDate)).collect(Collectors.toList());
+        Boolean credBeforeAppStart = false;
+        LocalDate firstAcceptedDate = LocalDate.of(2000, 1, 1);
+        //find the first date that the case was accepted
+        for (Map.Entry<LocalDateTime,State> mCase : monitoredCase.getHistory().entrySet()) {
+            if(mCase.getValue().equals(State.ACCEPTED)){
+                firstAcceptedDate = mCase.getKey().toLocalDate();
+                break;
+            }
+        }
+        //check if any credential has been altered at a date before the start of the application and use that value as the base one
+        for (Map.Entry<LocalDate, List<PaymentCredential>> mCred : monthlyGroupMap.entrySet()) {
+            if(mCred.getKey().compareTo(firstAcceptedDate) > 0){
+                continue;
+            }
+            credBeforeAppStart = true;
+            for(PaymentCredential credential: mCred.getValue()){
+                //householdApps.stream().filter(h -> credential.getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0);
+                if(credential.getName().equals("household")){
+                    updateSsiApplication2(credential.getName(), null, ssiAppTest, credential.getHousehold());
+                } else {
+                    updateSsiApplication2(credential.getName(), credential.getValue(), householdApps.stream().filter(h -> credential.getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);
+                }
+                //ssiAppTest = aggregateHouseholdValues(householdApps);
+            }
+        }
+        if(credBeforeAppStart){
+            ssiAppTest = aggregateHouseholdValues(householdApps);
+        }
+        log.info("rrrrrrrrrrrrrrrrrrrrrrr sssiApp other benefits:{}, pensions :{}", ssiAppTest.getOtherBenefitsR(), ssiAppTest.getPensionsR());
+
+        for(CasePayment ph:paymentHistory){
+            
+            log.info("111111111111111111111 start loop ph");
+            
+            LocalDate startOfMonth = ph.getPaymentDate().minusMonths(1).withDayOfMonth(1).toLocalDate();
+            LocalDate endOfMonth = ph.getPaymentDate().minusMonths(1).withDayOfMonth(monthDays(ph.getPaymentDate().minusMonths(1).toLocalDate())).toLocalDate();
+            Integer fullMonthDays = monthDays(startOfMonth);
+
+            // if there is no credential change during this month then calculate the payment with the last credentials
+            if(monthlyGroupMap.get(startOfMonth) == null && startOfMonth.isAfter(firstAcceptedDate)){
+                
+                Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+                    e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 && e.getKey().toLocalDate().compareTo(endOfMonth) <=0 && e.getValue().equals(State.ACCEPTED)).count();
+                
+                BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, startOfMonth);
+                BigDecimal monthlyOffset = ph.getPayment().subtract(offsetPayment);
+
+                monitoredCase.setOffset(monitoredCase.getOffset().add(monthlyOffset));
+            }
+
+            if(monthlyGroupMap.get(startOfMonth)!= null){
+                //calculate the starting days of the month with a payment value of the lastly updated credentials
+                Long nonOffsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+                        e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(1).toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
+                    
+                CasePayment payment = monitoredCase.getPaymentHistory().stream()
+                    .filter(p -> p.getPaymentDate().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(1).toLocalDate()) >= 0
+                    && p.getPaymentDate().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(monthDays(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate())).toLocalDate()) <= 0)
+                    .collect(Collectors.toList()).get(0);
+
+                BigDecimal correctedPayment = (payment.getPayment()
+                    .divide(BigDecimal.valueOf(monthDays(payment.getPaymentDate().toLocalDate())), 2, RoundingMode.HALF_UP))
+                    .multiply(BigDecimal.valueOf(nonOffsetDays));
+                log.info("hhhhhhhhhhhhhhhhh start of corrected payment :{}", correctedPayment);
+                for(int i = 0; i< monthlyGroupMap.get(startOfMonth).size(); i++){
+                    List<String> othrBnfts = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
+                    List<String> pensions = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
+                    log.info("ooooooooooooooooooooo household apps benefits:{}, pensions :{}", othrBnfts, pensions);
+                    log.info("22222222222222222 loop per month :{}", monthlyGroupMap.get(startOfMonth).get(i));
+                    //if there are more credentials in the history list for this month then calculate the offset days and payment value for each period
+                    if( i+1 <  monthlyGroupMap.get(startOfMonth).size() ) {
+                        final int innerI = i;
+                        Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+                            e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI+1).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
+                        log.info("ddddddddddddddddddddddd offsetDays :{}", offsetDays);
+                        if(monthlyGroupMap.get(startOfMonth).get(i).getName().equals("household")){
+                            log.info("vvvvvvvvvvvvvvvvvvvvvv houshold change :{}", monthlyGroupMap.get(startOfMonth).get(i).getHousehold());
+                            updateSsiApplication2(monthlyGroupMap.get(startOfMonth).get(i).getName(), null, ssiAppTest, monthlyGroupMap.get(startOfMonth).get(i).getHousehold());
+                            log.info("bbbbbbbbbbbbbbbbbbbbbbb houshold change ssiapp :{}", ssiAppTest.getHouseholdComposition());
+                            householdApps = reCalculateHousehold(householdApps, ssiAppTest);
+                            List<String> othrBnftsB = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
+                            List<String> pensionsB = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
+                            log.info("jjjjjjjjjjjjjjjjjjjjjjjjjj household -> household apps before aggregation benefits:{}, pensions :{}", othrBnftsB, pensionsB);
+                        }else{
+                            log.info("not household");
+                            updateSsiApplication2(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), householdApps.stream().filter(h -> monthlyGroupMap.get(startOfMonth).get(innerI).getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);   
+                            List<String> othrBnftsB = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
+                            List<String> pensionsB = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
+                            log.info("ooooooooooooooooooooo household apps before aggregation benefits:{}, pensions :{}", othrBnftsB, pensionsB);
+                        }
+                        ssiAppTest = aggregateHouseholdValues(householdApps);
+                        log.info("lllllllllllllllllllllllllll sssiApp loop other benefits:{}, pensions :{}", ssiAppTest.getOtherBenefitsR(), ssiAppTest.getPensionsR());
+                        log.info("ttttttttttttttttttttttttttt ssiApp household after aggregation :{}", ssiAppTest.getHouseholdComposition());
+                        BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, monthlyGroupMap.get(startOfMonth).get(i).getDate().toLocalDate());
+                        correctedPayment = correctedPayment.add(offsetPayment);
+                    } else {
+                        // last credential change in the history list for this month
+                        final int innerI = i;
+                        Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+                            e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().withDayOfMonth(monthDays(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate())).toLocalDate()) <=0 && e.getValue().equals(State.ACCEPTED)).count();
+                            log.info("ddddddddddddddddddddddd last offsetDays :{}", offsetDays);
+                        if(monthlyGroupMap.get(startOfMonth).get(i).getName().equals("household")){
+                            updateSsiApplication2(monthlyGroupMap.get(startOfMonth).get(i).getName(), null, ssiAppTest, monthlyGroupMap.get(startOfMonth).get(i).getHousehold());   
+                            householdApps = reCalculateHousehold(householdApps, ssiAppTest);
+                        }else{
+                            updateSsiApplication2(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), householdApps.stream().filter(h -> monthlyGroupMap.get(startOfMonth).get(innerI).getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);   
+                            List<String> othrBnftsB = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
+                            List<String> pensionsB = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
+                            log.info("ooooooooooooooooooooo last household apps before aggregation benefits:{}, pensions :{}", othrBnftsB, pensionsB);
+                        }
+                        ssiAppTest = aggregateHouseholdValues(householdApps);
+
+                        log.info("lllllllllllllllllllllllllll last sssiApp loop other benefits:{}, pensions :{}", ssiAppTest.getOtherBenefitsR(), ssiAppTest.getPensionsR());
+                        
+                        BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, monthlyGroupMap.get(startOfMonth).get(i).getDate().toLocalDate());
+                        correctedPayment = correctedPayment.add(offsetPayment);
+                    }
+                    log.info("333333333333333333333333 corrected payment :{}", correctedPayment);
+                    log.info("444444444444444444444444 offset :{}", monitoredCase.getOffset());
+                }
+
+                BigDecimal monthlyOffset = ph.getPayment().subtract(correctedPayment);
+
+                monitoredCase.setOffset(monitoredCase.getOffset().add(monthlyOffset));
+                log.info("aaaaaaaaaaaaaaaaaaaaaa offset :{}", monitoredCase.getOffset());
+            }
+        }
+    }
+
+    // public static void calculateCurrentPayment3(Case monitoredCase, SsiApplication ssiAppTest, List<SsiApplication> householdApps){
+
+    //     List<PaymentCredential> changedCredentials = alteredCredentialsList3(ssiAppTest, householdApps);
+
+    //     if(changedCredentials.isEmpty()){
+    //         return;
     //     }
+    //     //sort the list of altered credentials by date
+    //     List<PaymentCredential> changedCredentialsSorted = changedCredentials.stream().sorted(Comparator.comparing(PaymentCredential::getDate)).collect(Collectors.toList());
+    //     log.info("qqqqqqqqqqqqqqqqqqqqq altered credentials sorted :{}", changedCredentialsSorted);
+    //     //create a map of altered credentials grouped by month, with key the start date of the month and value the credentials that were altered during this month
+    //     Map<LocalDate, List<PaymentCredential>> monthlyGroupMap = changedCredentialsSorted.stream().collect(Collectors.groupingBy(e -> e.getDate().withDayOfMonth(1).toLocalDate()));
+    //     log.info("wwwwwwwwwwwwwwwwwwwwwwwwwwww monthlyGroupMap :{}", monthlyGroupMap);
+    //     List<CasePayment> paymentHistory = monitoredCase.getPaymentHistory().stream().sorted(Comparator.comparing(CasePayment::getPaymentDate)).collect(Collectors.toList());
+    //     Boolean credBeforeAppStart = false;
+    //     LocalDate firstAcceptedDate = LocalDate.of(2000, 1, 1);
+    //     //find the first date that the case was accepted
+    //     for (Map.Entry<LocalDateTime,State> mCase : monitoredCase.getHistory().entrySet()) {
+    //         if(mCase.getValue().equals(State.ACCEPTED)){
+    //             firstAcceptedDate = mCase.getKey().toLocalDate();
+    //             break;
+    //         }
+    //     }
+    //     //check if any credential has been altered at a date before the start of the application and use that value as the base one
+    //     for (Map.Entry<LocalDate, List<PaymentCredential>> mCred : monthlyGroupMap.entrySet()) {
+    //         if(mCred.getKey().compareTo(firstAcceptedDate) > 0){
+    //             continue;
+    //         }
+    //         credBeforeAppStart = true;
+    //         for(PaymentCredential credential: mCred.getValue()){
+    //             //householdApps.stream().filter(h -> credential.getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0);
+    //             if(credential.getName().equals("household")){
+    //                 updateSsiApplication2(credential.getName(), null, ssiAppTest, credential.getHousehold());
+    //             } else {
+    //                 updateSsiApplication2(credential.getName(), credential.getValue(), householdApps.stream().filter(h -> credential.getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);
+    //             }
+    //             //ssiAppTest = aggregateHouseholdValues(householdApps);
+    //         }
+    //     }
+    //     if(credBeforeAppStart){
+    //         ssiAppTest = aggregateHouseholdValues(householdApps);
+    //     }
+    //     log.info("rrrrrrrrrrrrrrrrrrrrrrr sssiApp other benefits:{}, pensions :{}", ssiAppTest.getOtherBenefitsR(), ssiAppTest.getPensionsR());
 
-    //     return isApproxEqual(sum.doubleValue(), result.doubleValue(), precision);
+    //     for(CasePayment ph:paymentHistory){
+            
+    //         log.info("111111111111111111111 start loop ph");
+            
+    //         LocalDate startOfMonth = ph.getPaymentDate().minusMonths(1).withDayOfMonth(1).toLocalDate();
+    //         LocalDate endOfMonth = ph.getPaymentDate().minusMonths(1).withDayOfMonth(monthDays(ph.getPaymentDate().minusMonths(1).toLocalDate())).toLocalDate();
+    //         Integer fullMonthDays = monthDays(startOfMonth);
+
+    //         // if there is no credential change during this month then calculate the payment with the last credentials
+    //         if(monthlyGroupMap.get(startOfMonth) == null && startOfMonth.isAfter(firstAcceptedDate)){
+                
+    //             Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+    //                 e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 && e.getKey().toLocalDate().compareTo(endOfMonth) <=0 && e.getValue().equals(State.ACCEPTED)).count();
+                
+    //             BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, startOfMonth);
+    //             BigDecimal monthlyOffset = ph.getPayment().subtract(offsetPayment);
+
+    //             monitoredCase.setOffset(monitoredCase.getOffset().add(monthlyOffset));
+    //         }
+
+    //         if(monthlyGroupMap.get(startOfMonth)!= null){
+    //             //calculate the starting days of the month with a payment value of the lastly updated credentials
+    //             Long nonOffsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+    //                     e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(1).toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
+                    
+    //             CasePayment payment = monitoredCase.getPaymentHistory().stream()
+    //                 .filter(p -> p.getPaymentDate().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(1).toLocalDate()) >= 0
+    //                 && p.getPaymentDate().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(monthDays(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate())).toLocalDate()) <= 0)
+    //                 .collect(Collectors.toList()).get(0);
+
+    //             BigDecimal correctedPayment = (payment.getPayment()
+    //                 .divide(BigDecimal.valueOf(monthDays(payment.getPaymentDate().toLocalDate())), 2, RoundingMode.HALF_UP))
+    //                 .multiply(BigDecimal.valueOf(nonOffsetDays));
+    //             log.info("hhhhhhhhhhhhhhhhh start of corrected payment :{}", correctedPayment);
+    //             for(int i = 0; i< monthlyGroupMap.get(startOfMonth).size(); i++){
+    //                 List<String> othrBnfts = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
+    //                 List<String> pensions = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
+    //                 log.info("ooooooooooooooooooooo household apps benefits:{}, pensions :{}", othrBnfts, pensions);
+    //                 log.info("22222222222222222 loop per month :{}", monthlyGroupMap.get(startOfMonth).get(i));
+    //                 //if there are more credentials in the history list for this month then calculate the offset days and payment value for each period
+    //                 if( i+1 <  monthlyGroupMap.get(startOfMonth).size() ) {
+    //                     final int innerI = i;
+    //                     Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+    //                         e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI+1).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
+    //                     log.info("ddddddddddddddddddddddd offsetDays :{}", offsetDays);
+    //                     if(monthlyGroupMap.get(startOfMonth).get(i).getName().equals("household")){
+    //                         log.info("vvvvvvvvvvvvvvvvvvvvvv houshold change :{}", monthlyGroupMap.get(startOfMonth).get(i).getHousehold());
+    //                         updateSsiApplication2(monthlyGroupMap.get(startOfMonth).get(i).getName(), null, ssiAppTest, monthlyGroupMap.get(startOfMonth).get(i).getHousehold());
+    //                         log.info("bbbbbbbbbbbbbbbbbbbbbbb houshold change ssiapp :{}", ssiAppTest.getHouseholdComposition());
+    //                         householdApps = reCalculateHousehold(householdApps, ssiAppTest);
+    //                         List<String> othrBnftsB = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
+    //                         List<String> pensionsB = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
+    //                         log.info("jjjjjjjjjjjjjjjjjjjjjjjjjj household -> household apps before aggregation benefits:{}, pensions :{}", othrBnftsB, pensionsB);
+    //                     }else{
+    //                         log.info("not household");
+    //                         updateSsiApplication2(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), householdApps.stream().filter(h -> monthlyGroupMap.get(startOfMonth).get(innerI).getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);   
+    //                         List<String> othrBnftsB = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
+    //                         List<String> pensionsB = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
+    //                         log.info("ooooooooooooooooooooo household apps before aggregation benefits:{}, pensions :{}", othrBnftsB, pensionsB);
+    //                     }
+    //                     ssiAppTest = aggregateHouseholdValues(householdApps);
+    //                     log.info("lllllllllllllllllllllllllll sssiApp loop other benefits:{}, pensions :{}", ssiAppTest.getOtherBenefitsR(), ssiAppTest.getPensionsR());
+    //                     log.info("ttttttttttttttttttttttttttt ssiApp household after aggregation :{}", ssiAppTest.getHouseholdComposition());
+    //                     BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, monthlyGroupMap.get(startOfMonth).get(i).getDate().toLocalDate());
+    //                     correctedPayment = correctedPayment.add(offsetPayment);
+    //                 } else {
+    //                     // last credential change in the history list for this month
+    //                     final int innerI = i;
+    //                     Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+    //                         e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().withDayOfMonth(monthDays(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate())).toLocalDate()) <=0 && e.getValue().equals(State.ACCEPTED)).count();
+    //                         log.info("ddddddddddddddddddddddd last offsetDays :{}", offsetDays);
+    //                     if(monthlyGroupMap.get(startOfMonth).get(i).getName().equals("household")){
+    //                         updateSsiApplication2(monthlyGroupMap.get(startOfMonth).get(i).getName(), null, ssiAppTest, monthlyGroupMap.get(startOfMonth).get(i).getHousehold());   
+    //                         householdApps = reCalculateHousehold(householdApps, ssiAppTest);
+    //                     }else{
+    //                         updateSsiApplication2(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), householdApps.stream().filter(h -> monthlyGroupMap.get(startOfMonth).get(innerI).getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);   
+    //                         List<String> othrBnftsB = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
+    //                         List<String> pensionsB = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
+    //                         log.info("ooooooooooooooooooooo last household apps before aggregation benefits:{}, pensions :{}", othrBnftsB, pensionsB);
+    //                     }
+    //                     ssiAppTest = aggregateHouseholdValues(householdApps);
+
+    //                     log.info("lllllllllllllllllllllllllll last sssiApp loop other benefits:{}, pensions :{}", ssiAppTest.getOtherBenefitsR(), ssiAppTest.getPensionsR());
+                        
+    //                     BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, monthlyGroupMap.get(startOfMonth).get(i).getDate().toLocalDate());
+    //                     correctedPayment = correctedPayment.add(offsetPayment);
+    //                 }
+    //                 log.info("333333333333333333333333 corrected payment :{}", correctedPayment);
+    //                 log.info("444444444444444444444444 offset :{}", monitoredCase.getOffset());
+    //             }
+
+    //             BigDecimal monthlyOffset = ph.getPayment().subtract(correctedPayment);
+
+    //             monitoredCase.setOffset(monitoredCase.getOffset().add(monthlyOffset));
+    //             log.info("aaaaaaaaaaaaaaaaaaaaaa offset :{}", monitoredCase.getOffset());
+    //         }
+    //     }
     // }
 
-    // private static boolean isApproxEqual(final double a, final double b, final double precision) {
-
-    //     return Math.abs(a - b) < precision;
-    // }
-
-    public static void updateOffset2(LocalDate credentialDate, Case monitoredCase, SsiApplicationTest ssiApp){
-
-        //Mock credential date, this illustrates a date at which a credential has been modified prior to being updated in the system
-        //LocalDate credentialDate = LocalDate.of(2020, 8, 12);
-        LocalDate startOfCredMonth = credentialDate.withDayOfMonth(1);
-        LocalDate endOfCredMonth = credentialDate.withDayOfMonth(monthDays(credentialDate));
+    public static BigDecimal calculateCurrentPayment2(Case monitoredCase, SsiApplication ssiAppTest, List<SsiApplication> householdApps){
         
-        // this should probably call the payment calculation method and return the value that should have been paid for all paid days with the new credentials
-        //BigDecimal fullMonthProjection = BigDecimal.valueOf(100).setScale(2, RoundingMode.HALF_UP);
+        LocalDate startOfPayment = LocalDate.now().minusMonths(1).withDayOfMonth(1);
+        Integer monthDays = monthDays(startOfPayment);
+        LocalDate endOfPayment = LocalDate.now().minusMonths(1).withDayOfMonth(monthDays);
+        Long acceptedDays = monitoredCase.getHistory().entrySet().stream().filter(
+                        e -> e.getKey().toLocalDate().compareTo(startOfPayment) >= 0 && e.getKey().toLocalDate().compareTo(endOfPayment) <=0 && e.getValue().equals(State.ACCEPTED)).count();
+        
+        ssiAppTest = aggregateHouseholdValues(householdApps);            
+        BigDecimal projectedPayment = calculatePayment2(monthDays, acceptedDays.intValue(), ssiAppTest, LocalDate.now());
 
-        BigDecimal totalPayment = BigDecimal.ZERO;
-        BigDecimal projectedPayment = BigDecimal.ZERO;
+        List<PaymentCredential> changedCredentials = latestAlteredCredentials(ssiAppTest, householdApps);
+        
+        BigDecimal correctedPayment = BigDecimal.ZERO;
 
-        for(CasePayment payment:monitoredCase.getPaymentHistory()){
-            
-            //sum the payment of each month to calculate the total paid amount 
-            totalPayment = totalPayment.add(payment.getPayment());
-
-            //if the payment of the month has failed add it all as offset(don't include it the projected sum)
-            if(payment.getState().equals(State.FAILED)){
-                continue;
-            }
-
-            // payment concerns the previous month of the actual date of payment
-            LocalDate paymentDate = payment.getPaymentDate().minusMonths(1).toLocalDate();
-
-            // update iff the month of the date is equal or after the date of the modified credential 
-            if(paymentDate.isBefore(startOfCredMonth)){
-                projectedPayment = projectedPayment.add(payment.getPayment());
-                continue; 
-            }
-            log.info("111111111111111111111 offset :{}", monitoredCase.getOffset());
-            BigDecimal fullMonthProjection = calculatePayment2(monthDays(paymentDate), monthDays(paymentDate), ssiApp, monitoredCase.getOffset());
-            log.info("222222222222222222222 fullMonthProjection :{}", fullMonthProjection);
-            if(fullMonthProjection == payment.getPayment()){
-                projectedPayment = projectedPayment.add(payment.getPayment());
-                continue; 
-            }
-
-            // if the payment concerns the same month as the altered credential, calculate the payment only of the offset days
-            if(paymentDate.isBefore(endOfCredMonth)){
-           
-                Long paidDays = monitoredCase.getHistory().entrySet().stream().filter(
-                    e -> e.getKey().toLocalDate().compareTo(startOfCredMonth) >=0 && e.getKey().toLocalDate().compareTo(endOfCredMonth) <=0 && e.getValue().equals(State.ACCEPTED)).count();
-                    log.info("33333333333333333333 paidDays :{}", paidDays);
-                Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                e -> e.getKey().toLocalDate().compareTo(credentialDate) >= 0 && e.getKey().toLocalDate().compareTo(endOfCredMonth) <=0 && e.getValue().equals(State.ACCEPTED)).count();
-                log.info("4444444444444444444444444 offsetDays :{}", offsetDays);
-                
-                // Long paidDays = monitoredCase.getHistory().entrySet().stream().filter(
-                //     e -> e.getKey().getMonthValue() == credentialDate.getMonthValue() && e.getKey().isAfter(startOfCredMonth) && e.getValue().equals(State.ACCEPTED)).count();
-
-                // Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                //     e -> e.getKey().getMonthValue() == credentialDate.getMonthValue() && e.getKey().getYear() == credentialDate.getYear() && e.getKey().getDayOfMonth()>=credentialDate.getDayOfMonth() && e.getValue().equals(State.ACCEPTED)).count();
-               
-                BigDecimal paymentPerDayActual = payment.getPayment().divide(BigDecimal.valueOf(paidDays), 2, RoundingMode.HALF_UP);
-                log.info("5555555555555555555555555 paymentPerDayActual :{}", paymentPerDayActual);
-                projectedPayment = projectedPayment.add((BigDecimal.valueOf(paidDays - offsetDays ).multiply(paymentPerDayActual))
-                .add(BigDecimal.valueOf(offsetDays).multiply(fullMonthProjection.divide(BigDecimal.valueOf(paidDays), 2, RoundingMode.HALF_UP))));
-                log.info("6666666666666666666666666 projectedPayment :{}", projectedPayment);
-            } else{
-                log.info("payment after credential");
-                Long paidDays = monitoredCase.getHistory().entrySet().stream().filter(
-                    e -> e.getKey().toLocalDate().compareTo(paymentDate.withDayOfMonth(1)) >=0 && e.getKey().toLocalDate().compareTo(paymentDate.withDayOfMonth(monthDays(paymentDate))) <=0 && e.getValue().equals(State.ACCEPTED)).count();
-
-                // add the projected payment for all accepted dates during this month
-                projectedPayment = projectedPayment.add(fullMonthProjection.divide(BigDecimal.valueOf(monthDays(paymentDate)), 2, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(paidDays)));
-            } 
+        if(changedCredentials.isEmpty() || !changedCredentials.stream().anyMatch(c -> c.getDate().withDayOfMonth(1).toLocalDate().equals(startOfPayment))){
+            return projectedPayment;
         }
-        BigDecimal newOffset = totalPayment.subtract(projectedPayment);
-        log.info("777777777777777777777777777 newOffset :{}", newOffset);
-        monitoredCase.setOffset(newOffset);
-        // if the offset in the case is diffrenent than the calculated offset the update the offset 
-        // if(newOffset.compareTo(monitoredCase.getOffset()) != 0){
-        //     monitoredCase.setOffset(newOffset);
-        // }
+        //sort the list of altered credentials by date
+        List<PaymentCredential> changedCredentialsSorted = changedCredentials.stream().sorted(Comparator.comparing(PaymentCredential::getDate)).collect(Collectors.toList());
+        //create a map of altered credentials grouped by month, with key the start date of the month and value the credentials that were altered during this month
+        // Map<LocalDate, List<PaymentCredential>> monthlyGroupMap = changedCredentialsSorted.stream().collect(Collectors.groupingBy(e -> e.getDate().withDayOfMonth(1).toLocalDate()));
+        
+        // List<CasePayment> paymentHistory = monitoredCase.getPaymentHistory().stream().sorted(Comparator.comparing(CasePayment::getPaymentDate)).collect(Collectors.toList());
+        
+        // CasePayment currentPayment = new CasePayment();
+        // currentPayment.setPaymentDate(LocalDateTime.now());
+        // currentPayment.setPayment(projectedPayment);
+        // paymentHistory.add(currentPayment);
+
+        // monthlyGroupMap.entrySet().forEach(m -> {
+        //     if(m.getKey().compareTo(paymentHistory.get(0).getPaymentDate().toLocalDate()) <= 0){
+        //         m.getValue().forEach(l ->{
+        //             updateSsiApplication2(l.getName(), l.getValue(), ssiAppTest);   
+        //         });
+        //     }
+        // });
+
+        //for(CasePayment payment : paymentHistory){
+            //LocalDate startOfMonth = payment.getPaymentDate().minusMonths(1).withDayOfMonth(1).toLocalDate();
+            LocalDate startOfMonth = LocalDate.now().minusMonths(1);
+            Integer fullMonthDays = monthDays(startOfMonth);
+
+            //if(monthlyGroupMap.get(startOfMonth)!= null){
+                // if(!startOfMonth.isEqual(startOfPayment)){
+                //     continue;   
+                // }
+                Long nonOffsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+                        e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 
+                        && e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(0).getDate().toLocalDate()) <0 
+                        && e.getValue().equals(State.ACCEPTED)).count();
+                    
+                correctedPayment = calculatePayment2(fullMonthDays, nonOffsetDays.intValue(), ssiAppTest, startOfMonth);
+                for(int i = 0; i< changedCredentialsSorted.size(); i++){
+                    if( i+1 < changedCredentialsSorted.size() ) {
+                        // if(!startOfMonth.isEqual(startOfPayment)){
+                        //     updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), ssiAppTest);
+                        //     continue;   
+                        // }
+                    
+                        final int innerI = i;
+                        Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+                            e -> e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI).getDate().toLocalDate()) >= 0 
+                            && e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI+1).getDate().toLocalDate()) <0 
+                            && e.getValue().equals(State.ACCEPTED)).count();
+                        if(changedCredentialsSorted.get(i).getName().equals("household")){
+                            updateSsiApplication2(changedCredentialsSorted.get(i).getName(), null, ssiAppTest, changedCredentialsSorted.get(i).getHousehold());
+                            householdApps = reCalculateHousehold(householdApps, ssiAppTest);
+                        } else{
+                            updateSsiApplication2(changedCredentialsSorted.get(i).getName(), changedCredentialsSorted.get(i).getValue(), ssiAppTest, null);   
+                        }
+                        
+                        ssiAppTest = aggregateHouseholdValues(householdApps);
+                        BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, changedCredentialsSorted.get(i).getDate().toLocalDate());
+                        correctedPayment = correctedPayment.add(offsetPayment);
+                    } else {
+                        // if(!startOfMonth.isEqual(startOfPayment)){
+                        //     updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), ssiAppTest); 
+                        //     continue;   
+                        // }
+                        final int innerI = i;
+                        Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+                            e -> e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI).getDate().toLocalDate()) >= 0 
+                            && e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI).getDate().withDayOfMonth(monthDays(changedCredentialsSorted.get(innerI).getDate().toLocalDate())).toLocalDate()) <=0 
+                            && e.getValue().equals(State.ACCEPTED)).count();
+                        
+                        if(changedCredentialsSorted.get(i).getName().equals("household")){
+                            updateSsiApplication2(changedCredentialsSorted.get(i).getName(), null, ssiAppTest, changedCredentialsSorted.get(i).getHousehold());
+                            householdApps = reCalculateHousehold(householdApps, ssiAppTest);
+                        } else{
+                            updateSsiApplication2(changedCredentialsSorted.get(i).getName(), changedCredentialsSorted.get(i).getValue(), ssiAppTest, null);   
+                        }
+                        
+                        ssiAppTest = aggregateHouseholdValues(householdApps);
+                        BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, changedCredentialsSorted.get(i).getDate().toLocalDate());
+                        correctedPayment = correctedPayment.add(offsetPayment);
+                    }
+                }
+           // }
+        //}
+
+        return correctedPayment;
     }
 
-    public static void updateOffset3(LocalDate credentialDate, Case monitoredCase, SsiApplicationTest ssiApp){
+    private static List<PaymentCredential> latestAlteredCredentials(SsiApplication ssiAppTest, List<SsiApplication> householdApps){
 
-        //Mock credential date, this illustrates a date at which a credential has been modified prior to being updated in the system
-        //LocalDate credentialDate = LocalDate.of(2020, 8, 12);
-        LocalDate startOfCredMonth = credentialDate.withDayOfMonth(1);
-        LocalDate endOfCredMonth = credentialDate.withDayOfMonth(monthDays(credentialDate));
-        
-        // this should probably call the payment calculation method and return the value that should have been paid for all paid days with the new credentials
-        //BigDecimal fullMonthProjection = BigDecimal.valueOf(100).setScale(2, RoundingMode.HALF_UP);
+        List<PaymentCredential> changedCredentials = new ArrayList<>();
 
-        BigDecimal totalPayment = BigDecimal.ZERO;
-        BigDecimal projectedPayment = BigDecimal.ZERO;
+        householdApps.forEach(h -> {
+            Map<String, LinkedHashMap<LocalDateTime, String>> credHistoriesMap = new HashMap<>();
+            if(h.getPensionsRHistory()!=null){
+                credHistoriesMap.put("pension", h.getPensionsRHistory());
+            }
+            if(h.getSalariesRHistory()!=null){
+                credHistoriesMap.put("salaries", h.getSalariesRHistory());
+            }
+            if(h.getOtherBenefitsRHistory()!=null){
+                credHistoriesMap.put("otherBnfts", h.getOtherBenefitsRHistory());
+            }
+            if(h.getFreelanceRHistory()!=null){
+                credHistoriesMap.put("freelance", h.getFreelanceRHistory());
+            }
+            if(h.getDepositsAHistory()!=null){
+                credHistoriesMap.put("deposits", h.getDepositsAHistory());
+            }
+            if(h.getDomesticRealEstateAHistory()!=null){
+                credHistoriesMap.put("domesticRE", h.getDomesticRealEstateAHistory());
+            }
+            if(h.getForeignRealEstateAHistory()!=null){
+                credHistoriesMap.put("foreignRE", h.getForeignRealEstateAHistory());
+            }
 
-        for(CasePayment payment:monitoredCase.getPaymentHistory()){
+            //if there are altered credentials (credential history size > 1) set the credential date and value to the default (first value) and add it to the list of changed credentials
+            if(!credHistoriesMap.isEmpty()){
+                credHistoriesMap.entrySet().forEach(e -> {
+                    //if(e.getValue().size()>1){
+                    Optional<Entry<LocalDateTime, String>> maxEntry = e.getValue().entrySet().stream().filter(m -> m.getKey().toLocalDate().compareTo(LocalDate.now().minusMonths(1)) <= 0)
+                    .max((Entry<LocalDateTime, String> e1, Entry<LocalDateTime, String> e2) -> e1.getKey()
+                    .compareTo(e2.getKey()));
+
+                    if(maxEntry.isPresent()){
+                        updateSsiApplication2(e.getKey(), maxEntry.get().getValue(), h, null);
+                    }
+                    if(e.getValue().size()>1){
+                        e.getValue().entrySet().stream().skip(1).forEach(p -> {
+                            if(p.getKey().toLocalDate().compareTo(LocalDate.now()) > 0){
+                                PaymentCredential credential = new PaymentCredential();
+                                credential.setDate(p.getKey()); 
+                                credential.setValue(p.getValue());
+                                credential.setName(e.getKey());
+                                credential.setAfm(h.getTaxisAfm());
+                                changedCredentials.add(credential);
+                            }
+                        });
+                    // updateSsiApplication2(e.getKey(), e.getValue().entrySet().iterator().next().getValue(), h, null);
+                    }
+                });
+            }
+        });
+
+        if(ssiAppTest.getHouseholdCompositionHistory()!=null){
+            Optional<Entry<LocalDateTime, List<HouseholdMember>>> maxEntry = ssiAppTest.getHouseholdCompositionHistory().entrySet().stream().filter(m -> m.getKey().toLocalDate().compareTo(LocalDate.now().minusMonths(1)) <= 0)
+            .max((Entry<LocalDateTime, List<HouseholdMember>> e1, Entry<LocalDateTime, List<HouseholdMember>> e2) -> e1.getKey()
+            .compareTo(e2.getKey()));
+
+            if(maxEntry.isPresent()){
+                updateSsiApplication2("household", null, ssiAppTest, maxEntry.get().getValue());
+            }
+            if(ssiAppTest.getHouseholdCompositionHistory().size()>1){
+                ssiAppTest.getHouseholdCompositionHistory().entrySet().stream().skip(1).forEach(p -> {
+                    if(p.getKey().toLocalDate().compareTo(LocalDate.now()) > 0){
+                        PaymentCredential credential = new PaymentCredential();
+                        credential.setDate(p.getKey()); 
+                        //credential.setValue(p.getValue());
+                        credential.setName("household");
+                        credential.setHousehold(p.getValue());
+                        changedCredentials.add(credential);
+                    }
+                });
+            }
             
-            //sum the payment of each month to calculate the total paid amount 
-            totalPayment = totalPayment.add(payment.getPayment());
-
-            //if the payment of the month has failed add it all as offset(don't include it the projected sum)
-            if(payment.getState().equals(State.FAILED)){
-                continue;
-            }
-
-            // payment concerns the previous month of the actual date of payment
-            LocalDate paymentDate = payment.getPaymentDate().minusMonths(1).toLocalDate();
-
-            // update iff the month of the date is equal or after the date of the modified credential 
-            if(paymentDate.isBefore(startOfCredMonth)){
-                projectedPayment = projectedPayment.add(payment.getPayment());
-                continue; 
-            }
-            log.info("111111111111111111111 offset :{}", monitoredCase.getOffset());
-            BigDecimal fullMonthProjection = calculatePayment2(monthDays(paymentDate), monthDays(paymentDate), ssiApp, monitoredCase.getOffset());
-            log.info("222222222222222222222 fullMonthProjection :{}", fullMonthProjection);
-            if(fullMonthProjection == payment.getPayment()){
-                projectedPayment = projectedPayment.add(payment.getPayment());
-                continue; 
-            }
-
-            // if the payment concerns the same month as the altered credential, calculate the payment only of the offset days
-            if(paymentDate.isBefore(endOfCredMonth)){
-           
-                Long paidDays = monitoredCase.getHistory().entrySet().stream().filter(
-                    e -> e.getKey().toLocalDate().compareTo(startOfCredMonth) >=0 && e.getKey().toLocalDate().compareTo(endOfCredMonth) <=0 && e.getValue().equals(State.ACCEPTED)).count();
-                    log.info("33333333333333333333 paidDays :{}", paidDays);
-                Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                e -> e.getKey().toLocalDate().compareTo(credentialDate) >= 0 && e.getKey().toLocalDate().compareTo(endOfCredMonth) <=0 && e.getValue().equals(State.ACCEPTED)).count();
-                log.info("4444444444444444444444444 offsetDays :{}", offsetDays);
-                
-                // Long paidDays = monitoredCase.getHistory().entrySet().stream().filter(
-                //     e -> e.getKey().getMonthValue() == credentialDate.getMonthValue() && e.getKey().isAfter(startOfCredMonth) && e.getValue().equals(State.ACCEPTED)).count();
-
-                // Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                //     e -> e.getKey().getMonthValue() == credentialDate.getMonthValue() && e.getKey().getYear() == credentialDate.getYear() && e.getKey().getDayOfMonth()>=credentialDate.getDayOfMonth() && e.getValue().equals(State.ACCEPTED)).count();
-               
-                BigDecimal paymentPerDayActual = payment.getPayment().divide(BigDecimal.valueOf(paidDays), 2, RoundingMode.HALF_UP);
-                log.info("5555555555555555555555555 paymentPerDayActual :{}", paymentPerDayActual);
-                projectedPayment = projectedPayment.add((BigDecimal.valueOf(paidDays - offsetDays ).multiply(paymentPerDayActual))
-                .add(BigDecimal.valueOf(offsetDays).multiply(fullMonthProjection.divide(BigDecimal.valueOf(paidDays), 2, RoundingMode.HALF_UP))));
-                log.info("6666666666666666666666666 projectedPayment :{}", projectedPayment);
-            } else{
-                log.info("payment after credential");
-                Long paidDays = monitoredCase.getHistory().entrySet().stream().filter(
-                    e -> e.getKey().toLocalDate().compareTo(paymentDate.withDayOfMonth(1)) >=0 && e.getKey().toLocalDate().compareTo(paymentDate.withDayOfMonth(monthDays(paymentDate))) <=0 && e.getValue().equals(State.ACCEPTED)).count();
-
-                // add the projected payment for all accepted dates during this month
-                projectedPayment = projectedPayment.add(fullMonthProjection.divide(BigDecimal.valueOf(monthDays(paymentDate)), 2, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(paidDays)));
-            } 
+            //updateSsiApplication2("household", null, ssiAppTest, ssiAppTest.getHouseholdCompositionHistory().entrySet().iterator().next().getValue());
         }
-        BigDecimal newOffset = totalPayment.subtract(projectedPayment);
-        log.info("777777777777777777777777777 newOffset :{}", newOffset);
-        monitoredCase.setOffset(newOffset);
-        // if the offset in the case is diffrenent than the calculated offset the update the offset 
-        // if(newOffset.compareTo(monitoredCase.getOffset()) != 0){
-        //     monitoredCase.setOffset(newOffset);
-        // }
+
+        List<String> othrBnfts = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
+        List<String> pensions = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
+        log.info("ggggggggggggggggggggggggg household before any aggregation apps benefits:{}, pensions :{}", othrBnfts, pensions);
+        log.info("hhhhhhhhhhhhhhhhhhhhhhhhh ssiapp before aggregate :{}", ssiAppTest);
+        ssiAppTest = aggregateHouseholdValues(householdApps);
+
+        List<String> othrBnftsA = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
+        List<String> pensionsA = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
+        log.info("ggggggggggggggggggggggggg household after aggregation apps benefits:{}, pensions :{}", othrBnftsA, pensionsA);
+        log.info("hhhhhhhhhhhhhhhhhhhhhhhhh ssiapp after aggregate :{}", ssiAppTest);
+
+        return changedCredentials;
     }
-        
+
 }

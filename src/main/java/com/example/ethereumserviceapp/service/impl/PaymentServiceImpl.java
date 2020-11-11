@@ -12,12 +12,14 @@ import java.util.Optional;
 
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.CasePayment;
+import com.example.ethereumserviceapp.model.HouseholdMember;
 import com.example.ethereumserviceapp.model.State;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.service.MongoService;
 import com.example.ethereumserviceapp.service.PaymentService;
 import com.example.ethereumserviceapp.utils.EthAppUtils;
+import com.example.ethereumserviceapp.utils.MonitorUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -29,8 +31,6 @@ public class PaymentServiceImpl implements PaymentService{
 
     private EthereumService ethServ;
     private MongoService mongoServ;
-
-    final static BigDecimal paymentValPerDay = BigDecimal.valueOf(100);
 
     @Autowired
     public PaymentServiceImpl(EthereumService ethServ, MongoService mongoServ) {
@@ -60,11 +60,11 @@ public class PaymentServiceImpl implements PaymentService{
                     return;
                 }
                 if(startDate.isBefore(currentDate)){
-                    Long acceptedDates= caseToBePaid.getHistory().entrySet().stream().filter(
-                        e -> (e.getKey().toLocalDate().compareTo(currentDate.toLocalDate().minusMonths(1)) >= 0) 
-                        && e.getKey().toLocalDate().isBefore(currentDate.toLocalDate())
-                        && e.getValue().equals(State.ACCEPTED)).count();
-                    paymentValue = EthAppUtils.calculatePayment(acceptedDates.intValue(), caseToBePaid.getOffset(), ssiApp.get());
+                    // Long acceptedDates= caseToBePaid.getHistory().entrySet().stream().filter(
+                    //     e -> (e.getKey().toLocalDate().compareTo(currentDate.toLocalDate().minusMonths(1)) >= 0) 
+                    //     && e.getKey().toLocalDate().isBefore(currentDate.toLocalDate())
+                    //     && e.getValue().equals(State.ACCEPTED)).count();
+                    //paymentValue = MonitorUtils.calculateCurrentPayment2(caseToBePaid, ssiApp.get()).subtract(caseToBePaid.getOffset());
                     //Call to payment service
                     State paymentState = paymentService(paymentValue, caseToBePaid);
                     addPayment(paymentValue, caseToBePaid, currentDate, paymentState);
@@ -81,7 +81,7 @@ public class PaymentServiceImpl implements PaymentService{
                     Optional<SsiApplication> ssiApp = mongoServ.findByUuid(uuid);
                     //check payment credentials
                     if(ssiApp.isPresent() && checkPaymentCredentials(caseToBePaid, ssiApp.get())){
-                        paymentValue = EthAppUtils.calculatePayment(acceptedDates.intValue(), caseToBePaid.getOffset(), ssiApp.get());
+                        //paymentValue = MonitorUtils.calculateCurrentPayment2(caseToBePaid, ssiApp.get()).subtract(caseToBePaid.getOffset());
                         //Call to payment service
                         State paymentState = paymentService(paymentValue, caseToBePaid);
                         addPayment(paymentValue, caseToBePaid, currentDate, paymentState);
@@ -121,14 +121,23 @@ public class PaymentServiceImpl implements PaymentService{
 
     private Boolean checkPaymentCredentials(Case caseToBePaid, SsiApplication ssiApp){
         //mock household check
-        Map<String, String>[] houseHold = ssiApp.getHouseholdComposition();
-        if(houseHold != null){
-            for(int i = 0; i < houseHold.length; i++){
-                if(houseHold[i].entrySet().stream().anyMatch(h -> h.getValue().equals("deceased"))){
-                    return false;
-                }
-            }
-        }
+        // Map<String, String>[] houseHold = ssiApp.getHouseholdComposition();
+        // if(houseHold != null){
+        //     for(int i = 0; i < houseHold.length; i++){
+        //         if(houseHold[i].entrySet().stream().anyMatch(h -> h.getValue().equals("deceased"))){
+        //             return false;
+        //         }
+        //     }
+        // }
+
+
+        // List<HouseholdMember> household = ssiApp.getHouseholdComposition();
+        // if(household != null){
+        //     if(household.stream().anyMatch(h -> h.getStatus().equals("deceased"))){
+        //         return false;
+        //     }
+        // }
+
         //external oaed check
         if(!oaedRegistrationCheck(ssiApp.getOaedId())){
             return false;
@@ -185,16 +194,18 @@ public class PaymentServiceImpl implements PaymentService{
         }
 
         //check for duplicates in households
-        Map<String, String>[] householdArray = ssiApp.getHouseholdComposition();
-        if(householdArray != null){
-            for(int i=0; i<householdArray.length; i++){
-                Map<String, String> household = householdArray[i];
-                List<SsiApplication> hSsiApp = mongoServ.findByHouseholdCompositionIn(household);
-                if(hSsiApp.size()>1){
-                    return false;
-                }
-            }
-        }
+        // Map<String, String>[] householdArray = ssiApp.getHouseholdComposition();
+        // if(householdArray != null){
+        //     for(int i=0; i<householdArray.length; i++){
+        //         Map<String, String> household = householdArray[i];
+        //         List<SsiApplication> hSsiApp = mongoServ.findByHouseholdCompositionIn(household);
+        //         if(hSsiApp.size()>1){
+        //             return false;
+        //         }
+        //     }
+        // }
+        
+
         //check if iban exists in other application
         if(mongoServ.findByIban(ssiApp.getIban()).size() > 1){
             return false;
