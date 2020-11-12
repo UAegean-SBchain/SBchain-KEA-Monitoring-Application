@@ -383,8 +383,8 @@ public class MonitorUtils extends EthAppUtils{
         List<String> pensions = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
         log.info("ggggggggggggggggggggggggg household before any aggregation apps benefits:{}, pensions :{}", othrBnfts, pensions);
         log.info("hhhhhhhhhhhhhhhhhhhhhhhhh ssiapp before aggregate :{}", ssiAppTest);
-        ssiAppTest = aggregateHouseholdValues(householdApps);
-
+        //ssiAppTest = aggregateHouseholdValues(householdApps);
+        ssiAppTest = filterHHAndAggregate(householdApps, ssiAppTest.getHouseholdComposition());
         List<String> othrBnftsA = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
         List<String> pensionsA = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
         log.info("ggggggggggggggggggggggggg household after aggregation apps benefits:{}, pensions :{}", othrBnftsA, pensionsA);
@@ -409,6 +409,8 @@ public class MonitorUtils extends EthAppUtils{
     private static List<SsiApplication> reCalculateHousehold2(List<SsiApplication> householdApps, List<SsiApplication> allHouseholdApps , SsiApplication ssiApp ){
         List<String> newHouseholdAfms = ssiApp.getHouseholdComposition().stream().map(h -> h.getAfm()).collect(Collectors.toList());
         //householdApps = householdApps.stream().filter(h -> newHouseholdAfms.contains(h.getTaxisAfm())).collect(Collectors.toList());
+        // helper list contains all the applications of the current iteration of the household but with the latest data(if a new member was introduced to the household the housholdApps list may not contain it)
+        List<SsiApplication> helperList = allHouseholdApps.stream().filter(h -> newHouseholdAfms.contains(h.getTaxisAfm())).collect(Collectors.toList());
         List<SsiApplication> alteredHousehold = new ArrayList<>();
         for(SsiApplication app:householdApps){
             if(newHouseholdAfms.contains(app.getTaxisAfm())){
@@ -416,7 +418,26 @@ public class MonitorUtils extends EthAppUtils{
                 alteredHousehold.add(app);
             }
         }
+        List<String> alteredAfms = alteredHousehold.stream().map(h -> h.getTaxisAfm()).collect(Collectors.toList());
+        //if an afm appears in the helperList but not on the altetedHousehold it means that a member was added in the household and should be added to the new alteredList
+        for(SsiApplication app:helperList){
+            if(!alteredAfms.contains(app.getTaxisAfm())){
+                app.setHouseholdComposition(ssiApp.getHouseholdComposition());
+                alteredHousehold.add(app);
+            }
+        }
         return alteredHousehold;
+    }
+
+    private static void reCalculateHousehold3(List<SsiApplication> householdApps, SsiApplication ssiApp ){
+        List<String> newHouseholdAfms = ssiApp.getHouseholdComposition().stream().map(h -> h.getAfm()).collect(Collectors.toList());
+        //householdApps = householdApps.stream().filter(h -> newHouseholdAfms.contains(h.getTaxisAfm())).collect(Collectors.toList());
+        List<SsiApplication> alteredHousehold = new ArrayList<>();
+        for(SsiApplication app:householdApps){
+            if(newHouseholdAfms.contains(app.getTaxisAfm())){
+                app.setHouseholdComposition(ssiApp.getHouseholdComposition());
+            }
+        }
     }
 
     private static void updateSsiApplication2(String name, String value, SsiApplication ssiAppTest, List<HouseholdMember> household ){
@@ -500,7 +521,7 @@ public class MonitorUtils extends EthAppUtils{
     //     return changedCredentials;
     // }
 
-    public static void calculateOffset2(Case monitoredCase, SsiApplication ssiAppTest/*, List<SsiApplication> householdApps*/){
+    public static void calculateOffset2(Case monitoredCase, SsiApplication ssiAppTest, List<SsiApplication> householdApps){
 
         Set<String> allAfms = new HashSet<>();
         //List<SsiApplication> householdApps = new ArrayList<>();
@@ -510,11 +531,11 @@ public class MonitorUtils extends EthAppUtils{
             }
         }
 
-        List<SsiApplication> allHouseholdApps = mongoServ.findByTaxisAfmIn(allAfms);
-        List<SsiApplication> householdApps = new ArrayList<>();
-        List<String> startAfms = ssiAppTest.getHouseholdCompositionHistory().entrySet().iterator().next().getValue().stream().map(m -> m.getAfm()).collect(Collectors.toList());
+        // List<SsiApplication> allHouseholdApps = mongoServ.findByTaxisAfmIn(allAfms);
+        // List<SsiApplication> householdApps = new ArrayList<>();
+        // List<String> startAfms = ssiAppTest.getHouseholdCompositionHistory().entrySet().iterator().next().getValue().stream().map(m -> m.getAfm()).collect(Collectors.toList());
         
-        householdApps = allHouseholdApps.stream().filter(h -> startAfms.contains(h.getTaxisAfm())).collect(Collectors.toList());
+        // householdApps = allHouseholdApps.stream().filter(h -> startAfms.contains(h.getTaxisAfm())).collect(Collectors.toList());
 
         List<PaymentCredential> changedCredentials = alteredCredentialsList3(ssiAppTest, householdApps);
 
@@ -554,7 +575,8 @@ public class MonitorUtils extends EthAppUtils{
             }
         }
         if(credBeforeAppStart){
-            ssiAppTest = aggregateHouseholdValues(householdApps);
+            //ssiAppTest = aggregateHouseholdValues(householdApps);
+            ssiAppTest = filterHHAndAggregate(householdApps, ssiAppTest.getHouseholdComposition());
         }
         log.info("rrrrrrrrrrrrrrrrrrrrrrr sssiApp other benefits:{}, pensions :{}", ssiAppTest.getOtherBenefitsR(), ssiAppTest.getPensionsR());
 
@@ -607,7 +629,8 @@ public class MonitorUtils extends EthAppUtils{
                             log.info("vvvvvvvvvvvvvvvvvvvvvv houshold change :{}", monthlyGroupMap.get(startOfMonth).get(i).getHousehold());
                             updateSsiApplication2(monthlyGroupMap.get(startOfMonth).get(i).getName(), null, ssiAppTest, monthlyGroupMap.get(startOfMonth).get(i).getHousehold());
                             log.info("bbbbbbbbbbbbbbbbbbbbbbb houshold change ssiapp :{}", ssiAppTest.getHouseholdComposition());
-                            householdApps = reCalculateHousehold(householdApps, ssiAppTest);
+                            //householdApps = reCalculateHousehold(householdApps, ssiAppTest);
+                            reCalculateHousehold3(householdApps, ssiAppTest);
                             List<String> othrBnftsB = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
                             List<String> pensionsB = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
                             log.info("jjjjjjjjjjjjjjjjjjjjjjjjjj household -> household apps before aggregation benefits:{}, pensions :{}", othrBnftsB, pensionsB);
@@ -618,7 +641,8 @@ public class MonitorUtils extends EthAppUtils{
                             List<String> pensionsB = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
                             log.info("ooooooooooooooooooooo household apps before aggregation benefits:{}, pensions :{}", othrBnftsB, pensionsB);
                         }
-                        ssiAppTest = aggregateHouseholdValues(householdApps);
+                        //ssiAppTest = aggregateHouseholdValues(householdApps);
+                        ssiAppTest = filterHHAndAggregate(householdApps, ssiAppTest.getHouseholdComposition());
                         log.info("lllllllllllllllllllllllllll sssiApp loop other benefits:{}, pensions :{}", ssiAppTest.getOtherBenefitsR(), ssiAppTest.getPensionsR());
                         log.info("ttttttttttttttttttttttttttt ssiApp household after aggregation :{}", ssiAppTest.getHouseholdComposition());
                         BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, monthlyGroupMap.get(startOfMonth).get(i).getDate().toLocalDate());
@@ -631,15 +655,16 @@ public class MonitorUtils extends EthAppUtils{
                             log.info("ddddddddddddddddddddddd last offsetDays :{}", offsetDays);
                         if(monthlyGroupMap.get(startOfMonth).get(i).getName().equals("household")){
                             updateSsiApplication2(monthlyGroupMap.get(startOfMonth).get(i).getName(), null, ssiAppTest, monthlyGroupMap.get(startOfMonth).get(i).getHousehold());   
-                            householdApps = reCalculateHousehold(householdApps, ssiAppTest);
+                            //householdApps = reCalculateHousehold(householdApps, ssiAppTest);
+                            reCalculateHousehold3(householdApps, ssiAppTest);
                         }else{
                             updateSsiApplication2(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), householdApps.stream().filter(h -> monthlyGroupMap.get(startOfMonth).get(innerI).getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);   
                             List<String> othrBnftsB = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
                             List<String> pensionsB = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
                             log.info("ooooooooooooooooooooo last household apps before aggregation benefits:{}, pensions :{}", othrBnftsB, pensionsB);
                         }
-                        ssiAppTest = aggregateHouseholdValues(householdApps);
-
+                        //ssiAppTest = aggregateHouseholdValues(householdApps);
+                        ssiAppTest = filterHHAndAggregate(householdApps, ssiAppTest.getHouseholdComposition());
                         log.info("lllllllllllllllllllllllllll last sssiApp loop other benefits:{}, pensions :{}", ssiAppTest.getOtherBenefitsR(), ssiAppTest.getPensionsR());
                         
                         BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, monthlyGroupMap.get(startOfMonth).get(i).getDate().toLocalDate());
@@ -801,6 +826,15 @@ public class MonitorUtils extends EthAppUtils{
     // }
 
     public static BigDecimal calculateCurrentPayment2(Case monitoredCase, SsiApplication ssiAppTest, List<SsiApplication> householdApps){
+
+        Set<String> allAfms = new HashSet<>();
+        //List<SsiApplication> householdApps = new ArrayList<>();
+        for (Map.Entry<LocalDateTime, List<HouseholdMember>> app : ssiAppTest.getHouseholdCompositionHistory().entrySet()) {
+            for(HouseholdMember member : app.getValue()){
+                allAfms.add(member.getAfm());
+            }
+        }
+        
         
         LocalDate startOfPayment = LocalDate.now().minusMonths(1).withDayOfMonth(1);
         Integer monthDays = monthDays(startOfPayment);
@@ -808,10 +842,13 @@ public class MonitorUtils extends EthAppUtils{
         Long acceptedDays = monitoredCase.getHistory().entrySet().stream().filter(
                         e -> e.getKey().toLocalDate().compareTo(startOfPayment) >= 0 && e.getKey().toLocalDate().compareTo(endOfPayment) <=0 && e.getValue().equals(State.ACCEPTED)).count();
         
-        ssiAppTest = aggregateHouseholdValues(householdApps);            
-        BigDecimal projectedPayment = calculatePayment2(monthDays, acceptedDays.intValue(), ssiAppTest, LocalDate.now());
+        //ssiAppTest = aggregateHouseholdValues(householdApps); 
+        SsiApplication ssiAppProjection = filterHHAndAggregate(householdApps, ssiAppTest.getHouseholdComposition());           
+        BigDecimal projectedPayment = calculatePayment2(monthDays, acceptedDays.intValue(), ssiAppProjection, LocalDate.now());
 
         List<PaymentCredential> changedCredentials = latestAlteredCredentials(ssiAppTest, householdApps);
+        ssiAppTest = filterHHAndAggregate(householdApps, ssiAppTest.getHouseholdComposition());    
+        log.info("======================= changedCredentials :{}", changedCredentials);
         
         BigDecimal correctedPayment = BigDecimal.ZERO;
 
@@ -840,7 +877,7 @@ public class MonitorUtils extends EthAppUtils{
 
         //for(CasePayment payment : paymentHistory){
             //LocalDate startOfMonth = payment.getPaymentDate().minusMonths(1).withDayOfMonth(1).toLocalDate();
-            LocalDate startOfMonth = LocalDate.now().minusMonths(1);
+            LocalDate startOfMonth = LocalDate.now().minusMonths(1).withDayOfMonth(1);
             Integer fullMonthDays = monthDays(startOfMonth);
 
             //if(monthlyGroupMap.get(startOfMonth)!= null){
@@ -851,6 +888,9 @@ public class MonitorUtils extends EthAppUtils{
                         e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 
                         && e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(0).getDate().toLocalDate()) <0 
                         && e.getValue().equals(State.ACCEPTED)).count();
+
+                        log.info("11111111111111111111 nonOffsetDays :{}", nonOffsetDays);
+                        log.info("GGGGGGGGGGGGGGGGGGGGGGGGG ssiAppTest non offset :{}", ssiAppTest);
                     
                 correctedPayment = calculatePayment2(fullMonthDays, nonOffsetDays.intValue(), ssiAppTest, startOfMonth);
                 for(int i = 0; i< changedCredentialsSorted.size(); i++){
@@ -865,14 +905,19 @@ public class MonitorUtils extends EthAppUtils{
                             e -> e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI).getDate().toLocalDate()) >= 0 
                             && e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI+1).getDate().toLocalDate()) <0 
                             && e.getValue().equals(State.ACCEPTED)).count();
+                            log.info("22222222222222222222 offsetDays :{}", offsetDays);
                         if(changedCredentialsSorted.get(i).getName().equals("household")){
                             updateSsiApplication2(changedCredentialsSorted.get(i).getName(), null, ssiAppTest, changedCredentialsSorted.get(i).getHousehold());
-                            householdApps = reCalculateHousehold(householdApps, ssiAppTest);
+                            //householdApps = reCalculateHousehold(householdApps, ssiAppTest);
+                            reCalculateHousehold3(householdApps, ssiAppTest);
                         } else{
-                            updateSsiApplication2(changedCredentialsSorted.get(i).getName(), changedCredentialsSorted.get(i).getValue(), ssiAppTest, null);   
+                            log.info("3333333333333333333333333 not household");
+                            log.info("OOOOOOOOOOOOOOOOOOOOOO changedCredentialsSorted.get(i).getName() :{}, changedCredentialsSorted.get(i).getValue() :{}", changedCredentialsSorted.get(i).getName(), changedCredentialsSorted.get(i).getValue());
+                            updateSsiApplication2(changedCredentialsSorted.get(i).getName(), changedCredentialsSorted.get(i).getValue(), householdApps.stream().filter(h -> changedCredentialsSorted.get(innerI).getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);   
                         }
                         
-                        ssiAppTest = aggregateHouseholdValues(householdApps);
+                        //ssiAppTest = aggregateHouseholdValues(householdApps);
+                        ssiAppTest = filterHHAndAggregate(householdApps, ssiAppTest.getHouseholdComposition());
                         BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, changedCredentialsSorted.get(i).getDate().toLocalDate());
                         correctedPayment = correctedPayment.add(offsetPayment);
                     } else {
@@ -885,15 +930,20 @@ public class MonitorUtils extends EthAppUtils{
                             e -> e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI).getDate().toLocalDate()) >= 0 
                             && e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI).getDate().withDayOfMonth(monthDays(changedCredentialsSorted.get(innerI).getDate().toLocalDate())).toLocalDate()) <=0 
                             && e.getValue().equals(State.ACCEPTED)).count();
-                        
+                            log.info("444444444444444444444 offsetDays last:{}", offsetDays);
                         if(changedCredentialsSorted.get(i).getName().equals("household")){
                             updateSsiApplication2(changedCredentialsSorted.get(i).getName(), null, ssiAppTest, changedCredentialsSorted.get(i).getHousehold());
-                            householdApps = reCalculateHousehold(householdApps, ssiAppTest);
+                            //householdApps = reCalculateHousehold(householdApps, ssiAppTest);
+                            reCalculateHousehold3(householdApps, ssiAppTest);
                         } else{
-                            updateSsiApplication2(changedCredentialsSorted.get(i).getName(), changedCredentialsSorted.get(i).getValue(), ssiAppTest, null);   
+                            log.info("5555555555555555555555555 not household last");
+                            log.info("PPPPPPPPPPPPPPPPPPPPPPP changedCredentialsSorted.get(i).getName() :{}, changedCredentialsSorted.get(i).getValue() :{}", changedCredentialsSorted.get(i).getName(), changedCredentialsSorted.get(i).getValue());
+                            
+                            updateSsiApplication2(changedCredentialsSorted.get(i).getName(), changedCredentialsSorted.get(i).getValue(), householdApps.stream().filter(h -> changedCredentialsSorted.get(innerI).getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);   
                         }
                         
-                        ssiAppTest = aggregateHouseholdValues(householdApps);
+                        //ssiAppTest = aggregateHouseholdValues(householdApps);
+                        ssiAppTest = filterHHAndAggregate(householdApps, ssiAppTest.getHouseholdComposition());
                         BigDecimal offsetPayment = calculatePayment2(fullMonthDays, offsetDays.intValue(), ssiAppTest, changedCredentialsSorted.get(i).getDate().toLocalDate());
                         correctedPayment = correctedPayment.add(offsetPayment);
                     }
@@ -936,16 +986,16 @@ public class MonitorUtils extends EthAppUtils{
             if(!credHistoriesMap.isEmpty()){
                 credHistoriesMap.entrySet().forEach(e -> {
                     //if(e.getValue().size()>1){
-                    Optional<Entry<LocalDateTime, String>> maxEntry = e.getValue().entrySet().stream().filter(m -> m.getKey().toLocalDate().compareTo(LocalDate.now().minusMonths(1)) <= 0)
+                    Optional<Entry<LocalDateTime, String>> maxEntry = e.getValue().entrySet().stream().filter(m -> m.getKey().toLocalDate().compareTo(LocalDate.now().minusMonths(1).withDayOfMonth(1)) <= 0)
                     .max((Entry<LocalDateTime, String> e1, Entry<LocalDateTime, String> e2) -> e1.getKey()
                     .compareTo(e2.getKey()));
-
+                        log.info("FFFFFFFFFFFFFFFFFFFFFFFFFFF max entry date:{}, value :{}", maxEntry.get().getKey(), maxEntry.get().getValue());
                     if(maxEntry.isPresent()){
                         updateSsiApplication2(e.getKey(), maxEntry.get().getValue(), h, null);
                     }
                     if(e.getValue().size()>1){
                         e.getValue().entrySet().stream().skip(1).forEach(p -> {
-                            if(p.getKey().toLocalDate().compareTo(LocalDate.now()) > 0){
+                            if(p.getKey().toLocalDate().compareTo(LocalDate.now().minusMonths(1).withDayOfMonth(1)) > 0){
                                 PaymentCredential credential = new PaymentCredential();
                                 credential.setDate(p.getKey()); 
                                 credential.setValue(p.getValue());
@@ -959,18 +1009,18 @@ public class MonitorUtils extends EthAppUtils{
                 });
             }
         });
-
+        log.info("KKKKKKKKKKKKKKKKKKKKKK household history :{}", ssiAppTest.getHouseholdCompositionHistory());
         if(ssiAppTest.getHouseholdCompositionHistory()!=null){
-            Optional<Entry<LocalDateTime, List<HouseholdMember>>> maxEntry = ssiAppTest.getHouseholdCompositionHistory().entrySet().stream().filter(m -> m.getKey().toLocalDate().compareTo(LocalDate.now().minusMonths(1)) <= 0)
+            Optional<Entry<LocalDateTime, List<HouseholdMember>>> maxEntry = ssiAppTest.getHouseholdCompositionHistory().entrySet().stream().filter(m -> m.getKey().toLocalDate().compareTo(LocalDate.now().minusMonths(1).withDayOfMonth(1)) <= 0)
             .max((Entry<LocalDateTime, List<HouseholdMember>> e1, Entry<LocalDateTime, List<HouseholdMember>> e2) -> e1.getKey()
             .compareTo(e2.getKey()));
-
+            log.info("HHHHHHHHHHHHHHHHHHHHHHHHHH  household max entry date:{}, value :{}", maxEntry.get().getKey(), maxEntry.get().getValue());
             if(maxEntry.isPresent()){
                 updateSsiApplication2("household", null, ssiAppTest, maxEntry.get().getValue());
             }
             if(ssiAppTest.getHouseholdCompositionHistory().size()>1){
                 ssiAppTest.getHouseholdCompositionHistory().entrySet().stream().skip(1).forEach(p -> {
-                    if(p.getKey().toLocalDate().compareTo(LocalDate.now()) > 0){
+                    if(p.getKey().toLocalDate().compareTo(LocalDate.now().minusMonths(1).withDayOfMonth(1)) > 0){
                         PaymentCredential credential = new PaymentCredential();
                         credential.setDate(p.getKey()); 
                         //credential.setValue(p.getValue());
@@ -984,18 +1034,27 @@ public class MonitorUtils extends EthAppUtils{
             //updateSsiApplication2("household", null, ssiAppTest, ssiAppTest.getHouseholdCompositionHistory().entrySet().iterator().next().getValue());
         }
 
-        List<String> othrBnfts = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
-        List<String> pensions = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
-        log.info("ggggggggggggggggggggggggg household before any aggregation apps benefits:{}, pensions :{}", othrBnfts, pensions);
-        log.info("hhhhhhhhhhhhhhhhhhhhhhhhh ssiapp before aggregate :{}", ssiAppTest);
-        ssiAppTest = aggregateHouseholdValues(householdApps);
+        // List<String> othrBnfts = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
+        // List<String> pensions = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
+        // log.info("ggggggggggggggggggggggggg household before any aggregation apps benefits:{}, pensions :{}", othrBnfts, pensions);
+        // log.info("hhhhhhhhhhhhhhhhhhhhhhhhh ssiapp before aggregate :{}", ssiAppTest);
+        //ssiAppTest = filterHHAndAggregate(householdApps, ssiAppTest.getHouseholdComposition());
 
-        List<String> othrBnftsA = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
-        List<String> pensionsA = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
-        log.info("ggggggggggggggggggggggggg household after aggregation apps benefits:{}, pensions :{}", othrBnftsA, pensionsA);
-        log.info("hhhhhhhhhhhhhhhhhhhhhhhhh ssiapp after aggregate :{}", ssiAppTest);
+        // List<String> othrBnftsA = householdApps.stream().map(h -> h.getOtherBenefitsR()).collect(Collectors.toList());
+        // List<String> pensionsA = householdApps.stream().map(h -> h.getPensionsR()).collect(Collectors.toList());
+        // log.info("ggggggggggggggggggggggggg household after aggregation apps benefits:{}, pensions :{}", othrBnftsA, pensionsA);
+        // log.info("hhhhhhhhhhhhhhhhhhhhhhhhh ssiapp after aggregate :{}", ssiAppTest);
 
         return changedCredentials;
+    }
+
+    private static SsiApplication filterHHAndAggregate(List<SsiApplication> householdApps/*, SsiApplication ssiApp*/, List<HouseholdMember> currentHousehold){
+
+        List<String> currentAfms = currentHousehold.stream().map(h -> h.getAfm()).collect(Collectors.toList());
+
+        List<SsiApplication> filteredHouseholdApps = householdApps.stream().filter(h -> currentAfms.contains(h.getTaxisAfm())).collect(Collectors.toList());
+        return aggregateHouseholdValues(filteredHouseholdApps);
+
     }
 
 }

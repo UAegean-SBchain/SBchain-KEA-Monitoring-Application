@@ -147,7 +147,7 @@ public class MonitorServiceImpl implements MonitorService {
                 //TODO use new application with history when ready
                 //SsiApplicationTest ssiAppTest = new SsiApplicationTest();
                 //MonitorUtils.updateOffset(LocalDate.of(2020, 8, 12), theCase.get(), ssiApp);
-                List<SsiApplication> householdApps = mongoServ.findByTaxisAfmIn(ssiApp.getHouseholdComposition().stream().map(h -> h.getAfm()).collect(Collectors.toList()));
+                List<SsiApplication> householdApps = mongoServ.findByTaxisAfmIn(ssiApp.getHouseholdComposition().stream().map(h -> h.getAfm()).collect(Collectors.toSet()));
                 MonitorUtils.calculateOffset2(theCase.get(), ssiApp, householdApps);
             }
             this.ethServ.updateCase(theCase.get());
@@ -235,7 +235,7 @@ public class MonitorServiceImpl implements MonitorService {
             return false;
         }
 
-        List<SsiApplication> ssiApps = mongoServ.findByTaxisAfmIn(household.stream().map(h -> h.getAfm()).collect(Collectors.toList()));
+        List<SsiApplication> ssiApps = mongoServ.findByTaxisAfmIn(household.stream().map(h -> h.getAfm()).collect(Collectors.toSet()));
         SsiApplication aggregatedSsiApp = EthAppUtils.aggregateHouseholdValues(ssiApps);
 
         //economics check
