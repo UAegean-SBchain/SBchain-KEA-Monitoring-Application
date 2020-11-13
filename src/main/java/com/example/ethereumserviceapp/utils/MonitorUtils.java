@@ -83,7 +83,7 @@ public class MonitorUtils extends EthAppUtils{
                 credential.setHousehold(p.getValue());
                 changedCredentials.add(credential);
             });
-            updateSsiApplication2("household", null, ssiAppTest, ssiAppTest.getHouseholdCompositionHistory().entrySet().iterator().next().getValue());
+            updateSsiApplication("household", null, ssiAppTest, ssiAppTest.getHouseholdCompositionHistory().entrySet().iterator().next().getValue());
         }
 
         householdApps.forEach(h -> {
@@ -122,7 +122,7 @@ public class MonitorUtils extends EthAppUtils{
                             credential.setAfm(h.getTaxisAfm());
                             changedCredentials.add(credential);
                         });
-                        updateSsiApplication2(e.getKey(), e.getValue().entrySet().iterator().next().getValue(), h, null);
+                        updateSsiApplication(e.getKey(), e.getValue().entrySet().iterator().next().getValue(), h, null);
                     }
                 });
             }
@@ -132,7 +132,7 @@ public class MonitorUtils extends EthAppUtils{
         return changedCredentials;
     }
 
-    private static void reCalculateHousehold3(List<SsiApplication> householdApps, SsiApplication ssiApp ){
+    private static void reCalculateHousehold(List<SsiApplication> householdApps, SsiApplication ssiApp ){
         List<String> newHouseholdAfms = ssiApp.getHouseholdComposition().stream().map(h -> h.getAfm()).collect(Collectors.toList());
         for(SsiApplication app:householdApps){
             if(newHouseholdAfms.contains(app.getTaxisAfm())){
@@ -141,7 +141,7 @@ public class MonitorUtils extends EthAppUtils{
         }
     }
 
-    private static void updateSsiApplication2(String name, String value, SsiApplication ssiAppTest, List<HouseholdMember> household ){
+    private static void updateSsiApplication(String name, String value, SsiApplication ssiAppTest, List<HouseholdMember> household ){
         switch(name) {
             case "pension":
             ssiAppTest.setPensionsR(value);
@@ -200,9 +200,9 @@ public class MonitorUtils extends EthAppUtils{
             credBeforeAppStart = true;
             for(PaymentCredential credential: mCred.getValue()){
                 if(credential.getName().equals("household")){
-                    updateSsiApplication2(credential.getName(), null, ssiAppTest, credential.getHousehold());
+                    updateSsiApplication(credential.getName(), null, ssiAppTest, credential.getHousehold());
                 } else {
-                    updateSsiApplication2(credential.getName(), credential.getValue(), householdApps.stream().filter(h -> credential.getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);
+                    updateSsiApplication(credential.getName(), credential.getValue(), householdApps.stream().filter(h -> credential.getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);
                 }
             }
         }
@@ -247,10 +247,10 @@ public class MonitorUtils extends EthAppUtils{
                         Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
                             e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI+1).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
                         if(monthlyGroupMap.get(startOfMonth).get(i).getName().equals("household")){
-                            updateSsiApplication2(monthlyGroupMap.get(startOfMonth).get(i).getName(), null, ssiAppTest, monthlyGroupMap.get(startOfMonth).get(i).getHousehold());
-                            reCalculateHousehold3(householdApps, ssiAppTest);
+                            updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), null, ssiAppTest, monthlyGroupMap.get(startOfMonth).get(i).getHousehold());
+                            reCalculateHousehold(householdApps, ssiAppTest);
                         }else{
-                            updateSsiApplication2(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), householdApps.stream().filter(h -> monthlyGroupMap.get(startOfMonth).get(innerI).getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);   
+                            updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), householdApps.stream().filter(h -> monthlyGroupMap.get(startOfMonth).get(innerI).getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);   
                         }
                         ssiAppTest = filterHHAndAggregate(householdApps, ssiAppTest.getHouseholdComposition());
                         BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDays.intValue(), ssiAppTest, monthlyGroupMap.get(startOfMonth).get(i).getDate().toLocalDate());
@@ -261,10 +261,10 @@ public class MonitorUtils extends EthAppUtils{
                         Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
                             e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().withDayOfMonth(monthDays(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate())).toLocalDate()) <=0 && e.getValue().equals(State.ACCEPTED)).count();
                         if(monthlyGroupMap.get(startOfMonth).get(i).getName().equals("household")){
-                            updateSsiApplication2(monthlyGroupMap.get(startOfMonth).get(i).getName(), null, ssiAppTest, monthlyGroupMap.get(startOfMonth).get(i).getHousehold());   
-                            reCalculateHousehold3(householdApps, ssiAppTest);
+                            updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), null, ssiAppTest, monthlyGroupMap.get(startOfMonth).get(i).getHousehold());   
+                            reCalculateHousehold(householdApps, ssiAppTest);
                         }else{
-                            updateSsiApplication2(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), householdApps.stream().filter(h -> monthlyGroupMap.get(startOfMonth).get(innerI).getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);   
+                            updateSsiApplication(monthlyGroupMap.get(startOfMonth).get(i).getName(), monthlyGroupMap.get(startOfMonth).get(i).getValue(), householdApps.stream().filter(h -> monthlyGroupMap.get(startOfMonth).get(innerI).getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);   
                         }
                         ssiAppTest = filterHHAndAggregate(householdApps, ssiAppTest.getHouseholdComposition());
                         BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDays.intValue(), ssiAppTest, monthlyGroupMap.get(startOfMonth).get(i).getDate().toLocalDate());
@@ -307,50 +307,50 @@ public class MonitorUtils extends EthAppUtils{
         //sort the list of altered credentials by date
         List<PaymentCredential> changedCredentialsSorted = changedCredentials.stream().sorted(Comparator.comparing(PaymentCredential::getDate)).collect(Collectors.toList());
         
-            LocalDate startOfMonth = LocalDate.now().minusMonths(1).withDayOfMonth(1);
-            Integer fullMonthDays = monthDays(startOfMonth);
+    LocalDate startOfMonth = LocalDate.now().minusMonths(1).withDayOfMonth(1);
+    Integer fullMonthDays = monthDays(startOfMonth);
 
-                Long nonOffsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                        e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 
-                        && e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(0).getDate().toLocalDate()) <0 
-                        && e.getValue().equals(State.ACCEPTED)).count();
-                    
-                correctedPayment = calculatePayment(fullMonthDays, nonOffsetDays.intValue(), ssiAppTest, startOfMonth);
-                for(int i = 0; i< changedCredentialsSorted.size(); i++){
-                    if( i+1 < changedCredentialsSorted.size() ) {
-                        final int innerI = i;
-                        Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                            e -> e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI).getDate().toLocalDate()) >= 0 
-                            && e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI+1).getDate().toLocalDate()) <0 
-                            && e.getValue().equals(State.ACCEPTED)).count();
-                        if(changedCredentialsSorted.get(i).getName().equals("household")){
-                            updateSsiApplication2(changedCredentialsSorted.get(i).getName(), null, ssiAppTest, changedCredentialsSorted.get(i).getHousehold());
-                            reCalculateHousehold3(householdApps, ssiAppTest);
-                        } else{
-                            updateSsiApplication2(changedCredentialsSorted.get(i).getName(), changedCredentialsSorted.get(i).getValue(), householdApps.stream().filter(h -> changedCredentialsSorted.get(innerI).getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);   
-                        }
-                        
-                        ssiAppTest = filterHHAndAggregate(householdApps, ssiAppTest.getHouseholdComposition());
-                        BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDays.intValue(), ssiAppTest, changedCredentialsSorted.get(i).getDate().toLocalDate());
-                        correctedPayment = correctedPayment.add(offsetPayment);
-                    } else {
-                        final int innerI = i;
-                        Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                            e -> e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI).getDate().toLocalDate()) >= 0 
-                            && e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI).getDate().withDayOfMonth(monthDays(changedCredentialsSorted.get(innerI).getDate().toLocalDate())).toLocalDate()) <=0 
-                            && e.getValue().equals(State.ACCEPTED)).count();
-                        if(changedCredentialsSorted.get(i).getName().equals("household")){
-                            updateSsiApplication2(changedCredentialsSorted.get(i).getName(), null, ssiAppTest, changedCredentialsSorted.get(i).getHousehold());
-                            reCalculateHousehold3(householdApps, ssiAppTest);
-                        } else{
-                             updateSsiApplication2(changedCredentialsSorted.get(i).getName(), changedCredentialsSorted.get(i).getValue(), householdApps.stream().filter(h -> changedCredentialsSorted.get(innerI).getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);   
-                        }
-                        
-                        ssiAppTest = filterHHAndAggregate(householdApps, ssiAppTest.getHouseholdComposition());
-                        BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDays.intValue(), ssiAppTest, changedCredentialsSorted.get(i).getDate().toLocalDate());
-                        correctedPayment = correctedPayment.add(offsetPayment);
-                    }
+        Long nonOffsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+                e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 
+                && e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(0).getDate().toLocalDate()) <0 
+                && e.getValue().equals(State.ACCEPTED)).count();
+            
+        correctedPayment = calculatePayment(fullMonthDays, nonOffsetDays.intValue(), ssiAppTest, startOfMonth);
+        for(int i = 0; i< changedCredentialsSorted.size(); i++){
+            if( i+1 < changedCredentialsSorted.size() ) {
+                final int innerI = i;
+                Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+                    e -> e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI).getDate().toLocalDate()) >= 0 
+                    && e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI+1).getDate().toLocalDate()) <0 
+                    && e.getValue().equals(State.ACCEPTED)).count();
+                if(changedCredentialsSorted.get(i).getName().equals("household")){
+                    updateSsiApplication(changedCredentialsSorted.get(i).getName(), null, ssiAppTest, changedCredentialsSorted.get(i).getHousehold());
+                    reCalculateHousehold(householdApps, ssiAppTest);
+                } else{
+                    updateSsiApplication(changedCredentialsSorted.get(i).getName(), changedCredentialsSorted.get(i).getValue(), householdApps.stream().filter(h -> changedCredentialsSorted.get(innerI).getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);   
                 }
+                
+                ssiAppTest = filterHHAndAggregate(householdApps, ssiAppTest.getHouseholdComposition());
+                BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDays.intValue(), ssiAppTest, changedCredentialsSorted.get(i).getDate().toLocalDate());
+                correctedPayment = correctedPayment.add(offsetPayment);
+            } else {
+                final int innerI = i;
+                Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+                    e -> e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI).getDate().toLocalDate()) >= 0 
+                    && e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI).getDate().withDayOfMonth(monthDays(changedCredentialsSorted.get(innerI).getDate().toLocalDate())).toLocalDate()) <=0 
+                    && e.getValue().equals(State.ACCEPTED)).count();
+                if(changedCredentialsSorted.get(i).getName().equals("household")){
+                    updateSsiApplication(changedCredentialsSorted.get(i).getName(), null, ssiAppTest, changedCredentialsSorted.get(i).getHousehold());
+                    reCalculateHousehold(householdApps, ssiAppTest);
+                } else{
+                        updateSsiApplication(changedCredentialsSorted.get(i).getName(), changedCredentialsSorted.get(i).getValue(), householdApps.stream().filter(h -> changedCredentialsSorted.get(innerI).getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);   
+                }
+                
+                ssiAppTest = filterHHAndAggregate(householdApps, ssiAppTest.getHouseholdComposition());
+                BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDays.intValue(), ssiAppTest, changedCredentialsSorted.get(i).getDate().toLocalDate());
+                correctedPayment = correctedPayment.add(offsetPayment);
+            }
+        }
 
         return correctedPayment;
     }
@@ -390,7 +390,7 @@ public class MonitorUtils extends EthAppUtils{
                     .max((Entry<LocalDateTime, String> e1, Entry<LocalDateTime, String> e2) -> e1.getKey()
                     .compareTo(e2.getKey()));
                     if(maxEntry.isPresent()){
-                        updateSsiApplication2(e.getKey(), maxEntry.get().getValue(), h, null);
+                        updateSsiApplication(e.getKey(), maxEntry.get().getValue(), h, null);
                     }
                     if(e.getValue().size()>1){
                         e.getValue().entrySet().stream().skip(1).forEach(p -> {
@@ -412,7 +412,7 @@ public class MonitorUtils extends EthAppUtils{
             .max((Entry<LocalDateTime, List<HouseholdMember>> e1, Entry<LocalDateTime, List<HouseholdMember>> e2) -> e1.getKey()
             .compareTo(e2.getKey()));
             if(maxEntry.isPresent()){
-                updateSsiApplication2("household", null, ssiAppTest, maxEntry.get().getValue());
+                updateSsiApplication("household", null, ssiAppTest, maxEntry.get().getValue());
             }
             if(ssiAppTest.getHouseholdCompositionHistory().size()>1){
                 ssiAppTest.getHouseholdCompositionHistory().entrySet().stream().skip(1).forEach(p -> {
