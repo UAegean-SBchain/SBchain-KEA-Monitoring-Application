@@ -53,7 +53,7 @@ public class TestMonitorUtils {
 
         //log.info("ssiApp before :{}", ssiApp);
 
-        MonitorUtils.calculateOffset2(monitoredCase, ssiApp1, ssiApps);
+        MonitorUtils.calculateOffset(monitoredCase, ssiApp1, ssiApps);
 
         log.info("xxxxxxxxxxxxxxxxxxx offset :{}", monitoredCase.getOffset());
         //log.info("ssiApp after :{}", ssiApp);
@@ -77,7 +77,7 @@ public class TestMonitorUtils {
         ssiApps.add(ssiApp4);
         ssiApps.add(ssiApp5);
 
-        BigDecimal payment = MonitorUtils.calculateCurrentPayment2(monitoredCase, ssiApp1, ssiApps);
+        BigDecimal payment = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp1, ssiApps);
 
         log.info("xxxxxxxxxxxxxxxxxxx payment :{}", payment);
         //log.info("ssiApp after :{}", ssiApp);
