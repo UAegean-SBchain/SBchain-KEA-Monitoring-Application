@@ -6,7 +6,7 @@ public enum State {
     ACCEPTED(1, "Accepted"),    //case has been accepted
     REJECTED(2, "Rejected"),    //case has been rejected
     PAID(3, "Paid"),            //payment successful
-    PAUSED(4, "Paused"),        //case has been paused/suspended
+    SUSPENDED(4, "Suspended"),        //case has been paused/suspended
     FAILED(5, "Failed"),        //payment of case has failed
     NONPRINCIPAL(6, "NonPrincipal"); //case is not of the principal of the household
 
