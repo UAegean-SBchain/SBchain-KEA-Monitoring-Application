@@ -64,10 +64,13 @@ public class MonitorServiceImpl implements MonitorService {
 
             //check if the case state is rejected, if so, skip the test
             Optional<Case> c = this.ethServ.getCaseByUUID(uuid);
-            int caseState = c.get().getState().getValue();
+            //int caseState = c.get().getState().getValue();
             Iterator<Entry<LocalDateTime, State>> it = c.get().getHistory().entrySet().iterator();
             
-            if (caseState == 2) {
+            if(c.get().getState().equals(State.NONPRINCIPAL)){
+                return;
+            }
+            if(c.get().getState().equals(State.REJECTED)){
                 Iterator<Entry<LocalDateTime, State>> itr = c.get().getHistory().entrySet().iterator();
                 while(itr.hasNext()){
                     Map.Entry<LocalDateTime, State> entry = itr.next();
@@ -78,10 +81,15 @@ public class MonitorServiceImpl implements MonitorService {
                 }
                 return;
             }
-            log.info("looking into case {} with state {}", uuid, caseState);
+            log.info("looking into case {} with state {}", uuid, c.get().getState());
             Optional<SsiApplication> ssiCase = mongoServ.findByUuid(uuid);
             if (!ssiCase.isPresent()) {
                 updateCase(uuid, State.REJECTED, null);
+                return;
+            }
+            // if this is not a principal case update state as non principal and continue to the next case
+            if(!ssiCase.get().getTaxisAfm().equals(ssiCase.get().getHouseholdPrincipal().getAfm())){
+                updateCase(uuid, State.NONPRINCIPAL, null);
                 return;
             }
 
@@ -110,9 +118,8 @@ public class MonitorServiceImpl implements MonitorService {
                 //this.mongoServ.deleteByUuid(uuid);
             } else {
                 final SsiApplication ssiApp = ssiCase.get();
-                Boolean isPrincipal = ssiApp.getHouseholdPrincipal().getAfm().equals(ssiApp.getTaxisAfm());
                 //check the application by the uuid and update the case accordingly
-                if ((!isPrincipal && checkIndividualCredentials(c.get(), ssiApp)) || (isPrincipal && checkIndividualCredentials(c.get(), ssiApp) && checkHouseholdCredentials(c.get(), ssiApp, householdApps))) {
+                if (checkHouseholdCredentials(c.get(), ssiApp, householdApps)) {
                     //TODO replace mock check has green card with valid check
                     if(!MonitorUtils.hasGreenCard(uuid)){
                         rejectOrSuspendCases(uuid, State.SUSPENDED, householdApps);
@@ -181,21 +188,88 @@ public class MonitorServiceImpl implements MonitorService {
         return credsOk;
     }
 
-    private Boolean checkIndividualCredentials(Case monitoredCase, SsiApplication ssiApp){
+    private Boolean checkHouseholdCredentials(Case monitoredCase, SsiApplication ssiApp, List<SsiApplication> householdApps){
+        final LocalDate currentDate = LocalDate.now();
+        final LocalDate endDate = LocalDate.of(currentDate.getYear(), currentDate.getMonthValue(), EthAppUtils.monthDays(currentDate));
+
+        List<HouseholdMember> household = ssiApp.getHouseholdComposition();
+
+        //check if by the end of the month all the members of the household have submitted an application
+        if(currentDate.equals(endDate)){
+            List<String> appAfms = householdApps.stream().map(a -> a.getTaxisAfm()).collect(Collectors.toList());
+            List<String> householdAfms = household.stream().map(m -> m.getAfm()).collect(Collectors.toList());
+
+            if(!householdAfms.containsAll(appAfms)){
+                return false;
+            }
+        }
+
+        //check for deceased members in the household
+        if(household.stream().anyMatch(h -> checkForDeceasedMembers(h))){
+            return false;
+        }
+
+        //check for failed payments
+        if(monitoredCase.getPaymentHistory() == null? false : monitoredCase.getPaymentHistory().stream().filter(s -> s.getState().equals(State.FAILED)).count() >= 3){
+            return false;
+        }
+
+        //check if there are more than one principal members
+        if(mongoServ.findByHouseholdPrincipalIn(household).size()>1){
+            return false;
+        }
+
+        for(HouseholdMember member:household){
+            List<SsiApplication> householdDuplicates = mongoServ.findByHouseholdComposition(member);
+            if(householdDuplicates.size()>1){
+                return false;
+            }
+        }
+
+        //check if two months have passed while the application is in status suspended
+        Iterator<Entry<LocalDateTime, State>> it = monitoredCase.getHistory().entrySet().iterator();
+        LocalDate suspendStartDate = LocalDate.of(1900, 1, 1);
+        LocalDate suspendEndDate = LocalDate.of(1900, 1, 1);
+        while(it.hasNext()){
+            if(suspendEndDate.equals(suspendStartDate.plusMonths(2))){
+                return false;
+            }
+            Map.Entry<LocalDateTime, State> entry = it.next();
+            if(!entry.getValue().equals(State.SUSPENDED)){
+                suspendStartDate = LocalDate.of(1900, 1, 1);
+                continue;
+            }
+            if(suspendStartDate.equals(LocalDate.of(1900, 1, 1))){
+                suspendStartDate = entry.getKey().toLocalDate();
+            }
+            suspendEndDate = entry.getKey().toLocalDate();
+        }
+
+        // aggregate all the financial values of the household to one new application for verification
+        SsiApplication aggregatedSsiApp = EthAppUtils.aggregateHouseholdValues(householdApps);
+
+        //economics check
+        if(EthAppUtils.getTotalMonthlyValue(aggregatedSsiApp, null).compareTo(BigDecimal.ZERO) == 0){
+            return false;
+        }
+
+        //validate each household application credentials
+        for(SsiApplication app:householdApps){
+            if(!checkIndividualCredentials(app)){
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private Boolean checkIndividualCredentials(SsiApplication ssiApp){
 
         List<HouseholdMember> household = ssiApp.getHouseholdComposition();
         if(household == null){
             return false;
         }
 
-        if(mongoServ.findByHouseholdPrincipalIn(household).size()>1){
-            return false;
-        }
-
-        if(household.stream().anyMatch(h -> checkForDeceasedMembers(h))){
-            return false;
-        }
-        
         //external oaed check
         if(!oaedRegistrationCheck(ssiApp.getOaedId())){
             return false;
@@ -222,24 +296,6 @@ public class MonitorServiceImpl implements MonitorService {
             return false;
         }
 
-        //check if two months have passed while the application is in status suspended
-        Iterator<Entry<LocalDateTime, State>> it = monitoredCase.getHistory().entrySet().iterator();
-        LocalDate suspendStartDate = LocalDate.of(1900, 1, 1);
-        LocalDate suspendEndDate = LocalDate.of(1900, 1, 1);
-        while(it.hasNext()){
-            if(suspendEndDate.equals(suspendStartDate.plusMonths(2))){
-                return false;
-            }
-            Map.Entry<LocalDateTime, State> entry = it.next();
-            if(!entry.getValue().equals(State.SUSPENDED)){
-                suspendStartDate = LocalDate.of(1900, 1, 1);
-                continue;
-            }
-            if(suspendStartDate.equals(LocalDate.of(1900, 1, 1))){
-                suspendStartDate = entry.getKey().toLocalDate();
-            }
-            suspendEndDate = entry.getKey().toLocalDate();
-        }
         // check that if there differences in Amka register
         if(differenceInAmka(ssiApp.getTaxisAmka())){
             return false;
@@ -250,45 +306,6 @@ public class MonitorServiceImpl implements MonitorService {
             return false;
         }
         log.info("return check true ?");
-        return true;
-    }
-
-    private Boolean checkHouseholdCredentials(Case monitoredCase, SsiApplication ssiApp, List<SsiApplication> householdApps){
-        final LocalDate currentDate = LocalDate.now();
-        final LocalDate endDate = LocalDate.of(currentDate.getYear(), currentDate.getMonthValue(), EthAppUtils.monthDays(currentDate));
-
-        List<HouseholdMember> household = ssiApp.getHouseholdComposition();
-
-        //check if by the end of the month all the members of the household have submitted an application
-        if(currentDate.equals(endDate)){
-            List<String> appAfms = householdApps.stream().map(a -> a.getTaxisAfm()).collect(Collectors.toList());
-            List<String> householdAfms = household.stream().map(m -> m.getAfm()).collect(Collectors.toList());
-
-            if(!householdAfms.containsAll(appAfms)){
-                return false;
-            }
-        }
-
-        //check for failed payments
-        if(monitoredCase.getPaymentHistory() == null? false : monitoredCase.getPaymentHistory().stream().filter(s -> s.getState().equals(State.FAILED)).count() >= 3){
-            return false;
-        }
-
-        for(HouseholdMember member:household){
-            List<SsiApplication> householdDuplicates = mongoServ.findByHouseholdComposition(member);
-            if(householdDuplicates.size()>1){
-                return false;
-            }
-        }
-
-        // aggregate all the financial values of the household to one new application for verification
-        SsiApplication aggregatedSsiApp = EthAppUtils.aggregateHouseholdValues(householdApps);
-
-        //economics check
-        if(EthAppUtils.getTotalMonthlyValue(aggregatedSsiApp, null).compareTo(BigDecimal.ZERO) == 0){
-            return false;
-        }
-
         return true;
     }
 

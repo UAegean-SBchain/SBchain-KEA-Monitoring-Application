@@ -32,7 +32,7 @@ public class TestMonitorUtils {
     MongoService mongoServ;
 
     @Test
-    public void testOffsetPayment2(){
+    public void testOffsetPayment(){
 
         Case monitoredCase = generateMockCase("2WiYi1", State.ACCEPTED);
         SsiApplication ssiApp1 = generateSsiApp1();

@@ -40,7 +40,8 @@ public class PaymentServiceImpl implements PaymentService{
         uuids.stream().forEach(uuid -> {
             // get the case from the block chain
             Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
-            if(!theCase.isPresent()){
+            //if the case does not exist or is a case belonging to a non principal member, continue to the next case
+            if(!theCase.isPresent() || theCase.get().getState().equals(State.NONPRINCIPAL)){
                 return;
             }
             Case caseToBePaid = theCase.get();
@@ -49,10 +50,6 @@ public class PaymentServiceImpl implements PaymentService{
             BigDecimal paymentValue = BigDecimal.valueOf(0);
             if (caseToBePaid.getState().equals(State.ACCEPTED)) {
                 Optional<SsiApplication> ssiApp = mongoServ.findByUuid(uuid);
-                //check if this is the principal case of the household
-                if(!ssiApp.isPresent() || !ssiApp.get().getHouseholdPrincipal().getAfm().equals(ssiApp.get().getTaxisAfm())){
-                    return;
-                }
                 if(startDate.isBefore(currentDate)){
                     List<SsiApplication> allHouseholdApps = mongoServ.findByTaxisAfmIn(EthAppUtils.fetchAllHouseholdAfms(ssiApp.get())); 
                     paymentValue = MonitorUtils.calculateCurrentPayment(caseToBePaid, ssiApp.get(), allHouseholdApps).subtract(caseToBePaid.getOffset());
@@ -83,7 +80,6 @@ public class PaymentServiceImpl implements PaymentService{
                     ethServ.deleteCaseByUuid(uuid);
                 }
             }
-        
         });
     }
 
