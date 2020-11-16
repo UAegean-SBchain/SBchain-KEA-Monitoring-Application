@@ -263,7 +263,7 @@ public class MonitorServiceImpl implements MonitorService {
         return true;
     }
 
-    private Boolean checkIndividualCredentials(SsiApplication ssiApp){
+    public Boolean checkIndividualCredentials(SsiApplication ssiApp){
 
         List<HouseholdMember> household = ssiApp.getHouseholdComposition();
         if(household == null){

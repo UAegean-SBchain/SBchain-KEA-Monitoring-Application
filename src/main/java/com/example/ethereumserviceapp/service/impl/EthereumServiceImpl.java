@@ -57,7 +57,7 @@ public class EthereumServiceImpl implements EthereumService {
     private final TransactionManager txManager;
 
     public EthereumServiceImpl() {
-        this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/71d4655608864df6951baf7d7b7d80df"));
+        this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/58249bdbdaf449d7b1cb4f3e1955ee77"));
         String password = null; // no encryption
         this.mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
         // Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in
@@ -70,7 +70,7 @@ public class EthereumServiceImpl implements EthereumService {
         Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, derivationPath);
         // Load the wallet for the derived key
         this.credentials = Credentials.create(derivedKeyPair);
-        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x63AA7D6C01b2DE0702Cd5591C2584Df6CF810BC5"
+        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x3027b1e481C3478E85f9adD58d239eD9742AB418"
                 : System.getenv("CONTRACT_ADDRESS");
         this.REVOCATION_CONTRACT_ADDRESS = System.getenv("REVOCATION_CONTRACT_ADDRESS") == null
                 ? "0x9534d226e56826Cc4C01912Eb388b121Bb0683b5"
@@ -81,7 +81,7 @@ public class EthereumServiceImpl implements EthereumService {
     @Override
     public Credentials getCredentials() {
         if (this.credentials == null) {
-            this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/71d4655608864df6951baf7d7b7d80df"));
+            this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/58249bdbdaf449d7b1cb4f3e1955ee77"));
             String password = null; // no encryption
             this.mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
             // Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in

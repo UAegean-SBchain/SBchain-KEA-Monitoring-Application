@@ -5,6 +5,8 @@
  */
 package com.example.ethereumserviceapp.service;
 
+import com.example.ethereumserviceapp.model.entities.SsiApplication;
+
 /**
  *
  * @author nikos
@@ -12,5 +14,7 @@ package com.example.ethereumserviceapp.service;
 public interface MonitorService {
 
     public void startMonitoring();
+
+    public Boolean checkIndividualCredentials(SsiApplication ssiApp);
 
 }

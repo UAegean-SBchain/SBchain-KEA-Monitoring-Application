@@ -5,7 +5,7 @@ import com.example.ethereumserviceapp.model.State;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.service.MongoService;
-import com.example.ethereumserviceapp.utils.MonitorUtils;
+import com.example.ethereumserviceapp.service.MonitorService;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
@@ -28,6 +28,9 @@ public class EthereumController {
 
     @Autowired
     MongoService mongoServ;
+
+    @Autowired
+    MonitorService monitorService;
 
     @PostMapping("/addCase")
     protected void addCase(@RequestParam(value = "uuid", required = true) String uuid, @RequestParam(value = "caseName", required = true) String caseName,
@@ -68,7 +71,7 @@ public class EthereumController {
             if (!ssiApp.isPresent()) {
                 return "FAIL";
             }
-            if (!MonitorUtils.isApplicationAccepted(ssiApp.get())) {
+            if(monitorService.checkIndividualCredentials(ssiApp.get())){
                 return "FAIL";
             }
             c.get().setState(State.ACCEPTED);
