@@ -347,9 +347,11 @@ public class TestMonitorServ {
         CasePayment payment1 = new CasePayment();  
         payment1.setPayment(BigDecimal.valueOf(300));
         payment1.setPaymentDate(LocalDateTime.of(2020, 8, 1, 0, 0, 2));
+        payment1.setState(State.PAID);
         CasePayment payment2 = new CasePayment();    
         payment2.setPayment(BigDecimal.valueOf(300));
         payment2.setPaymentDate(LocalDateTime.of(2020, 9, 1, 0, 0, 2));
+        payment2.setState(State.PAID);
         paymentHistory.add(payment1);
         paymentHistory.add(payment2);
         monitoredCase.setPaymentHistory(paymentHistory);

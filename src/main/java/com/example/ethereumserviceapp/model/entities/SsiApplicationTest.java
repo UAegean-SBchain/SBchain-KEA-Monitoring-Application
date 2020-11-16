@@ -7,8 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.example.ethereumserviceapp.model.HouseholdMember;
-
 import org.springframework.data.annotation.Id;
 
 import lombok.Getter;
@@ -20,7 +18,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @NoArgsConstructor
-public class SsiApplication {
+public class SsiApplicationTest {
 
     @Id
     private String id;
@@ -116,10 +114,7 @@ public class SsiApplication {
     private LinkedHashMap<LocalDateTime, String> foreignRealEstateAHistory;
 
     //household composition
-    private HouseholdMember householdPrincipal;
-    private List<HouseholdMember> householdComposition;
-    //private Map<String, String>[] householdComposition;
-    private LinkedHashMap<LocalDateTime,List<HouseholdMember>> householdCompositionHistory;
+    private Map<String, String>[] householdComposition;
 
     //income guarantee
     private String monthlyGuarantee;

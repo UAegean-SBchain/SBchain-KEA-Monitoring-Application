@@ -8,9 +8,11 @@ package com.example.ethereumserviceapp.service.impl;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import com.example.ethereumserviceapp.model.ColletionOfCredentials;
 import com.example.ethereumserviceapp.model.CredsAndExp;
+import com.example.ethereumserviceapp.model.HouseholdMember;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.repository.SsiApplicationRepository;
 import com.example.ethereumserviceapp.service.MongoService;
@@ -50,6 +52,16 @@ public class MongoServiceImpl implements MongoService {
     @Override
     public List<SsiApplication> findByTaxisAfm(String taxisAfm) {
         return this.rep.findByTaxisAfm(taxisAfm);
+    }
+
+    @Override
+    public List<SsiApplication> findByTaxisAfmIn(Set<String> taxisAfms){
+        return this.rep.findByTaxisAfmIn(taxisAfms);
+    }
+
+    @Override
+    public List<SsiApplication> findByHouseholdPrincipalIn(List<HouseholdMember> members){
+        return this.rep.findByHouseholdPrincipalIn(members);
     }
 
     @Override
@@ -93,6 +105,11 @@ public class MongoServiceImpl implements MongoService {
     @Override
     public List<SsiApplication> findByHouseholdCompositionIn(Map<String, String> household) {
         return this.rep.findByHouseholdCompositionIn(household);
+    }
+
+    @Override
+    public List<SsiApplication> findByHouseholdComposition(HouseholdMember member){
+        return this.rep.findByHouseholdComposition(member);
     }
 
     @Override
