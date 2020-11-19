@@ -12,11 +12,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.example.ethereumserviceapp.model.Case;
@@ -60,7 +62,6 @@ public class MonitorUtils extends EthAppUtils{
         }
         //sort the list of altered credentials by date
         List<PaymentCredential> changedCredentialsSorted = changedCredentials.stream().sorted(Comparator.comparing(PaymentCredential::getDate)).collect(Collectors.toList());
-        
         //create a map of altered credentials grouped by month, with key the start date of the month and value the credentials that were altered during this month
         Map<LocalDate, List<PaymentCredential>> monthlyGroupMap = changedCredentialsSorted.stream().collect(Collectors.groupingBy(e -> e.getDate().withDayOfMonth(1).toLocalDate()));
         List<CasePayment> paymentHistory = monitoredCase.getPaymentHistory().stream().sorted(Comparator.comparing(CasePayment::getPaymentDate)).collect(Collectors.toList());
@@ -95,51 +96,78 @@ public class MonitorUtils extends EthAppUtils{
             LocalDate startOfMonth = ph.getPaymentDate().minusMonths(1).withDayOfMonth(1).toLocalDate();
             LocalDate endOfMonth = ph.getPaymentDate().minusMonths(1).withDayOfMonth(monthDays(ph.getPaymentDate().minusMonths(1).toLocalDate())).toLocalDate();
             Integer fullMonthDays = monthDays(startOfMonth);
+            List<LocalDate> monthDates =  monitoredCase.getHistory().entrySet().stream().filter(
+                    e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 && e.getKey().toLocalDate().compareTo(endOfMonth) <=0 && e.getValue().equals(State.ACCEPTED)).map(e -> e.getKey().toLocalDate()).collect(Collectors.toList());
 
+            //find all the dates that a minor becomes an adult during the month
+            List<LocalDate> ageOffsetDates = findOffsetAgeDates(ssiApp, monthDates).stream().sorted().collect(Collectors.toList());
             // if there is no credential change during this month then calculate the payment with the last credentials
             if(monthlyGroupMap.get(startOfMonth) == null && startOfMonth.isAfter(firstAcceptedDate)){
+                BigDecimal correctedPayment = BigDecimal.ZERO;
+                List<LocalDate> offsetDates = monitoredCase.getHistory().entrySet().stream().filter(
+                    e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 && e.getKey().toLocalDate().compareTo(endOfMonth) <=0 && e.getValue().equals(State.ACCEPTED)).map(x -> x.getKey().toLocalDate()).collect(Collectors.toList());
+               
+                List<LocalDate> ageList =  new ArrayList<>();
+                if(!ageOffsetDates.isEmpty()){
+                    for(LocalDate ageOffset:ageOffsetDates){
+                        if(!offsetDates.isEmpty() && ageOffset.compareTo(offsetDates.get(0)) >= 0 && ageOffset.isBefore(offsetDates.get(offsetDates.size()-1))){
+                            ageList.add(ageOffset);
+                        }
+                    }
+                }
                 
-                Long offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                    e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 && e.getKey().toLocalDate().compareTo(endOfMonth) <=0 && e.getValue().equals(State.ACCEPTED)).count();
+                if(ageList.isEmpty()){
+                    BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDates.size(), ssiApp, startOfMonth);
+                    correctedPayment = correctedPayment.add(offsetPayment);
+                } else {
+                    BigDecimal offsetPayment = calculateAges(ageList, monitoredCase, offsetDates.get(0), offsetDates.get(offsetDates.size()-1), fullMonthDays, ssiApp);
+                    correctedPayment = correctedPayment.add(offsetPayment);
+                }
                 
-                BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDays.intValue(), ssiApp, startOfMonth);
-                BigDecimal monthlyOffset = ph.getPayment().subtract(offsetPayment);
+                BigDecimal monthlyOffset = ph.getPayment().subtract(correctedPayment);
 
                 monitoredCase.setOffset(monitoredCase.getOffset().add(monthlyOffset));
             }
 
             if(monthlyGroupMap.get(startOfMonth)!= null){
+                BigDecimal correctedPayment = BigDecimal.ZERO;
+                if(!ageOffsetDates.isEmpty() && ageOffsetDates.get(0).isBefore(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate()) ){
+                    List<LocalDate> ageList = ageOffsetDates.stream().filter(a -> a.isBefore(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate())).collect(Collectors.toList());
+                    BigDecimal offsetPayment = calculateAges(ageList, monitoredCase, startOfMonth, monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate(), fullMonthDays, ssiApp);
+                    correctedPayment = correctedPayment.add(offsetPayment);
+                } else{
                 //calculate the starting days of the month with a payment value of the lastly updated credentials
-                Long nonOffsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                        e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(1).toLocalDate()) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
-                    
-                CasePayment payment = monitoredCase.getPaymentHistory().stream()
-                    .filter(p -> p.getPaymentDate().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(1).toLocalDate()) >= 0
-                    && p.getPaymentDate().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(monthDays(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate())).toLocalDate()) <= 0)
-                    .collect(Collectors.toList()).get(0);
+                    Long nonOffsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+                            e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
+                        
+                    CasePayment payment = monitoredCase.getPaymentHistory().stream()
+                        .filter(p -> p.getPaymentDate().toLocalDate().compareTo(startOfMonth) >= 0
+                        && p.getPaymentDate().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(monthDays(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate())).toLocalDate()) <= 0)
+                        .collect(Collectors.toList()).get(0);
 
-                BigDecimal correctedPayment = (payment.getPayment()
-                    .divide(BigDecimal.valueOf(monthDays(payment.getPaymentDate().toLocalDate())), 2, RoundingMode.HALF_UP))
-                    .multiply(BigDecimal.valueOf(nonOffsetDays));
+                    correctedPayment = (payment.getPayment()
+                        .divide(BigDecimal.valueOf(monthDays(payment.getPaymentDate().toLocalDate())), 2, RoundingMode.HALF_UP))
+                        .multiply(BigDecimal.valueOf(nonOffsetDays));
+                }
                 for(int i = 0; i< monthlyGroupMap.get(startOfMonth).size(); i++){
-                    Long offsetDays = Long.valueOf(0);
+                    List<LocalDate> offsetDates = new ArrayList<>();
+                    final int innerI = i;
                     //if there are more credentials in the history list for this month then calculate the offset days and payment value for each period
                     if( i+1 <  monthlyGroupMap.get(startOfMonth).size() ) {
-                        final int innerI = i;
-                        offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+                        offsetDates = monitoredCase.getHistory().entrySet().stream().filter(
                             e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate()) >= 0
                                 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI+1).getDate().toLocalDate()) <0 
-                                && e.getValue().equals(State.ACCEPTED))
-                                .count();
-                        
+                                && e.getValue().equals(State.ACCEPTED)).map(m -> m.getKey().toLocalDate())
+                                .collect(Collectors.toList());
+                                
                     } else {
                         // last credential change in the history list for this month
-                        final int innerI = i;
-                        offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+                        offsetDates = monitoredCase.getHistory().entrySet().stream().filter(
                             e -> e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate()) >= 0 
                                 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().withDayOfMonth(monthDays(monthlyGroupMap.get(startOfMonth).get(innerI).getDate().toLocalDate())).toLocalDate()) <=0 
-                                && e.getValue().equals(State.ACCEPTED))
-                                .count();
+                                && e.getValue().equals(State.ACCEPTED)).map(m -> m.getKey().toLocalDate())
+                                .collect(Collectors.toList());
+                        
                     }
                     updateAlteredCredential(monthlyGroupMap.get(startOfMonth).get(i).getName(),
                             ssiApp,
@@ -149,8 +177,23 @@ public class MonitorUtils extends EthAppUtils{
                             monthlyGroupMap.get(startOfMonth).get(i).getAfm());
 
                     ssiApp = filterHHAndAggregate(householdApps, ssiApp.getHouseholdComposition());
-                    BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDays.intValue(), ssiApp, monthlyGroupMap.get(startOfMonth).get(i).getDate().toLocalDate());
-                    correctedPayment = correctedPayment.add(offsetPayment);
+
+                    List<LocalDate> ageList =  new ArrayList<>();
+                    if(!ageOffsetDates.isEmpty()){
+                        for(LocalDate ageOffset:ageOffsetDates){
+                            if(!offsetDates.isEmpty() && ageOffset.compareTo(offsetDates.get(0)) >= 0 && ageOffset.isBefore(offsetDates.get(offsetDates.size()-1))){
+                                ageList.add(ageOffset);
+                            }
+                        }
+                    }
+                    
+                    if(ageList.isEmpty()){
+                        BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDates.size(), ssiApp, monthlyGroupMap.get(startOfMonth).get(i).getDate().toLocalDate());
+                        correctedPayment = correctedPayment.add(offsetPayment);
+                    } else {
+                        BigDecimal offsetPayment = calculateAges(ageList, monitoredCase, offsetDates.get(0), offsetDates.get(offsetDates.size()-1), fullMonthDays, ssiApp);
+                        correctedPayment = correctedPayment.add(offsetPayment);
+                    }
                 }
                 BigDecimal monthlyOffset = ph.getPayment().subtract(correctedPayment);
 
@@ -162,57 +205,70 @@ public class MonitorUtils extends EthAppUtils{
     public static BigDecimal calculateCurrentPayment(Case monitoredCase, SsiApplication ssiApp, List<SsiApplication> householdApps){
         
         LocalDate startOfPayment = LocalDate.now().minusMonths(1).withDayOfMonth(1);
-        Integer monthDays = monthDays(startOfPayment);
-        LocalDate endOfPayment = LocalDate.now().minusMonths(1).withDayOfMonth(monthDays);
-        Long acceptedDays = monitoredCase.getHistory().entrySet().stream().filter(
-                        e -> e.getKey().toLocalDate().compareTo(startOfPayment) >= 0 && e.getKey().toLocalDate().compareTo(endOfPayment) <=0 && e.getValue().equals(State.ACCEPTED)).count();
-        
+        Integer fullMonthDays = monthDays(startOfPayment);
+        LocalDate endOfPayment = LocalDate.now().minusMonths(1).withDayOfMonth(fullMonthDays);
+
+        List<LocalDate> acceptedDates = monitoredCase.getHistory().entrySet().stream().filter(
+            e -> e.getKey().toLocalDate().compareTo(startOfPayment) >= 0 
+            && e.getKey().toLocalDate().compareTo(endOfPayment) <=0 
+            && e.getValue().equals(State.ACCEPTED))
+            .map(x -> x.getKey().toLocalDate()).collect(Collectors.toList());
+
         SsiApplication ssiAppProjection = filterHHAndAggregate(householdApps, ssiApp.getHouseholdComposition());           
-        BigDecimal projectedPayment = calculatePayment(monthDays, acceptedDays.intValue(), ssiAppProjection, LocalDate.now());
+        BigDecimal projectedPayment = calculatePayment(fullMonthDays, acceptedDates.size(), ssiAppProjection, LocalDate.now());
 
         List<PaymentCredential> changedCredentials = latestAlteredCredentials(ssiApp, householdApps);
         ssiApp = filterHHAndAggregate(householdApps, ssiApp.getHouseholdComposition());   
         
         BigDecimal correctedPayment = BigDecimal.ZERO;
 
-        if(changedCredentials.isEmpty() || !changedCredentials.stream().anyMatch(c -> c.getDate().withDayOfMonth(1).toLocalDate().equals(startOfPayment))){
+        //find all the dates that minors become adults during this month
+        List<LocalDate> ageOffsetDates = findOffsetAgeDates(ssiApp, acceptedDates).stream().sorted().collect(Collectors.toList());
+        if((changedCredentials.isEmpty() || !changedCredentials.stream().anyMatch(c -> c.getDate().withDayOfMonth(1).toLocalDate().equals(startOfPayment))) && ageOffsetDates.isEmpty()){
             return projectedPayment;
         }
         //sort the list of altered credentials by date
         List<PaymentCredential> changedCredentialsSorted = changedCredentials.stream().sorted(Comparator.comparing(PaymentCredential::getDate)).collect(Collectors.toList());
         
-    LocalDate startOfMonth = LocalDate.now().minusMonths(1).withDayOfMonth(1);
-    Integer fullMonthDays = monthDays(startOfMonth);
-
-        Long nonOffsetDays = monitoredCase.getHistory().entrySet().stream().filter(
-                e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 
+        List<LocalDate> nonOffsetDates = monitoredCase.getHistory().entrySet().stream().filter(
+                e -> e.getKey().toLocalDate().compareTo(startOfPayment) >= 0 
                 && e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(0).getDate().toLocalDate()) <0 
-                && e.getValue().equals(State.ACCEPTED)).count();
-            
-        correctedPayment = calculatePayment(fullMonthDays, nonOffsetDays.intValue(), ssiApp, startOfMonth);
+                && e.getValue().equals(State.ACCEPTED))
+                .map(x -> x.getKey().toLocalDate()).collect(Collectors.toList());
+        
+        List<LocalDate> ageList =  new ArrayList<>();
+
+        if(!ageOffsetDates.isEmpty()){
+            for(LocalDate ageOffset:ageOffsetDates){
+                if(!nonOffsetDates.isEmpty() && ageOffset.compareTo(nonOffsetDates.get(0)) >= 0 && ageOffset.isBefore(nonOffsetDates.get(nonOffsetDates.size()-1))){
+                    ageList.add(ageOffset);
+                }
+            }
+        }
+
+        if(ageList.isEmpty()){
+            correctedPayment = calculatePayment(fullMonthDays, nonOffsetDates.size(), ssiApp, startOfPayment);
+        } else {
+            BigDecimal offsetPayment = calculateAges(ageList, monitoredCase, nonOffsetDates.get(0), nonOffsetDates.get(nonOffsetDates.size()-1), fullMonthDays, ssiApp);
+            correctedPayment = correctedPayment.add(offsetPayment);
+        }
+
         for(int i = 0; i< changedCredentialsSorted.size(); i++){
-            Long offsetDays = Long.valueOf(0);
+            List<LocalDate> offsetDates = new ArrayList<>();
             if( i+1 < changedCredentialsSorted.size() ) {
                 final int innerI = i;
-                offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+                offsetDates = monitoredCase.getHistory().entrySet().stream().filter(
                     e -> e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI).getDate().toLocalDate()) >= 0 
                         && e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI+1).getDate().toLocalDate()) <0 
                         && e.getValue().equals(State.ACCEPTED))
-                        .count();
-
-                updateAlteredCredential(changedCredentialsSorted.get(i).getName(),
-                    ssiApp,
-                    changedCredentialsSorted.get(i).getValue(), 
-                    changedCredentialsSorted.get(i).getHousehold(), 
-                    householdApps,
-                    changedCredentialsSorted.get(innerI).getAfm());
+                        .map(x -> x.getKey().toLocalDate()).collect(Collectors.toList());
             } else {
                 final int innerI = i;
-                offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+                offsetDates = monitoredCase.getHistory().entrySet().stream().filter(
                     e -> e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI).getDate().toLocalDate()) >= 0 
                         && e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(innerI).getDate().withDayOfMonth(monthDays(changedCredentialsSorted.get(innerI).getDate().toLocalDate())).toLocalDate()) <=0 
                         && e.getValue().equals(State.ACCEPTED))
-                        .count();
+                        .map(x -> x.getKey().toLocalDate()).collect(Collectors.toList());
             }
             updateAlteredCredential(changedCredentialsSorted.get(i).getName(),
                 ssiApp,
@@ -222,8 +278,22 @@ public class MonitorUtils extends EthAppUtils{
                 changedCredentialsSorted.get(i).getAfm());
 
             ssiApp = filterHHAndAggregate(householdApps, ssiApp.getHouseholdComposition());
-            BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDays.intValue(), ssiApp, changedCredentialsSorted.get(i).getDate().toLocalDate());
-            correctedPayment = correctedPayment.add(offsetPayment);
+
+            if(!ageOffsetDates.isEmpty()){
+                for(LocalDate ageOffset:ageOffsetDates){
+                    if(!offsetDates.isEmpty() && ageOffset.compareTo(offsetDates.get(0)) >= 0 && ageOffset.isBefore(offsetDates.get(offsetDates.size()-1))){
+                        ageList.add(ageOffset);
+                    }
+                }
+            }
+            
+            if(ageList.isEmpty()){
+                BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDates.size(), ssiApp, changedCredentialsSorted.get(i).getDate().toLocalDate());
+                correctedPayment = correctedPayment.add(offsetPayment);
+            } else {
+                BigDecimal offsetPayment = calculateAges(ageList, monitoredCase, offsetDates.get(0), offsetDates.get(offsetDates.size()-1), fullMonthDays, ssiApp);
+                correctedPayment = correctedPayment.add(offsetPayment);
+            }
         }
 
         return correctedPayment;
@@ -398,5 +468,55 @@ public class MonitorUtils extends EthAppUtils{
         return aggregateHouseholdValues(filteredHouseholdApps);
 
     }
+
+    private static List<LocalDate> findOffsetAgeDates(SsiApplication ssiApp, List<LocalDate> offsetDates){
+        List<LocalDate> ageOffsetDates = new ArrayList<>();
+        for(HouseholdMember member:ssiApp.getHouseholdComposition()){
+            Set<Integer> ages = new HashSet<>();
+            for(LocalDate referenceDate:offsetDates){
+                Integer age = calculateAge(LocalDate.parse(member.getDateOfBirth(), formatter), referenceDate);
+                
+                ages.add(age);
+                if(!ages.contains(17)){
+                    break;
+                }
+                if(ages.contains(17) && ages.contains(18)){
+                    ageOffsetDates.add(referenceDate);
+                    break;
+                }
+            }
+        }
+        return ageOffsetDates;
+    }
+
+    private static BigDecimal calculateAges(List<LocalDate> ageOffsetDates, Case monitoredCase, LocalDate startDate, LocalDate endDate, Integer fullMonthDays, SsiApplication ssiApp){
+        
+        Long nonOffsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+            e -> e.getKey().toLocalDate().compareTo(startDate) >= 0
+                && e.getKey().toLocalDate().compareTo(ageOffsetDates.get(0)) <0 
+                && e.getValue().equals(State.ACCEPTED)).count();
+
+        BigDecimal correctedPayment = calculatePayment(fullMonthDays, nonOffsetDays.intValue(), ssiApp, startDate);
+        Long offsetDays = Long.valueOf(0);
+        
+        for(int i=0; i<ageOffsetDates.size(); i++){
+            final int innerI = i;
+            if(i+1 < ageOffsetDates.size()){
+                offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+                    e -> e.getKey().toLocalDate().compareTo(ageOffsetDates.get(innerI)) >= 0 
+                    && e.getKey().toLocalDate().compareTo(ageOffsetDates.get(innerI+1)) < 0 
+                    && e.getValue().equals(State.ACCEPTED)).count();
+            } else {
+                offsetDays = monitoredCase.getHistory().entrySet().stream().filter(
+                    e -> e.getKey().toLocalDate().compareTo(ageOffsetDates.get(innerI)) >= 0 
+                    && e.getKey().toLocalDate().compareTo(endDate) <= 0 
+                    && e.getValue().equals(State.ACCEPTED)).count();
+            }
+            BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDays.intValue(), ssiApp, ageOffsetDates.get(i));
+            correctedPayment = correctedPayment.add(offsetPayment);
+        }
+
+        return correctedPayment;
+    } 
 
 }

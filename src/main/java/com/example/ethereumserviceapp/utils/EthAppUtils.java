@@ -255,7 +255,7 @@ public class EthAppUtils {
         return numDays;
     }
 
-    private static Integer calculateAge(LocalDate dateOfBirth, LocalDate referenceDate){
+    public static Integer calculateAge(LocalDate dateOfBirth, LocalDate referenceDate){
         if ((dateOfBirth != null) && (referenceDate != null)) {
             return Period.between(dateOfBirth, referenceDate).getYears();
         } else {

@@ -184,7 +184,7 @@ public class TestMonitorUtils {
         member3.setAfm("164582");
         member3.setName("James");
         member3.setSurname("Hetfield");
-        member3.setDateOfBirth("17/12/2005");
+        member3.setDateOfBirth("19/10/2002");
         HouseholdMember member4 = new HouseholdMember();
         member4.setAfm("789456");
         member4.setName("Rory");
@@ -277,7 +277,7 @@ public class TestMonitorUtils {
         member3.setAfm("164582");
         member3.setName("James");
         member3.setSurname("Hetfield");
-        member3.setDateOfBirth("17/12/2005");
+        member3.setDateOfBirth("19/10/2002");
         HouseholdMember member4 = new HouseholdMember();
         member4.setAfm("789456");
         member4.setName("Rory");
@@ -352,7 +352,7 @@ public class TestMonitorUtils {
         member3.setAfm("164582");
         member3.setName("James");
         member3.setSurname("Hetfield");
-        member3.setDateOfBirth("17/12/2005");
+        member3.setDateOfBirth("19/10/2002");
         HouseholdMember member4 = new HouseholdMember();
         member4.setAfm("789456");
         member4.setName("Rory");
@@ -426,7 +426,7 @@ public class TestMonitorUtils {
         member3.setAfm("164582");
         member3.setName("James");
         member3.setSurname("Hetfield");
-        member3.setDateOfBirth("17/12/2005");
+        member3.setDateOfBirth("19/10/2002");
         HouseholdMember member4 = new HouseholdMember();
         member4.setAfm("789456");
         member4.setName("Rory");
@@ -500,7 +500,7 @@ public class TestMonitorUtils {
         member3.setAfm("164582");
         member3.setName("James");
         member3.setSurname("Hetfield");
-        member3.setDateOfBirth("17/12/2005");
+        member3.setDateOfBirth("19/10/2002");
         HouseholdMember member4 = new HouseholdMember();
         member4.setAfm("789456");
         member4.setName("Rory");
