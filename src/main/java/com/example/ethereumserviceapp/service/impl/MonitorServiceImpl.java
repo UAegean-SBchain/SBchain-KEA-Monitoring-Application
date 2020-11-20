@@ -189,20 +189,20 @@ public class MonitorServiceImpl implements MonitorService {
     }
 
     private Boolean checkHouseholdCredentials(Case monitoredCase, SsiApplication ssiApp, List<SsiApplication> householdApps){
-        final LocalDate currentDate = LocalDate.now();
-        final LocalDate endDate = LocalDate.of(currentDate.getYear(), currentDate.getMonthValue(), EthAppUtils.monthDays(currentDate));
+        //final LocalDate currentDate = LocalDate.now();
+        //final LocalDate endDate = LocalDate.of(currentDate.getYear(), currentDate.getMonthValue(), EthAppUtils.monthDays(currentDate));
 
         List<HouseholdMember> household = ssiApp.getHouseholdComposition();
 
         //check if by the end of the month all the members of the household have submitted an application
-        if(currentDate.equals(endDate)){
-            List<String> appAfms = householdApps.stream().map(a -> a.getTaxisAfm()).collect(Collectors.toList());
-            List<String> householdAfms = household.stream().map(m -> m.getAfm()).collect(Collectors.toList());
+        // if(currentDate.equals(endDate)){
+        //     List<String> appAfms = householdApps.stream().map(a -> a.getTaxisAfm()).collect(Collectors.toList());
+        //     List<String> householdAfms = household.stream().map(m -> m.getAfm()).collect(Collectors.toList());
 
-            if(!householdAfms.containsAll(appAfms)){
-                return false;
-            }
-        }
+        //     if(!householdAfms.containsAll(appAfms)){
+        //         return false;
+        //     }
+        // }
 
         //check for deceased members in the household
         if(household.stream().anyMatch(h -> checkForDeceasedMembers(h))){

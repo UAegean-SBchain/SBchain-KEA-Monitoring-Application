@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.CasePayment;
@@ -48,13 +50,16 @@ public class PaymentServiceImpl implements PaymentService{
             LocalDateTime startDate = caseToBePaid.getHistory().entrySet().iterator().next().getKey();
             LocalDateTime currentDate = LocalDateTime.now();
             BigDecimal paymentValue = BigDecimal.valueOf(0);
+            Optional<SsiApplication> ssiApp = mongoServ.findByUuid(uuid);
+            Set<String> householdAfms = ssiApp.get().getHouseholdComposition().stream().map(s -> s.getAfm()).collect(Collectors.toSet());
+            List<SsiApplication> householdApps = mongoServ.findByTaxisAfmIn(householdAfms);
             if (caseToBePaid.getState().equals(State.ACCEPTED)) {
-                Optional<SsiApplication> ssiApp = mongoServ.findByUuid(uuid);
+                //Optional<SsiApplication> ssiApp = mongoServ.findByUuid(uuid);
                 if(startDate.isBefore(currentDate)){
                     List<SsiApplication> allHouseholdApps = mongoServ.findByTaxisAfmIn(EthAppUtils.fetchAllHouseholdAfms(ssiApp.get())); 
                     paymentValue = MonitorUtils.calculateCurrentPayment(caseToBePaid, ssiApp.get(), allHouseholdApps).subtract(caseToBePaid.getOffset());
                     //Call to payment service
-                    State paymentState = paymentService(paymentValue, caseToBePaid);
+                    State paymentState = paymentService(paymentValue, caseToBePaid, ssiApp.get(), householdApps);
                     addPayment(paymentValue, caseToBePaid, currentDate, paymentState);
                 }
             }
@@ -66,13 +71,13 @@ public class PaymentServiceImpl implements PaymentService{
                         && e.getKey().toLocalDate().isBefore(currentDate.toLocalDate())
                         && e.getValue().equals(State.ACCEPTED)).count();
                 if(acceptedDates.intValue() > 0){
-                    Optional<SsiApplication> ssiApp = mongoServ.findByUuid(uuid);
+                    //Optional<SsiApplication> ssiApp = mongoServ.findByUuid(uuid);
                     //check payment credentials
                     if(ssiApp.isPresent() && !ssiApp.get().getHouseholdPrincipal().getAfm().equals(ssiApp.get().getTaxisAfm())){
                         List<SsiApplication> allHouseholdApps = mongoServ.findByTaxisAfmIn(EthAppUtils.fetchAllHouseholdAfms(ssiApp.get())); 
                         paymentValue = MonitorUtils.calculateCurrentPayment(caseToBePaid, ssiApp.get(), allHouseholdApps).subtract(caseToBePaid.getOffset());
                         //Call to payment service
-                        State paymentState = paymentService(paymentValue, caseToBePaid);
+                        State paymentState = paymentService(paymentValue, caseToBePaid, ssiApp.get(), householdApps);
                         addPayment(paymentValue, caseToBePaid, currentDate, paymentState);
                     }
                 } else if(caseToBePaid.getState().equals(State.REJECTED) ){
@@ -83,9 +88,9 @@ public class PaymentServiceImpl implements PaymentService{
         });
     }
 
-    private State paymentService(BigDecimal valueToBePaid, Case caseToBePaid){
+    private State paymentService(BigDecimal valueToBePaid, Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps){
         //mock Call to external service
-        if(!mockExternalPaymentService(valueToBePaid, caseToBePaid.getUuid())){
+        if(!mockExternalPaymentService(valueToBePaid, caseToBePaid.getUuid()) || !EthAppUtils.areAppHouseholdAfmsTheSame(householdApps, ssiApp)){
             caseToBePaid.setOffset(BigDecimal.valueOf(0));
             //caseToBePaid.setState(State.PAID);
             return State.FAILED;
