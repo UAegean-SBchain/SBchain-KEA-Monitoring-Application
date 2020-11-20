@@ -88,7 +88,7 @@ public class TestMonitorUtils {
         
         Case monitoredCase = new Case();
         monitoredCase.setUuid(uuid);
-        monitoredCase.setDate(LocalDateTime.now().minusDays(1));
+        monitoredCase.setDate(LocalDateTime.now().withDayOfMonth(1));
         monitoredCase.setState(state);
         LinkedHashMap<LocalDateTime, State> history = new LinkedHashMap<>();
         Integer daysOfCurrentPayment = monthDays(LocalDateTime.now().minusMonths(1));
@@ -163,6 +163,7 @@ public class TestMonitorUtils {
         ssiApp.setTaxisAfm("123456");
         //ssiApp.setSalariesR("0.5");
         ssiApp.setPensionsR("650");
+        ssiApp.setTaxisDateOfBirth("05/05/1953");
 
         LinkedHashMap<LocalDateTime, String> pensionHistory = new LinkedHashMap<>();
         pensionHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "500");
@@ -184,7 +185,7 @@ public class TestMonitorUtils {
         member3.setAfm("164582");
         member3.setName("James");
         member3.setSurname("Hetfield");
-        member3.setDateOfBirth("19/10/2002");
+        member3.setDateOfBirth("19/09/2002");
         HouseholdMember member4 = new HouseholdMember();
         member4.setAfm("789456");
         member4.setName("Rory");
@@ -257,6 +258,7 @@ public class TestMonitorUtils {
         ssiApp.setTaxisAfm("678901");
         //ssiApp.setSalariesR("2000");
         ssiApp.setPensionsR("700");
+        ssiApp.setTaxisDateOfBirth("12/08/1960");
 
         LinkedHashMap<LocalDateTime, String> pensionHistory = new LinkedHashMap<>();
         pensionHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "600");
@@ -277,7 +279,7 @@ public class TestMonitorUtils {
         member3.setAfm("164582");
         member3.setName("James");
         member3.setSurname("Hetfield");
-        member3.setDateOfBirth("19/10/2002");
+        member3.setDateOfBirth("19/09/2002");
         HouseholdMember member4 = new HouseholdMember();
         member4.setAfm("789456");
         member4.setName("Rory");
@@ -333,6 +335,7 @@ public class TestMonitorUtils {
         ssiApp.setTaxisAfm("164582");
         //ssiApp.setSalariesR("2000");
         ssiApp.setPensionsR("0");
+        ssiApp.setTaxisDateOfBirth("19/09/2002");
 
         LinkedHashMap<LocalDateTime, String> pensionHistory = new LinkedHashMap<>();
         pensionHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "0");
@@ -352,7 +355,7 @@ public class TestMonitorUtils {
         member3.setAfm("164582");
         member3.setName("James");
         member3.setSurname("Hetfield");
-        member3.setDateOfBirth("19/10/2002");
+        member3.setDateOfBirth("19/09/2002");
         HouseholdMember member4 = new HouseholdMember();
         member4.setAfm("789456");
         member4.setName("Rory");
@@ -407,6 +410,7 @@ public class TestMonitorUtils {
         ssiApp.setTaxisAfm("789456");
         //ssiApp.setSalariesR("2000");
         ssiApp.setPensionsR("200");
+        ssiApp.setTaxisDateOfBirth("24/10/1970");
 
         LinkedHashMap<LocalDateTime, String> pensionHistory = new LinkedHashMap<>();
         pensionHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "200");
@@ -426,7 +430,7 @@ public class TestMonitorUtils {
         member3.setAfm("164582");
         member3.setName("James");
         member3.setSurname("Hetfield");
-        member3.setDateOfBirth("19/10/2002");
+        member3.setDateOfBirth("19/09/2002");
         HouseholdMember member4 = new HouseholdMember();
         member4.setAfm("789456");
         member4.setName("Rory");
@@ -481,6 +485,7 @@ public class TestMonitorUtils {
         ssiApp.setTaxisAfm("456789");
         //ssiApp.setSalariesR("2000");
         ssiApp.setPensionsR("100");
+        ssiApp.setTaxisDateOfBirth("14/05/1956");
 
         LinkedHashMap<LocalDateTime, String> pensionHistory = new LinkedHashMap<>();
         pensionHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "100");
@@ -500,7 +505,7 @@ public class TestMonitorUtils {
         member3.setAfm("164582");
         member3.setName("James");
         member3.setSurname("Hetfield");
-        member3.setDateOfBirth("19/10/2002");
+        member3.setDateOfBirth("19/09/2002");
         HouseholdMember member4 = new HouseholdMember();
         member4.setAfm("789456");
         member4.setName("Rory");

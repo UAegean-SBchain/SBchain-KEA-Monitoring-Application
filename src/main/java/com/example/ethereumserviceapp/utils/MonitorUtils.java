@@ -99,8 +99,8 @@ public class MonitorUtils extends EthAppUtils{
             List<LocalDate> monthDates =  monitoredCase.getHistory().entrySet().stream().filter(
                     e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 && e.getKey().toLocalDate().compareTo(endOfMonth) <=0 && e.getValue().equals(State.ACCEPTED)).map(e -> e.getKey().toLocalDate()).collect(Collectors.toList());
 
-            //find all the dates that a minor becomes an adult during the month
-            List<LocalDate> ageOffsetDates = findOffsetAgeDates(ssiApp, monthDates).stream().sorted().collect(Collectors.toList());
+            //find all the dates that minors become adults during this month, get the taxis date of birth of all the applications of the household history
+            List<LocalDate> ageOffsetDates = findOffsetAgeDates(householdApps.stream().map(h -> h.getTaxisDateOfBirth()).collect(Collectors.toList()), monthDates).stream().sorted().collect(Collectors.toList());
             // if there is no credential change during this month then calculate the payment with the last credentials
             if(monthlyGroupMap.get(startOfMonth) == null && startOfMonth.isAfter(firstAcceptedDate)){
                 BigDecimal correctedPayment = BigDecimal.ZERO;
@@ -186,7 +186,7 @@ public class MonitorUtils extends EthAppUtils{
                             }
                         }
                     }
-                    
+
                     if(ageList.isEmpty()){
                         BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDates.size(), ssiApp, monthlyGroupMap.get(startOfMonth).get(i).getDate().toLocalDate());
                         correctedPayment = correctedPayment.add(offsetPayment);
@@ -221,9 +221,8 @@ public class MonitorUtils extends EthAppUtils{
         ssiApp = filterHHAndAggregate(householdApps, ssiApp.getHouseholdComposition());   
         
         BigDecimal correctedPayment = BigDecimal.ZERO;
-
-        //find all the dates that minors become adults during this month
-        List<LocalDate> ageOffsetDates = findOffsetAgeDates(ssiApp, acceptedDates).stream().sorted().collect(Collectors.toList());
+        //find all the dates that minors become adults during this month, get the taxis date of birth of all the applications of the household history
+        List<LocalDate> ageOffsetDates = findOffsetAgeDates(householdApps.stream().map(h -> h.getTaxisDateOfBirth()).collect(Collectors.toList()), acceptedDates).stream().sorted().collect(Collectors.toList());
         if((changedCredentials.isEmpty() || !changedCredentials.stream().anyMatch(c -> c.getDate().withDayOfMonth(1).toLocalDate().equals(startOfPayment))) && ageOffsetDates.isEmpty()){
             return projectedPayment;
         }
@@ -278,7 +277,7 @@ public class MonitorUtils extends EthAppUtils{
                 changedCredentialsSorted.get(i).getAfm());
 
             ssiApp = filterHHAndAggregate(householdApps, ssiApp.getHouseholdComposition());
-
+            
             if(!ageOffsetDates.isEmpty()){
                 for(LocalDate ageOffset:ageOffsetDates){
                     if(!offsetDates.isEmpty() && ageOffset.compareTo(offsetDates.get(0)) >= 0 && ageOffset.isBefore(offsetDates.get(offsetDates.size()-1))){
@@ -469,12 +468,12 @@ public class MonitorUtils extends EthAppUtils{
 
     }
 
-    private static List<LocalDate> findOffsetAgeDates(SsiApplication ssiApp, List<LocalDate> offsetDates){
+    private static List<LocalDate> findOffsetAgeDates(List<String> birthDates, List<LocalDate> offsetDates){
         List<LocalDate> ageOffsetDates = new ArrayList<>();
-        for(HouseholdMember member:ssiApp.getHouseholdComposition()){
+        for(String birthDate:birthDates){
             Set<Integer> ages = new HashSet<>();
             for(LocalDate referenceDate:offsetDates){
-                Integer age = calculateAge(LocalDate.parse(member.getDateOfBirth(), formatter), referenceDate);
+                Integer age = calculateAge(LocalDate.parse(birthDate, formatter), referenceDate);
                 
                 ages.add(age);
                 if(!ages.contains(17)){
