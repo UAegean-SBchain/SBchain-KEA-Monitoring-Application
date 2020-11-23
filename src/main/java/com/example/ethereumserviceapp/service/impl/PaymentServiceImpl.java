@@ -49,18 +49,12 @@ public class PaymentServiceImpl implements PaymentService{
             Case caseToBePaid = theCase.get();
             LocalDateTime startDate = caseToBePaid.getHistory().entrySet().iterator().next().getKey();
             LocalDateTime currentDate = LocalDateTime.now();
-            BigDecimal paymentValue = BigDecimal.valueOf(0);
             Optional<SsiApplication> ssiApp = mongoServ.findByUuid(uuid);
             Set<String> householdAfms = ssiApp.get().getHouseholdComposition().stream().map(s -> s.getAfm()).collect(Collectors.toSet());
             List<SsiApplication> householdApps = mongoServ.findByTaxisAfmIn(householdAfms);
             if (caseToBePaid.getState().equals(State.ACCEPTED)) {
-                //Optional<SsiApplication> ssiApp = mongoServ.findByUuid(uuid);
                 if(startDate.isBefore(currentDate)){
-                    List<SsiApplication> allHouseholdApps = mongoServ.findByTaxisAfmIn(EthAppUtils.fetchAllHouseholdAfms(ssiApp.get())); 
-                    paymentValue = MonitorUtils.calculateCurrentPayment(caseToBePaid, ssiApp.get(), allHouseholdApps).subtract(caseToBePaid.getOffset());
-                    //Call to payment service
-                    State paymentState = paymentService(paymentValue, caseToBePaid, ssiApp.get(), householdApps);
-                    addPayment(paymentValue, caseToBePaid, currentDate, paymentState);
+                    calculatePayment(caseToBePaid, ssiApp.get(), householdApps, currentDate);
                 }
             }
             //if case is rejected then check the previous month history for days during which the case was accepted
@@ -71,14 +65,9 @@ public class PaymentServiceImpl implements PaymentService{
                         && e.getKey().toLocalDate().isBefore(currentDate.toLocalDate())
                         && e.getValue().equals(State.ACCEPTED)).count();
                 if(acceptedDates.intValue() > 0){
-                    //Optional<SsiApplication> ssiApp = mongoServ.findByUuid(uuid);
                     //check payment credentials
-                    if(ssiApp.isPresent() && !ssiApp.get().getHouseholdPrincipal().getAfm().equals(ssiApp.get().getTaxisAfm())){
-                        List<SsiApplication> allHouseholdApps = mongoServ.findByTaxisAfmIn(EthAppUtils.fetchAllHouseholdAfms(ssiApp.get())); 
-                        paymentValue = MonitorUtils.calculateCurrentPayment(caseToBePaid, ssiApp.get(), allHouseholdApps).subtract(caseToBePaid.getOffset());
-                        //Call to payment service
-                        State paymentState = paymentService(paymentValue, caseToBePaid, ssiApp.get(), householdApps);
-                        addPayment(paymentValue, caseToBePaid, currentDate, paymentState);
+                    if(ssiApp.isPresent() && ssiApp.get().getHouseholdPrincipal().getAfm().equals(ssiApp.get().getTaxisAfm())){
+                        calculatePayment(caseToBePaid, ssiApp.get(), householdApps, currentDate);
                     }
                 } else if(caseToBePaid.getState().equals(State.REJECTED) ){
                     // if the case's state is rejected and there are no days during the month during which the case was accepted, delete it from the block chain 
@@ -86,6 +75,14 @@ public class PaymentServiceImpl implements PaymentService{
                 }
             }
         });
+    }
+
+    private void calculatePayment(Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDateTime currentDate){
+        List<SsiApplication> allHouseholdApps = mongoServ.findByTaxisAfmIn(EthAppUtils.fetchAllHouseholdAfms(ssiApp)); 
+        BigDecimal paymentValue = MonitorUtils.calculateCurrentPayment(caseToBePaid, ssiApp, allHouseholdApps).subtract(caseToBePaid.getOffset());
+        //Call to payment service
+        State paymentState = paymentService(paymentValue, caseToBePaid, ssiApp, householdApps);
+        addPayment(paymentValue, caseToBePaid, currentDate, paymentState);
     }
 
     private State paymentService(BigDecimal valueToBePaid, Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps){

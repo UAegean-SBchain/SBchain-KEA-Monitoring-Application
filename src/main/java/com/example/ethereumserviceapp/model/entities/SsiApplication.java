@@ -41,7 +41,7 @@ public class SsiApplication {
     private String taxisFathersNameLatin;
     private String taxisMothersNameLatin;
     private String taxisAmka;
-    private String taxisDateOfBirth;
+    private String taxisDateOfBirth;    //
     private String taxisGender;
     private String nationality;
     private String maritalStatus;
@@ -74,7 +74,7 @@ public class SsiApplication {
     //employment info
     private String employmentStatus;
     private String unemployed;
-    private String employed;
+    private String employed; 
     private String oaedId;
     private String oaedDate;
 
@@ -118,7 +118,6 @@ public class SsiApplication {
     //household composition
     private HouseholdMember householdPrincipal;
     private List<HouseholdMember> householdComposition;
-    //private Map<String, String>[] householdComposition;
     private LinkedHashMap<LocalDateTime,List<HouseholdMember>> householdCompositionHistory;
 
     //income guarantee

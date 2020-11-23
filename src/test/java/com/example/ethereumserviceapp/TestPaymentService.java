@@ -1,6 +1,8 @@
 package com.example.ethereumserviceapp;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -8,10 +10,8 @@ import static org.mockito.Mockito.verify;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import com.example.ethereumserviceapp.model.Case;
@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @ExtendWith(MockitoExtension.class)
-public class TestPaymentService {
+public class TestPaymentService extends TestUtils{
 
     @Mock
     EthereumService ethServ;
@@ -49,14 +49,18 @@ public class TestPaymentService {
         uuids.add("2WiYi1");
         //uuids.add("2WiYi2");
         List<SsiApplication> mockList = new ArrayList<>();
-        mockList.add(generateMockSsiApp("2WiYi1"));
+        mockList.add(generateSsiApp1());
+        mockList.add(generateSsiApp2());
+        mockList.add(generateSsiApp3());
 
         Mockito.when(ethServ.getAllCaseUUID()).thenReturn(uuids);
-        Mockito.when(ethServ.getCaseByUUID("2WiYi1")).thenReturn(Optional.of(generateMockCase("2WiYi1", State.ACCEPTED, false)));
-        Mockito.when(mongoServ.findByUuid("2WiYi1")).thenReturn(Optional.of(generateMockSsiApp("2WiYi1")));
-        Mockito.when(mongoServ.findByMeterNumber(any())).thenReturn(mockList);
-        Mockito.when(mongoServ.findByHouseholdCompositionIn(any())).thenReturn(mockList);
-        Mockito.when(mongoServ.findByIban(any())).thenReturn(mockList);
+        Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(generateMockCase("2WiYi1", State.ACCEPTED, false)));
+        Mockito.when(mongoServ.findByUuid(anyString())).thenReturn(Optional.of(generateSsiApp1()));
+        Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(mockList);
+        Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(mockList);
+        // Mockito.when(mongoServ.findByMeterNumber(any())).thenReturn(mockList);
+        // Mockito.when(mongoServ.findByHouseholdCompositionIn(any())).thenReturn(mockList);
+        // Mockito.when(mongoServ.findByIban(any())).thenReturn(mockList);
         doNothing().when(ethServ).addPayment(any(), any());
 
         paymentServ.startPayment();
@@ -74,20 +78,20 @@ public class TestPaymentService {
         uuids.add("2WiYi1");
         //uuids.add("2WiYi2");
         List<SsiApplication> mockList = new ArrayList<>();
-        mockList.add(generateMockSsiApp("2WiYi1"));
+        mockList.add(generateSsiApp1());
+        mockList.add(generateSsiApp2());
+        mockList.add(generateSsiApp3());
 
         Mockito.when(ethServ.getAllCaseUUID()).thenReturn(uuids);
-        Mockito.when(ethServ.getCaseByUUID("2WiYi1")).thenReturn(Optional.of(generateMockCase("2WiYi1", State.REJECTED, false)));
-        Mockito.when(mongoServ.findByUuid("2WiYi1")).thenReturn(Optional.of(generateMockSsiApp("2WiYi1")));
-        Mockito.when(mongoServ.findByMeterNumber(any())).thenReturn(mockList);
-        Mockito.when(mongoServ.findByHouseholdCompositionIn(any())).thenReturn(mockList);
-        Mockito.when(mongoServ.findByIban(any())).thenReturn(mockList);
+        Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(generateMockCase("2WiYi1", State.REJECTED, false)));
+        Mockito.when(mongoServ.findByUuid(anyString())).thenReturn(Optional.of(generateSsiApp1()));
+        Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(mockList);
+        Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(mockList);
         doNothing().when(ethServ).addPayment(any(), any());
 
         paymentServ.startPayment();
 
         verify(ethServ, times(1)).addPayment(any(), any());
-        
     }
 
     @Test
@@ -99,10 +103,14 @@ public class TestPaymentService {
         uuids.add("2WiYi1");
         //uuids.add("2WiYi2");
         List<SsiApplication> mockList = new ArrayList<>();
-        mockList.add(generateMockSsiApp("2WiYi1"));
+        mockList.add(generateSsiApp1());
+        mockList.add(generateSsiApp2());
+        mockList.add(generateSsiApp3());
 
         Mockito.when(ethServ.getAllCaseUUID()).thenReturn(uuids);
-        Mockito.when(ethServ.getCaseByUUID("2WiYi1")).thenReturn(Optional.of(generateMockCase("2WiYi1", State.REJECTED, true)));
+        Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(generateMockCase("2WiYi1", State.REJECTED, true)));
+        Mockito.when(mongoServ.findByUuid(anyString())).thenReturn(Optional.of(generateSsiApp1()));
+        Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(mockList);
         doNothing().when(ethServ).deleteCaseByUuid(any());
 
         paymentServ.startPayment();
@@ -111,68 +119,29 @@ public class TestPaymentService {
         
     }
     
-    private SsiApplication generateMockSsiApp(String uuid){
-        SsiApplication ssiApp = new SsiApplication();
-        // ssiApp.setOtherBenefitsR("5");
-        // ssiApp.setUnemploymentBenefitR("5");
-        // ssiApp.setErgomeR("5");
-        // ssiApp.setRentIncomeR("5");
-        // ssiApp.setOtherIncomeR("5");
-        ssiApp.setUuid(uuid);
-        ssiApp.setLuxury("false");
-        ssiApp.setTotalIncome("10");
-        ssiApp.setHospitalized("true");
-        ssiApp.setUnemployed("true");
-        ssiApp.setEmploymentStatus("unemployed");
-        ssiApp.setTaxisAfm("taxisAfm");
-        //ssiApp.setSalariesR("2000");
-        ssiApp.setPensionsR("2400");
-        //ssiApp.setFreelanceR("500");
-        //ssiApp.setDepositsA("50");
-        //ssiApp.setOtherBenefitsR("480");
-        Map<String, String> householdVal1 = new HashMap<>();
-        householdVal1.put("adult1", "35");
-        Map<String, String> householdVal2 = new HashMap<>();
-        householdVal2.put("adult2", "28");
-        Map<String, String> householdVal3 = new HashMap<>();
-        householdVal3.put("adult3", "18");
-        Map<String, String> householdVal4 = new HashMap<>();
-        householdVal4.put("minor1", "10");
-        Map[] householdArray = new Map[3];
-        householdArray[0] = householdVal1;
-        householdArray[1] = householdVal2;
-        householdArray[2] = householdVal4;
-        //householdArray[3] = householdVal4;
-        //ssiApp.setHouseholdComposition(householdArray);
-
-        
-
-        return ssiApp;
-    }
-    
     private Case generateMockCase(String uuid, State state, Boolean allRejected){
         
         Case monitoredCase = new Case();
         monitoredCase.setUuid(uuid);
-        monitoredCase.setDate(LocalDateTime.now().minusDays(1));
+        monitoredCase.setDate(LocalDateTime.now().withDayOfMonth(1));
         monitoredCase.setState(state);
         LinkedHashMap<LocalDateTime, State> history = new LinkedHashMap<>();
         Integer days = monthDays(LocalDateTime.now().minusMonths(1));
         if(allRejected && state.equals(State.REJECTED)){
-            for(int i=0; i<days; i++){
-                history.put(LocalDateTime.now().minusDays(days-i), State.REJECTED);
+            for(int i=1; i<=days; i++){
+                history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.REJECTED);
             }
         } else if(!allRejected && state.equals(State.REJECTED)) {
-            for(int i=0; i<days; i++){
+            for(int i=1; i<=days; i++){
                 if(i > 15){
-                    history.put(LocalDateTime.now().minusDays(days-i), State.ACCEPTED);
+                    history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.ACCEPTED);
                 }else{
-                    history.put(LocalDateTime.now().minusDays(days-i), State.REJECTED);
+                    history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.REJECTED);
                 }
             }
         } else {
-            for(int i=0; i<days; i++){
-                history.put(LocalDateTime.now().minusDays(days-i), State.ACCEPTED);
+            for(int i=1; i<=days; i++){
+                history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.ACCEPTED);
             }
         }
         
@@ -181,36 +150,5 @@ public class TestPaymentService {
 
         return monitoredCase;
 
-    }
-
-    private Integer monthDays(LocalDateTime date) {
-
-        int month = date.getMonthValue();
-        int year = date.getYear();
-        int numDays = 0;
-
-        switch (month) {
-            case 1: case 3: case 5:
-            case 7: case 8: case 10:
-            case 12:
-                numDays = 31;
-                break;
-            case 4: case 6:
-            case 9: case 11:
-                numDays = 30;
-                break;
-            case 2:
-                if (((year % 4 == 0) && 
-                     !(year % 100 == 0))
-                     || (year % 400 == 0))
-                    numDays = 29;
-                else
-                    numDays = 28;
-                break;
-            default:
-                log.error("Invalid month.");
-                break;
-        }
-        return numDays;
     }
 }
