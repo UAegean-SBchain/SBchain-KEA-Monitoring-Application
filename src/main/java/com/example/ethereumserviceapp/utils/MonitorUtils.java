@@ -140,14 +140,8 @@ public class MonitorUtils extends EthAppUtils{
                     Long nonOffsetDays = monitoredCase.getHistory().entrySet().stream().filter(
                             e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 && e.getKey().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate()) <0 && e.getValue().equals(State.ACCEPTED)).count();
                         
-                    CasePayment payment = monitoredCase.getPaymentHistory().stream()
-                        .filter(p -> p.getPaymentDate().toLocalDate().compareTo(startOfMonth) >= 0
-                        && p.getPaymentDate().toLocalDate().compareTo(monthlyGroupMap.get(startOfMonth).get(0).getDate().withDayOfMonth(monthDays(monthlyGroupMap.get(startOfMonth).get(0).getDate().toLocalDate())).toLocalDate()) <= 0)
-                        .collect(Collectors.toList()).get(0);
-
-                    correctedPayment = (payment.getPayment()
-                        .divide(BigDecimal.valueOf(monthDays(payment.getPaymentDate().toLocalDate())), 2, RoundingMode.HALF_UP))
-                        .multiply(BigDecimal.valueOf(nonOffsetDays));
+                    ssiApp = filterHHAndAggregate(householdApps, ssiApp.getHouseholdComposition());
+                    correctedPayment = calculatePayment(fullMonthDays, nonOffsetDays.intValue(), ssiApp, startOfMonth);
                 }
                 for(int i = 0; i< monthlyGroupMap.get(startOfMonth).size(); i++){
                     List<LocalDate> offsetDates = new ArrayList<>();

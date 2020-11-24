@@ -60,7 +60,7 @@ public class PaymentServiceImpl implements PaymentService{
             //if case is rejected then check the previous month history for days during which the case was accepted
             if (caseToBePaid.getState().equals(State.REJECTED) || caseToBePaid.getState().equals(State.SUSPENDED)) {
                 // get the number of days of the previous month during which the case was accepted
-                Long acceptedDates= caseToBePaid.getHistory().entrySet().stream().filter(
+                Long acceptedDates = caseToBePaid.getHistory().entrySet().stream().filter(
                         e -> (e.getKey().toLocalDate().compareTo(currentDate.toLocalDate().minusMonths(1)) >= 0) 
                         && e.getKey().toLocalDate().isBefore(currentDate.toLocalDate())
                         && e.getValue().equals(State.ACCEPTED)).count();
@@ -88,11 +88,11 @@ public class PaymentServiceImpl implements PaymentService{
     private State paymentService(BigDecimal valueToBePaid, Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps){
         //mock Call to external service
         if(!mockExternalPaymentService(valueToBePaid, caseToBePaid.getUuid()) || !EthAppUtils.areAppHouseholdAfmsTheSame(householdApps, ssiApp)){
-            caseToBePaid.setOffset(BigDecimal.valueOf(0));
+            caseToBePaid.setOffset(BigDecimal.ZERO);
             //caseToBePaid.setState(State.PAID);
             return State.FAILED;
         } 
-        caseToBePaid.setOffset(BigDecimal.valueOf(0));
+        caseToBePaid.setOffset(BigDecimal.ZERO);
         return State.PAID;
     }
 
