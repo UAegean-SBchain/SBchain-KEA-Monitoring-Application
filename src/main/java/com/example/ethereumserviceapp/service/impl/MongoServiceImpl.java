@@ -113,6 +113,11 @@ public class MongoServiceImpl implements MongoService {
     }
 
     @Override
+    public List<String> findUuidByTaxisAfmIn(Set<String> afms){
+        return this.rep.findUuidByTaxisAfmIn(afms);
+    }
+
+    @Override
     public void deleteByUuid(String uuid) {
         rep.deleteByUuid(uuid);
     }

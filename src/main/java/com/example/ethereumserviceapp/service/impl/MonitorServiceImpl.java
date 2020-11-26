@@ -63,25 +63,30 @@ public class MonitorServiceImpl implements MonitorService {
         uuids.stream().forEach(uuid -> {
 
             //check if the case state is rejected, if so, skip the test
-            Optional<Case> c = this.ethServ.getCaseByUUID(uuid);
+            Optional<Case> monitoredCase = this.ethServ.getCaseByUUID(uuid);
             //int caseState = c.get().getState().getValue();
-            Iterator<Entry<LocalDateTime, State>> it = c.get().getHistory().entrySet().iterator();
+            Iterator<Entry<LocalDateTime, State>> it = monitoredCase.get().getHistory().entrySet().iterator();
             
-            if(c.get().getState().equals(State.NONPRINCIPAL)){
+            if(monitoredCase.get().getState().equals(State.NONPRINCIPAL)){
                 return;
             }
-            if(c.get().getState().equals(State.REJECTED)){
-                Iterator<Entry<LocalDateTime, State>> itr = c.get().getHistory().entrySet().iterator();
+            if(monitoredCase.get().getState().equals(State.REJECTED)){
+                Iterator<Entry<LocalDateTime, State>> itr = monitoredCase.get().getHistory().entrySet().iterator();
                 while(itr.hasNext()){
                     Map.Entry<LocalDateTime, State> entry = itr.next();
                     //if the case is rejected for more than one month then delete it
                     if(entry.getValue().equals(State.REJECTED) && entry.getKey().toLocalDate().isBefore(LocalDate.now().minusMonths(1))){
-                        this.mongoServ.deleteByUuid(uuid);
+                        Optional<SsiApplication> ssiCase = mongoServ.findByUuid(uuid);
+                        Set<String> householdAfms = ssiCase.get().getHouseholdComposition().stream().map(s -> s.getAfm()).collect(Collectors.toSet());
+                        for(String hhuuid: mongoServ.findUuidByTaxisAfmIn(householdAfms)){
+                            this.mongoServ.deleteByUuid(hhuuid);
+                        }
+                        break;
                     }
                 }
                 return;
             }
-            log.info("looking into case {} with state {}", uuid, c.get().getState());
+            log.info("looking into case {} with state {}", uuid, monitoredCase.get().getState());
             Optional<SsiApplication> ssiCase = mongoServ.findByUuid(uuid);
             if (!ssiCase.isPresent()) {
                 updateCase(uuid, State.REJECTED, null);
@@ -119,7 +124,7 @@ public class MonitorServiceImpl implements MonitorService {
             } else {
                 final SsiApplication ssiApp = ssiCase.get();
                 //check the application by the uuid and update the case accordingly
-                if (checkHouseholdCredentials(c.get(), ssiApp, householdApps)) {
+                if (checkHouseholdCredentials(monitoredCase.get(), ssiApp, householdApps)) {
                     //TODO replace mock check has green card with valid check
                     if(!MonitorUtils.hasGreenCard(uuid)){
                         rejectOrSuspendCases(uuid, State.SUSPENDED, householdApps);
@@ -140,7 +145,6 @@ public class MonitorServiceImpl implements MonitorService {
     }
 
     private void updateCase(String uuid, State state, SsiApplication ssiApp) {
-        
         Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
         if (theCase.isPresent()) {
             theCase.get().setState(state);

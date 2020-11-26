@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TestUtils {
 
-    public Case generateMockCase(String uuid, State state){
+    public Case generateMockCase(String uuid, State state, Boolean allRejected, Boolean isOld){
         
         Case monitoredCase = new Case();
         monitoredCase.setUuid(uuid);
@@ -28,29 +28,47 @@ public class TestUtils {
         Integer daysOfMinus2 = monthDays(LocalDateTime.now().minusMonths(2));
         Integer daysOfMinus3 = monthDays(LocalDateTime.now().minusMonths(3));
 
-        // if(allRejected && state.equals(State.REJECTED)){
-        //     for(int i=0; i<days; i++){
-        //         history.put(LocalDateTime.now().minusDays(days-i), State.REJECTED);
-        //     }
-        // } else if(!allRejected && state.equals(State.REJECTED)) {
-        //     for(int i=0; i<days; i++){
-        //         if(i > 15){
-        //             history.put(LocalDateTime.now().minusDays(days-i), State.ACCEPTED);
-        //         }else{
-        //             history.put(LocalDateTime.now().minusDays(days-i), State.REJECTED);
-        //         }
-        //     }
-        // } else {
-        //}
-        for(int i=1; i<=daysOfMinus3; i++){
-            history.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(i), State.ACCEPTED);
+        if(isOld){
+            history.put(LocalDateTime.now().minusMonths(6).minusDays(1), State.ACCEPTED);
         }
-        for(int i=1; i<=daysOfMinus2; i++){
-            history.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(i), State.ACCEPTED);
+
+        if(allRejected && state.equals(State.REJECTED)){
+            for(int i=1; i<=daysOfMinus3; i++){
+                history.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(i), State.REJECTED);
+            }
+            for(int i=1; i<=daysOfMinus2; i++){
+                history.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(i), State.REJECTED);
+            }
+            for(int i=1; i<=daysOfCurrentPayment; i++){
+                history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.REJECTED);
+            }
+        } else if(!allRejected && state.equals(State.REJECTED)) {
+            for(int i=1; i<=daysOfMinus3; i++){
+               
+                history.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(i), State.ACCEPTED);
+            }
+            for(int i=1; i<=daysOfMinus2; i++){
+                history.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(i), State.ACCEPTED);
+            }
+            for(int i=1; i<=daysOfCurrentPayment; i++){
+                if(i > 27){
+                    history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.REJECTED);
+                }else{
+                    history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.ACCEPTED);
+                }
+            }
+        } else {
+            for(int i=1; i<=daysOfMinus3; i++){
+                history.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(i), State.ACCEPTED);
+            }
+            for(int i=1; i<=daysOfMinus2; i++){
+                history.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(i), State.ACCEPTED);
+            }
+            for(int i=1; i<=daysOfCurrentPayment; i++){
+                history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.ACCEPTED);
+            }
         }
-        for(int i=1; i<=daysOfCurrentPayment; i++){
-            history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.ACCEPTED);
-        }
+        
         monitoredCase.setHistory(history);
         List<CasePayment> paymentHistory = new ArrayList<>();
         CasePayment payment1 = new CasePayment();  
@@ -87,7 +105,7 @@ public class TestUtils {
         // ssiApp.setErgomeR("5");
         // ssiApp.setRentIncomeR("5");
         // ssiApp.setOtherIncomeR("5");
-        //ssiApp.setUuid(uuid);
+        ssiApp.setUuid("2WiYi1");
         ssiApp.setLuxury("false");
         ssiApp.setTotalIncome("10");
         ssiApp.setHospitalized("true");
@@ -97,6 +115,8 @@ public class TestUtils {
         //ssiApp.setSalariesR("0.5");
         ssiApp.setPensionsR("650");
         ssiApp.setTaxisDateOfBirth("05/05/1953");
+        ssiApp.setMeterNumber("123456789");
+        ssiApp.setIban("iban123456");
 
         LinkedHashMap<LocalDateTime, String> pensionHistory = new LinkedHashMap<>();
         pensionHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "500");
@@ -481,6 +501,8 @@ public class TestUtils {
         //ssiApp.setSalariesR("0.5");
         ssiApp.setPensionsR("500");
         ssiApp.setTaxisDateOfBirth("05/05/1953");
+        ssiApp.setMeterNumber("123456789");
+        ssiApp.setIban("iban123456");
 
         LinkedHashMap<LocalDateTime, String> pensionHistory = new LinkedHashMap<>();
         pensionHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1), "500");

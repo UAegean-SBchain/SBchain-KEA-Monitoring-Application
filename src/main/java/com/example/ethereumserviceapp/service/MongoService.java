@@ -44,5 +44,7 @@ public interface MongoService {
 
     public List<SsiApplication> findByHouseholdPrincipalIn(List<HouseholdMember> members);
 
+    public List<String> findUuidByTaxisAfmIn(Set<String> taxisAfms);
+
     public void deleteByUuid(String uuid);
 }

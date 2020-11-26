@@ -54,7 +54,7 @@ public class TestPaymentService extends TestUtils{
         mockList.add(generateSsiApp3());
 
         Mockito.when(ethServ.getAllCaseUUID()).thenReturn(uuids);
-        Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(generateMockCase("2WiYi1", State.ACCEPTED, false)));
+        Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(generateMockCase("2WiYi1", State.ACCEPTED, false, false)));
         Mockito.when(mongoServ.findByUuid(anyString())).thenReturn(Optional.of(generateSsiApp1()));
         Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(mockList);
         Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(mockList);
@@ -83,7 +83,7 @@ public class TestPaymentService extends TestUtils{
         mockList.add(generateSsiApp3());
 
         Mockito.when(ethServ.getAllCaseUUID()).thenReturn(uuids);
-        Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(generateMockCase("2WiYi1", State.REJECTED, false)));
+        Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(generateMockCase("2WiYi1", State.REJECTED, false, false)));
         Mockito.when(mongoServ.findByUuid(anyString())).thenReturn(Optional.of(generateSsiApp1()));
         Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(mockList);
         Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(mockList);
@@ -108,7 +108,7 @@ public class TestPaymentService extends TestUtils{
         mockList.add(generateSsiApp3());
 
         Mockito.when(ethServ.getAllCaseUUID()).thenReturn(uuids);
-        Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(generateMockCase("2WiYi1", State.REJECTED, true)));
+        Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(generateMockCase("2WiYi1", State.REJECTED, true, false)));
         Mockito.when(mongoServ.findByUuid(anyString())).thenReturn(Optional.of(generateSsiApp1()));
         Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(mockList);
         doNothing().when(ethServ).deleteCaseByUuid(any());
@@ -119,36 +119,36 @@ public class TestPaymentService extends TestUtils{
         
     }
     
-    private Case generateMockCase(String uuid, State state, Boolean allRejected){
+    // private Case generateMockCase(String uuid, State state, Boolean allRejected){
         
-        Case monitoredCase = new Case();
-        monitoredCase.setUuid(uuid);
-        monitoredCase.setDate(LocalDateTime.now().withDayOfMonth(1));
-        monitoredCase.setState(state);
-        LinkedHashMap<LocalDateTime, State> history = new LinkedHashMap<>();
-        Integer days = monthDays(LocalDateTime.now().minusMonths(1));
-        if(allRejected && state.equals(State.REJECTED)){
-            for(int i=1; i<=days; i++){
-                history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.REJECTED);
-            }
-        } else if(!allRejected && state.equals(State.REJECTED)) {
-            for(int i=1; i<=days; i++){
-                if(i > 15){
-                    history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.ACCEPTED);
-                }else{
-                    history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.REJECTED);
-                }
-            }
-        } else {
-            for(int i=1; i<=days; i++){
-                history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.ACCEPTED);
-            }
-        }
+    //     Case monitoredCase = new Case();
+    //     monitoredCase.setUuid(uuid);
+    //     monitoredCase.setDate(LocalDateTime.now().withDayOfMonth(1));
+    //     monitoredCase.setState(state);
+    //     LinkedHashMap<LocalDateTime, State> history = new LinkedHashMap<>();
+    //     Integer days = monthDays(LocalDateTime.now().minusMonths(1));
+    //     if(allRejected && state.equals(State.REJECTED)){
+    //         for(int i=1; i<=days; i++){
+    //             history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.REJECTED);
+    //         }
+    //     } else if(!allRejected && state.equals(State.REJECTED)) {
+    //         for(int i=1; i<=days; i++){
+    //             if(i > 15){
+    //                 history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.ACCEPTED);
+    //             }else{
+    //                 history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.REJECTED);
+    //             }
+    //         }
+    //     } else {
+    //         for(int i=1; i<=days; i++){
+    //             history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.ACCEPTED);
+    //         }
+    //     }
         
-        monitoredCase.setHistory(history);
-        monitoredCase.setOffset(BigDecimal.valueOf(0));
+    //     monitoredCase.setHistory(history);
+    //     monitoredCase.setOffset(BigDecimal.valueOf(0));
 
-        return monitoredCase;
+    //     return monitoredCase;
 
-    }
+    // }
 }

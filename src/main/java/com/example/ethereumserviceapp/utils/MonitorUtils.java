@@ -117,15 +117,14 @@ public class MonitorUtils extends EthAppUtils{
                 }
                 
                 if(ageList.isEmpty()){
+                    
                     BigDecimal offsetPayment = calculatePayment(fullMonthDays, offsetDates.size(), ssiApp, startOfMonth);
                     correctedPayment = correctedPayment.add(offsetPayment);
                 } else {
                     BigDecimal offsetPayment = calculateAges(ageList, monitoredCase, offsetDates.get(0), offsetDates.get(offsetDates.size()-1), fullMonthDays, ssiApp);
                     correctedPayment = correctedPayment.add(offsetPayment);
                 }
-                
                 BigDecimal monthlyOffset = ph.getPayment().subtract(correctedPayment);
-
                 monitoredCase.setOffset(monitoredCase.getOffset().add(monthlyOffset));
             }
 

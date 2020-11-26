@@ -37,6 +37,8 @@ public interface SsiApplicationRepository extends MongoRepository<SsiApplication
 
     public List<SsiApplication> findByHouseholdPrincipalIn(List<HouseholdMember> members);
 
+    public List<String> findUuidByTaxisAfmIn(Set<String> afms);
+
     public void deleteByUuid(String uuid);
 
     @Query(value = "{'uuid' : ?0}", fields = "{credentialIds: 1, _id: 0}")
