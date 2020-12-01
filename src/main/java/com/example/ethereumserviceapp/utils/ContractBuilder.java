@@ -43,10 +43,13 @@ public class ContractBuilder {
 
         for(int i=0; i<theCase.component6().size(); i++){
             CasePayment transformedPayment = new CasePayment();
-            transformedPayment.setPaymentDate(Instant.ofEpochMilli(theCase.component6().get(i).longValue()).atZone(ZoneId.systemDefault()).toLocalDateTime());
-            transformedPayment.setPayment(new BigDecimal(theCase.component7().get(i)).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
-            transformedPayment.setState(State.values()[theCase.component8().get(i).intValue()]);
-            paymentHistory.add(transformedPayment);
+            if(theCase.component8().get(i).intValue() != 0){
+                transformedPayment.setPaymentDate(Instant.ofEpochMilli(theCase.component6().get(i).longValue()).atZone(ZoneId.systemDefault()).toLocalDateTime());
+                transformedPayment.setPayment(new BigDecimal(theCase.component7().get(i)).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
+                transformedPayment.setState(State.values()[theCase.component8().get(i).intValue()]);
+                paymentHistory.add(transformedPayment);
+            }
+            
         }
         transformedCase.setPaymentHistory(paymentHistory);
         transformedCase.setOffset(new BigDecimal(theCase.component9()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));

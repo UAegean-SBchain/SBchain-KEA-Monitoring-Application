@@ -33,8 +33,7 @@ public class EthereumController {
     MonitorService monitorService;
 
     @PostMapping("/addCase")
-    protected void addCase(@RequestParam(value = "uuid", required = true) String uuid, @RequestParam(value = "caseName", required = true) String caseName,
-            @RequestParam(value = "isStudent", required = true) Boolean isStudent,
+    protected void addCase(@RequestParam(value = "uuid", required = true) String uuid,
             @RequestParam(value = "date", required = true) String date) {
 
         Case monitoredCase = new Case();
