@@ -49,10 +49,6 @@ public class MonitorUtils extends EthAppUtils{
         return true;
     }
 
-    public static Boolean hasGreenCard(String uuid){
-        return true;
-    }
-
     public static void calculateOffset(Case monitoredCase, SsiApplication ssiApp, List<SsiApplication> householdApps){
 
         List<PaymentCredential> changedCredentials = alteredCredentialsList(ssiApp, householdApps);

@@ -125,12 +125,7 @@ public class MonitorServiceImpl implements MonitorService {
                 final SsiApplication ssiApp = ssiCase.get();
                 //check the application by the uuid and update the case accordingly
                 if (checkHouseholdCredentials(monitoredCase.get(), ssiApp, householdApps)) {
-                    //TODO replace mock check has green card with valid check
-                    if(!MonitorUtils.hasGreenCard(uuid)){
-                        rejectOrSuspendCases(uuid, State.SUSPENDED, householdApps);
-                    } else {
-                        updateCase(uuid, State.ACCEPTED, ssiApp);
-                    }
+                    updateCase(uuid, State.ACCEPTED, ssiApp);
                 } else {
                     rejectOrSuspendCases(uuid, State.REJECTED, householdApps);
                 }
@@ -290,16 +285,7 @@ public class MonitorServiceImpl implements MonitorService {
         if(ssiApp.getLuxury() == null? false : ssiApp.getLuxury().equals(String.valueOf(Boolean.TRUE))){
             return false;
         }
-        //check OAED benefits
-        if(BigInteger.valueOf(Long.valueOf(ssiApp.getUnemploymentBenefitR() == null? "0" : ssiApp.getUnemploymentBenefitR())).compareTo(BigInteger.valueOf(300)) > 0 ){
-            return false;
-        }
         
-        //check Ergome benefits
-        if(BigInteger.valueOf(Long.valueOf(ssiApp.getErgomeR() == null? "0" : ssiApp.getErgomeR())).compareTo(BigInteger.valueOf(300)) > 0 ){
-            return false;
-        }
-
         // check that if there differences in Amka register
         if(differenceInAmka(ssiApp.getTaxisAmka())){
             return false;
