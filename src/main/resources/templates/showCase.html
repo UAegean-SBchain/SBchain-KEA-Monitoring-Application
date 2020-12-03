@@ -9,8 +9,74 @@
 <body>
     <!-- <div th:replace="fragments/header"></div> -->
     <div class="container">
+        <table class="table caseTable" >
+            <thead>
+                <tr>
+                    <th class="tableHeader" th:text="Attribute"></th>
+                    <th class="tableHeader" th:text="Value"></th>
+                </tr>
+            </thead>
+            <tbody th:if="${ethCase}" >
+                <tr>
+                    <td class="column column__1" th:text="Uuid"></td>
+                    <td class="column column__2" th:text="${ethCase.uuid}"></td>
+                </tr>
+                <tr>
+                    <td class="column column__1" th:text="CurrentDate"></td>
+                    <td class="column column__2" th:text="${ethCase.date}"></td>
+                </tr>
+                <tr>
+                    <td class="column column__1" th:text="CurrentState"></td>
+                    <td class="column column__2" th:text="${ethCase.state}"></td>
+                </tr>
+                <tr>
+                    <td class="column column__1" th:text="History"></td>
+                    <td class="column column__2" >
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th th:text="Date"></th>
+                                    <th th:text="State"></th>
+                                </tr>
+                                <tbody th:if="${ethCase.history}" >
+                                    <tr th:each="hist, counter : ${ethCase.history}">
+                                        <td th:text="${hist.key}"></td>
+                                        <td th:text="${hist.value}"></td>
+                                    </tr>
+                                </tbody>
+                            </thead>
+                        </table>
+                    </td>
+                    
+                </tr>
+                <tr>
+                    <td class="column column__1" th:text="PaymentHistory"></td>
+                    <td class="column column__2">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th th:text="Date"></th>
+                                    <th th:text="PaymentValue"></th>
+                                    <th th:text="State"></th>
+                                </tr>
+                                <tbody th:if="${ethCase.history}" >
+                                    <tr th:each="payment, counter : ${ethCase.paymentHistory}">
+                                        <td th:text="${payment.paymentDate}"></td>
+                                        <td th:text="${payment.payment}"></td>
+                                        <td th:text="${payment.state}"></td>
+                                    </tr>
+                                </tbody>
+                            </thead>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="column column__1" th:text="Offset"></td>
+                    <td class="column column__2" th:text="${ethCase.offset}"></td>
+                </tr>
+            </tbody>
+        </table>
         
-        <div th:text="${ethCase}"> eth Case</div>
     </div>
     <!-- <div th:replace="fragments/footer"></div> -->
 </body>
