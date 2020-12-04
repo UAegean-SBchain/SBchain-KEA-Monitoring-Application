@@ -76,6 +76,30 @@
                 </tr>
             </tbody>
         </table>
+
+        <table class="table ssiAppTable" >
+            <thead>
+                <tr>
+                    <th class="tableHeader" th:text="Attribute"></th>
+                    <th class="tableHeader" th:text="Value"></th>
+                </tr>
+            </thead>
+            <tbody th:if="${ssiApp}" >
+                <tr>
+                    <td class="column column__1" th:text="Uuid"></td>
+                    <td class="column column__2" th:text="${ssiApp.uuid}"></td>
+                </tr>
+                <tr>
+                    <td class="column column__1" th:text="Principal"></td>
+                    <td class="column column__2" th:text="${ssiApp.householdPrincipal}"></td>
+                </tr>
+                <tr>
+                    <td class="column column__1" th:text="Household"></td>
+                    <td class="column column__2" th:text="${ssiApp.householdComposition}"></td>
+                </tr>
+            </tbody>
+
+        </table>
         
     </div>
     <!-- <div th:replace="fragments/footer"></div> -->
