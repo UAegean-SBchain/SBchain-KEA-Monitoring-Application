@@ -88,7 +88,7 @@ public class PaymentServiceImpl implements PaymentService{
     private State paymentService(BigDecimal valueToBePaid, Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps){
         //mock Call to external service
         if(!mockExternalPaymentService(valueToBePaid, caseToBePaid.getUuid()) || !EthAppUtils.areAppHouseholdAfmsTheSame(householdApps, ssiApp)){
-            caseToBePaid.setOffset(BigDecimal.ZERO);
+            caseToBePaid.setOffset(valueToBePaid);
             //caseToBePaid.setState(State.PAID);
             return State.FAILED;
         } 
