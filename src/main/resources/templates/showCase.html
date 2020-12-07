@@ -31,8 +31,8 @@
                 </tr>
                 <tr>
                     <td class="column column__1" th:text="History"></td>
-                    <td class="column column__2" >
-                        <table>
+                    <td class="column column__2 history"><button class="showHistBtn">show history</button>
+                        <table class="historyTable">
                             <thead>
                                 <tr>
                                     <th th:text="Date"></th>
@@ -51,8 +51,8 @@
                 </tr>
                 <tr>
                     <td class="column column__1" th:text="PaymentHistory"></td>
-                    <td class="column column__2">
-                        <table>
+                    <td class="column column__2 history"><button class="showHistBtn">show history</button>
+                        <table class="historyTable">
                             <thead>
                                 <tr>
                                     <th th:text="Date"></th>
@@ -82,6 +82,7 @@
                 <tr>
                     <th class="tableHeader" th:text="Attribute"></th>
                     <th class="tableHeader" th:text="Value"></th>
+                    <th class="tableHeader" th:text="History"></th>
                 </tr>
             </thead>
             <tbody th:if="${ssiApp}" >
@@ -91,17 +92,214 @@
                 </tr>
                 <tr>
                     <td class="column column__1" th:text="Principal"></td>
-                    <td class="column column__2" th:text="${ssiApp.householdPrincipal}"></td>
+                    <td class="column column__2">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th th:text="afm"></th>
+                                    <th th:text="name"></th>
+                                    <th th:text="surname"></th>
+                                    <th th:text="dateOfBirth"></th>
+                                </tr>
+                                <tbody th:if="${ssiApp.householdPrincipal}" >
+                                    <tr th:each="householdMember, counter : ${ssiApp.householdPrincipal}">
+                                        <td th:text="${householdMember.afm}"></td>
+                                        <td th:text="${householdMember.name}"></td>
+                                        <td th:text="${householdMember.surname}"></td>
+                                        <td th:text="${householdMember.dateOfBirth}"></td>
+                                    </tr>
+                                </tbody>
+                            </thead>
+                        </table>
+                    </td>
                 </tr>
                 <tr>
                     <td class="column column__1" th:text="Household"></td>
-                    <td class="column column__2" th:text="${ssiApp.householdComposition}"></td>
+                    <td class="column column__2">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th th:text="afm"></th>
+                                    <th th:text="name"></th>
+                                    <th th:text="surname"></th>
+                                    <th th:text="dateOfBirth"></th>
+                                </tr>
+                                <tbody th:if="${ssiApp.householdComposition}" >
+                                    <tr th:each="householdMember, counter : ${ssiApp.householdComposition}">
+                                        <td th:text="${householdMember.afm}"></td>
+                                        <td th:text="${householdMember.name}"></td>
+                                        <td th:text="${householdMember.surname}"></td>
+                                        <td th:text="${householdMember.dateOfBirth}"></td>
+                                    </tr>
+                                </tbody>
+                            </thead>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="column column__1" th:text="Salaries"></td>
+                    <td class="column column__2" th:text="${ssiApp.salariesR}"></td>
+                    <td class="column column__3 history"><button class="showHistBtn">show history</button>
+                        <table class="historyTable">
+                            <thead>
+                                <tr>
+                                    <th th:text="date"></th>
+                                    <th th:text="value"></th>
+                                </tr>
+                                <tbody th:if="${ssiApp.householdComposition}" >
+                                    <tr th:each="salaries, counter : ${ssiApp.salariesRHistory}">
+                                        <td th:text="${salaries.key}"></td>
+                                        <td th:text="${salaries.value}"></td>
+                                    </tr>
+                                </tbody>
+                            </thead>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="column column__1" th:text="Pensions"></td>
+                    <td class="column column__2" th:text="${ssiApp.pensionsR}"></td>
+                    <td class="column column__3 history"><button class="showHistBtn">show history</button>
+                        <table class="historyTable">
+                            <thead>
+                                <tr>
+                                    <th th:text="date"></th>
+                                    <th th:text="value"></th>
+                                </tr>
+                                <tbody th:if="${ssiApp.householdComposition}" >
+                                    <tr th:each="pensions, counter : ${ssiApp.pensionsRHistory}">
+                                        <td th:text="${pensions.key}"></td>
+                                        <td th:text="${pensions.value}"></td>
+                                    </tr>
+                                </tbody>
+                            </thead>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="column column__1" th:text="Freelance"></td>
+                    <td class="column column__2" th:text="${ssiApp.freelanceR}"></td>
+                    <td class="column column__3 history"><button class="showHistBtn">show history</button>
+                        <table class="historyTable">
+                            <thead>
+                                <tr>
+                                    <th th:text="date"></th>
+                                    <th th:text="value"></th>
+                                </tr>
+                                <tbody th:if="${ssiApp.householdComposition}" >
+                                    <tr th:each="freelance, counter : ${ssiApp.freelanceRHistory}">
+                                        <td th:text="${freelance.key}"></td>
+                                        <td th:text="${freelance.value}"></td>
+                                    </tr>
+                                </tbody>
+                            </thead>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="column column__1" th:text="OtherBenefits"></td>
+                    <td class="column column__2" th:text="${ssiApp.otherBenefitsR}"></td>
+                    <td class="column column__3 history"><button class="showHistBtn">show history</button>
+                        <table class="historyTable">
+                            <thead>
+                                <tr>
+                                    <th th:text="date"></th>
+                                    <th th:text="value"></th>
+                                </tr>
+                                <tbody th:if="${ssiApp.householdComposition}" >
+                                    <tr th:each="otherBenefits, counter : ${ssiApp.otherBenefitsRHistory}">
+                                        <td th:text="${otherBenefits.key}"></td>
+                                        <td th:text="${otherBenefits.value}"></td>
+                                    </tr>
+                                </tbody>
+                            </thead>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="column column__1" th:text="Deposits"></td>
+                    <td class="column column__2" th:text="${ssiApp.depositsA}"></td>
+                    <td class="column column__3 history"><button class="showHistBtn">show history</button>
+                        <table class="historyTable">
+                            <thead>
+                                <tr>
+                                    <th th:text="date"></th>
+                                    <th th:text="value"></th>
+                                </tr>
+                                <tbody th:if="${ssiApp.householdComposition}" >
+                                    <tr th:each="deposits, counter : ${ssiApp.depositsAHistory}">
+                                        <td th:text="${deposits.key}"></td>
+                                        <td th:text="${deposits.value}"></td>
+                                    </tr>
+                                </tbody>
+                            </thead>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="column column__1" th:text="DomesticRealEstate"></td>
+                    <td class="column column__2" th:text="${ssiApp.domesticRealEstateA}"></td>
+                    <td class="column column__3 history"><button class="showHistBtn">show history</button>
+                        <table class="historyTable">
+                            <thead>
+                                <tr>
+                                    <th th:text="date"></th>
+                                    <th th:text="value"></th>
+                                </tr>
+                                <tbody th:if="${ssiApp.householdComposition}" >
+                                    <tr th:each="dRealEstate, counter : ${ssiApp.domesticRealEstateAHistory}">
+                                        <td th:text="${dRealEstate.key}"></td>
+                                        <td th:text="${dRealEstate.value}"></td>
+                                    </tr>
+                                </tbody>
+                            </thead>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="column column__1" th:text="ForeignRealEstate"></td>
+                    <td class="column column__2" th:text="${ssiApp.foreignRealEstateA}"></td>
+                    <td class="column column__3 history"><button class="showHistBtn">show history</button>
+                        <table class="historyTable">
+                            <thead>
+                                <tr>
+                                    <th th:text="date"></th>
+                                    <th th:text="value"></th>
+                                </tr>
+                                <tbody th:if="${ssiApp.householdComposition}" >
+                                    <tr th:each="fRealEstate, counter : ${ssiApp.foreignRealEstateAHistory}">
+                                        <td th:text="${fRealEstate.key}"></td>
+                                        <td th:text="${fRealEstate.value}"></td>
+                                    </tr>
+                                </tbody>
+                            </thead>
+                        </table>
+                    </td>
                 </tr>
             </tbody>
 
         </table>
         
     </div>
+    
     <!-- <div th:replace="fragments/footer"></div> -->
+
+    
+    <script type="text/javascript">
+    window.onload = function() {
+        const histBtn = document.getElementsByClassName('showHistBtn');
+        const histories = document.getElementsByClassName('historyTable');
+        for(let i = 0; i < histBtn.length; i++) {
+            let btn = histBtn[i];
+            btn.onclick = function() {
+                if (histories[i].style.display === "none") {
+                    histories[i].style.display = "block";
+                } else {
+                    histories[i].style.display = "none";
+                }
+            }
+        }
+    }
+    </script>
 </body>
 </html>
