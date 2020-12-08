@@ -4,7 +4,7 @@
     <title th:text="#{personal.info.title}">Getting Started: Serving Web Content</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- <link rel="stylesheet" href="../static/css/main.css" th:href="@{/css/main.css}"/> -->
+    <link rel="stylesheet" href="../static/css/main.css" th:href="@{/css/main.css}"/>
 </head>
 <body>
     <!-- <div th:replace="fragments/header"></div> -->
@@ -12,8 +12,8 @@
         <table class="table caseTable" >
             <thead>
                 <tr>
-                    <th class="tableHeader" th:text="Attribute"></th>
-                    <th class="tableHeader" th:text="Value"></th>
+                    <th class="tableHeader header1" th:text="Attribute"></th>
+                    <th class="tableHeader header2" th:text="Value"></th>
                 </tr>
             </thead>
             <tbody th:if="${ethCase}" >
@@ -31,12 +31,12 @@
                 </tr>
                 <tr>
                     <td class="column column__1" th:text="History"></td>
-                    <td class="column column__2 history"><button class="showHistBtn">show history</button>
+                    <td class="column column__2 history"><button class="showHistBtn">Toggle History</button>
                         <table class="historyTable">
                             <thead>
                                 <tr>
-                                    <th th:text="Date"></th>
-                                    <th th:text="State"></th>
+                                    <th class="innerHeader innerHeader__1" th:text="Date"></th>
+                                    <th class="innerHeader innerHeader__2" th:text="State"></th>
                                 </tr>
                                 <tbody th:if="${ethCase.history}" >
                                     <tr th:each="hist, counter : ${ethCase.history}">
@@ -51,13 +51,13 @@
                 </tr>
                 <tr>
                     <td class="column column__1" th:text="PaymentHistory"></td>
-                    <td class="column column__2 history"><button class="showHistBtn">show history</button>
+                    <td class="column column__2 history"><button class="showHistBtn">Toggle History</button>
                         <table class="historyTable">
                             <thead>
                                 <tr>
-                                    <th th:text="Date"></th>
-                                    <th th:text="PaymentValue"></th>
-                                    <th th:text="State"></th>
+                                    <th class="innerHeader innerHeader__1" th:text="Date"></th>
+                                    <th class="innerHeader innerHeader__2" th:text="PaymentValue"></th>
+                                    <th class="innerHeader innerHeader__3" th:text="State"></th>
                                 </tr>
                                 <tbody th:if="${ethCase.history}" >
                                     <tr th:each="payment, counter : ${ethCase.paymentHistory}">
@@ -80,9 +80,8 @@
         <table class="table ssiAppTable" >
             <thead>
                 <tr>
-                    <th class="tableHeader" th:text="Attribute"></th>
-                    <th class="tableHeader" th:text="Value"></th>
-                    <th class="tableHeader" th:text="History"></th>
+                    <th class="tableHeader header1" th:text="Attribute"></th>
+                    <th class="tableHeader header2" th:text="Value"></th>
                 </tr>
             </thead>
             <tbody th:if="${ssiApp}" >
@@ -93,13 +92,13 @@
                 <tr>
                     <td class="column column__1" th:text="Principal"></td>
                     <td class="column column__2">
-                        <table>
+                        <table class="principalTable">
                             <thead>
                                 <tr>
-                                    <th th:text="afm"></th>
-                                    <th th:text="name"></th>
-                                    <th th:text="surname"></th>
-                                    <th th:text="dateOfBirth"></th>
+                                    <th class="innerHeader innerHeader__1" th:text="afm"></th>
+                                    <th class="innerHeader innerHeader__2" th:text="name"></th>
+                                    <th class="innerHeader innerHeader__3" th:text="surname"></th>
+                                    <th class="innerHeader innerHeader__4" th:text="dateOfBirth"></th>
                                 </tr>
                                 <tbody th:if="${ssiApp.householdPrincipal}" >
                                     <tr th:each="householdMember, counter : ${ssiApp.householdPrincipal}">
@@ -117,12 +116,12 @@
                     <td class="column column__1" th:text="Household"></td>
                     <td class="column column__2">
                         <table>
-                            <thead>
+                            <thead class="hhTable">
                                 <tr>
-                                    <th th:text="afm"></th>
-                                    <th th:text="name"></th>
-                                    <th th:text="surname"></th>
-                                    <th th:text="dateOfBirth"></th>
+                                    <th class="innerHeader innerHeader__1" th:text="afm"></th>
+                                    <th class="innerHeader innerHeader__2" th:text="name"></th>
+                                    <th class="innerHeader innerHeader__3" th:text="surname"></th>
+                                    <th class="innerHeader innerHeader__4" th:text="dateOfBirth"></th>
                                 </tr>
                                 <tbody th:if="${ssiApp.householdComposition}" >
                                     <tr th:each="householdMember, counter : ${ssiApp.householdComposition}">
@@ -136,15 +135,26 @@
                         </table>
                     </td>
                 </tr>
+            </tbody>
+        </table>
+        <table class="table financialTable">
+            <thead>
+                <tr>
+                    <th class="tableHeader header1" th:text="Attribute"></th>
+                    <th class="tableHeader header2" th:text="Value"></th>
+                    <th class="tableHeader header3"></th>
+                </tr>
+            </thead>
+            <tbody th:if="${ssiApp}" >
                 <tr>
                     <td class="column column__1" th:text="Salaries"></td>
                     <td class="column column__2" th:text="${ssiApp.salariesR}"></td>
-                    <td class="column column__3 history"><button class="showHistBtn">show history</button>
+                    <td class="column column__3 history"><button class="showHistBtn">Toggle History</button>
                         <table class="historyTable">
                             <thead>
                                 <tr>
-                                    <th th:text="date"></th>
-                                    <th th:text="value"></th>
+                                    <th class="innerHeader__1" th:text="date"></th>
+                                    <th class="innerHeader__2" th:text="value"></th>
                                 </tr>
                                 <tbody th:if="${ssiApp.householdComposition}" >
                                     <tr th:each="salaries, counter : ${ssiApp.salariesRHistory}">
@@ -159,12 +169,12 @@
                 <tr>
                     <td class="column column__1" th:text="Pensions"></td>
                     <td class="column column__2" th:text="${ssiApp.pensionsR}"></td>
-                    <td class="column column__3 history"><button class="showHistBtn">show history</button>
+                    <td class="column column__3 history"><button class="showHistBtn">Toggle History</button>
                         <table class="historyTable">
                             <thead>
                                 <tr>
-                                    <th th:text="date"></th>
-                                    <th th:text="value"></th>
+                                    <th class="innerHeader__1" th:text="date"></th>
+                                    <th class="innerHeader__2" th:text="value"></th>
                                 </tr>
                                 <tbody th:if="${ssiApp.householdComposition}" >
                                     <tr th:each="pensions, counter : ${ssiApp.pensionsRHistory}">
@@ -179,12 +189,12 @@
                 <tr>
                     <td class="column column__1" th:text="Freelance"></td>
                     <td class="column column__2" th:text="${ssiApp.freelanceR}"></td>
-                    <td class="column column__3 history"><button class="showHistBtn">show history</button>
+                    <td class="column column__3 history"><button class="showHistBtn">Toggle History</button>
                         <table class="historyTable">
                             <thead>
                                 <tr>
-                                    <th th:text="date"></th>
-                                    <th th:text="value"></th>
+                                    <th class="innerHeader__1" th:text="date"></th>
+                                    <th class="innerHeader__2" th:text="value"></th>
                                 </tr>
                                 <tbody th:if="${ssiApp.householdComposition}" >
                                     <tr th:each="freelance, counter : ${ssiApp.freelanceRHistory}">
@@ -199,12 +209,12 @@
                 <tr>
                     <td class="column column__1" th:text="OtherBenefits"></td>
                     <td class="column column__2" th:text="${ssiApp.otherBenefitsR}"></td>
-                    <td class="column column__3 history"><button class="showHistBtn">show history</button>
+                    <td class="column column__3 history"><button class="showHistBtn">Toggle History</button>
                         <table class="historyTable">
                             <thead>
                                 <tr>
-                                    <th th:text="date"></th>
-                                    <th th:text="value"></th>
+                                    <th class="innerHeader__1" th:text="date"></th>
+                                    <th class="innerHeader__2" th:text="value"></th>
                                 </tr>
                                 <tbody th:if="${ssiApp.householdComposition}" >
                                     <tr th:each="otherBenefits, counter : ${ssiApp.otherBenefitsRHistory}">
@@ -219,12 +229,12 @@
                 <tr>
                     <td class="column column__1" th:text="Deposits"></td>
                     <td class="column column__2" th:text="${ssiApp.depositsA}"></td>
-                    <td class="column column__3 history"><button class="showHistBtn">show history</button>
+                    <td class="column column__3 history"><button class="showHistBtn">Toggle History</button>
                         <table class="historyTable">
                             <thead>
                                 <tr>
-                                    <th th:text="date"></th>
-                                    <th th:text="value"></th>
+                                    <th class="innerHeader__1" th:text="date"></th>
+                                    <th class="innerHeader__2" th:text="value"></th>
                                 </tr>
                                 <tbody th:if="${ssiApp.householdComposition}" >
                                     <tr th:each="deposits, counter : ${ssiApp.depositsAHistory}">
@@ -239,12 +249,12 @@
                 <tr>
                     <td class="column column__1" th:text="DomesticRealEstate"></td>
                     <td class="column column__2" th:text="${ssiApp.domesticRealEstateA}"></td>
-                    <td class="column column__3 history"><button class="showHistBtn">show history</button>
+                    <td class="column column__3 history"><button class="showHistBtn">Toggle History</button>
                         <table class="historyTable">
                             <thead>
                                 <tr>
-                                    <th th:text="date"></th>
-                                    <th th:text="value"></th>
+                                    <th class="innerHeader__1" th:text="date"></th>
+                                    <th class="innerHeader__2" th:text="value"></th>
                                 </tr>
                                 <tbody th:if="${ssiApp.householdComposition}" >
                                     <tr th:each="dRealEstate, counter : ${ssiApp.domesticRealEstateAHistory}">
@@ -259,12 +269,12 @@
                 <tr>
                     <td class="column column__1" th:text="ForeignRealEstate"></td>
                     <td class="column column__2" th:text="${ssiApp.foreignRealEstateA}"></td>
-                    <td class="column column__3 history"><button class="showHistBtn">show history</button>
+                    <td class="column column__3 history"><button class="showHistBtn">Toggle History</button>
                         <table class="historyTable">
                             <thead>
                                 <tr>
-                                    <th th:text="date"></th>
-                                    <th th:text="value"></th>
+                                    <th class="innerHeader__1" th:text="date"></th>
+                                    <th class="innerHeader__2" th:text="value"></th>
                                 </tr>
                                 <tbody th:if="${ssiApp.householdComposition}" >
                                     <tr th:each="fRealEstate, counter : ${ssiApp.foreignRealEstateAHistory}">

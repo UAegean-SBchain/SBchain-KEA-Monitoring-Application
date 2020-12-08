@@ -1,0 +1,71 @@
+.container{
+    width: 70%;
+    margin: 0 auto;
+    align-self: center;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    max-width: 75%;
+    height: 100%;
+    min-height: 70vh;
+}
+
+.table{
+    width:100%;
+    border-collapse:collapse;
+    margin: 1rem;
+}
+
+.tableHeader{
+    background-color: rgb(63, 63, 63);
+    color: rgb(255, 145, 0);
+    padding:0.8rem;
+}
+
+.table .header1{
+    width:10%;
+}
+
+.column__1{
+    padding:0.5rem;
+    background-color: rgb(63, 63, 63);
+    color: rgb(255, 145, 0);
+}
+
+.column__2{
+    padding: 0.7rem;
+}
+
+
+.innerHeader{
+    width:25%;
+}
+
+.historyTable{
+    width:100%;
+    display:none;
+}
+
+.historyTable .innerHeader__1{
+    text-align: left;
+    width: 50%;
+}
+
+.historyTable th{
+    padding: 0.8rem;
+}
+
+.showHistBtn{
+    height: 2.5rem;
+    width: 6.5rem;
+    color: rgb(255, 145, 0);
+    font-size: 0.9rem;
+    border: none;
+  background-color: inherit;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.financialTable .column__2{
+    width:10%;
+    text-align: center;
+}
