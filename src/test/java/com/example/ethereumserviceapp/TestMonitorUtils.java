@@ -3,6 +3,7 @@ package com.example.ethereumserviceapp;
 import static org.mockito.ArgumentMatchers.anySet;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,7 +84,7 @@ public class TestMonitorUtils extends TestUtils {
         ssiApps.add(ssiApp4);
         ssiApps.add(ssiApp5);
 
-        BigDecimal payment = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp1, ssiApps);
+        BigDecimal payment = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp1, ssiApps, LocalDate.now());
 
         log.info("xxxxxxxxxxxxxxxxxxx payment :{}", payment);
 
@@ -106,7 +107,7 @@ public class TestMonitorUtils extends TestUtils {
         ssiApps.add(ssiApp4);
         ssiApps.add(ssiApp5);
 
-        BigDecimal payment = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp1, ssiApps);
+        BigDecimal payment = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp1, ssiApps, LocalDate.now());
 
         log.info("xxxxxxxxxxxxxxxxxxx payment :{}", payment);
 
@@ -125,7 +126,7 @@ public class TestMonitorUtils extends TestUtils {
         ssiApps.add(ssiApp2);
         ssiApps.add(ssiApp3);
 
-        BigDecimal payment = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp1, ssiApps);
+        BigDecimal payment = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp1, ssiApps, LocalDate.now());
 
         log.info("xxxxxxxxxxxxxxxxxxx payment :{}", payment);
         //log.info("ssiApp after :{}", ssiApp);

@@ -72,7 +72,7 @@ public class TestMonitorServ extends TestUtils{
         EthereumService ethServ = new EthereumServiceImpl();
         MonitorService monServ = new MonitorServiceImpl(monogServ, ethServ);
 
-        monServ.startMonitoring();
+        monServ.startMonitoring(null);
 
         assertEquals(true, true);
 
@@ -109,7 +109,7 @@ public class TestMonitorServ extends TestUtils{
         Mockito.when(mongoServ.findByIban(anyString())).thenReturn(oneItemList);
         doNothing().when(ethServ).updateCase(any());
 
-        monServ.startMonitoring();
+        monServ.startMonitoring(null);
 
         verify(ethServ, times(1)).updateCase(any());
         
@@ -155,7 +155,7 @@ public class TestMonitorServ extends TestUtils{
         Mockito.when(mongoServ.findByIban(anyString())).thenReturn(oneItemList);
         doNothing().when(ethServ).updateCase(any());
 
-        monServ.startMonitoring();
+        monServ.startMonitoring(null);
 
         verify(ethServ, times(1)).updateCase(any());
         
@@ -195,7 +195,7 @@ public class TestMonitorServ extends TestUtils{
         Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(monitoredCase));
         Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(ssiApps);
         doNothing().when(ethServ).updateCase(any());
-        monServ.startMonitoring();
+        monServ.startMonitoring(null);
 
         verify(ethServ, times(1)).updateCase(any());
         
@@ -248,7 +248,7 @@ public class TestMonitorServ extends TestUtils{
         Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(monitoredCase));
         Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(allSsiApps);
         doNothing().when(ethServ).updateCase(any());
-        monServ.startMonitoring();
+        monServ.startMonitoring(null);
         
         verify(ethServ, times(1)).updateCase(any());
         
@@ -292,7 +292,7 @@ public class TestMonitorServ extends TestUtils{
         Mockito.when(ethServ.checkRevocationStatus(anyString())).thenReturn(false);
         doNothing().when(ethServ).updateCase(any());
 
-        monServ.startMonitoring();
+        monServ.startMonitoring(null);
 
         verify(ethServ, times(1)).updateCase(any());
         
@@ -333,7 +333,7 @@ public class TestMonitorServ extends TestUtils{
         Mockito.when(mongoServ.findByUuid(anyString())).thenReturn(Optional.empty());
         doNothing().when(ethServ).updateCase(any());
 
-        monServ.startMonitoring();
+        monServ.startMonitoring(null);
 
         verify(ethServ, times(1)).updateCase(any());
         
@@ -375,7 +375,7 @@ public class TestMonitorServ extends TestUtils{
         Mockito.when(mongoServ.findUuidByTaxisAfmIn(anySet())).thenReturn(uuids);
         doNothing().when(mongoServ).deleteByUuid(anyString());
 
-        monServ.startMonitoring();
+        monServ.startMonitoring(null);
         
     }
 
@@ -412,7 +412,7 @@ public class TestMonitorServ extends TestUtils{
         Mockito.when(ethServ.getAllCaseUUID()).thenReturn(uuids);
         Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(monitoredCase));
 
-        monServ.startMonitoring();
+        monServ.startMonitoring(null);
         
     }
 }

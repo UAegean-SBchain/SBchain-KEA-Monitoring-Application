@@ -35,8 +35,8 @@ public class PaymentServiceImpl implements PaymentService{
     }
     
     @Override
-    @Scheduled(cron = "0 0 0 1 * ?")
-    public void startPayment(){
+    //@Scheduled(cron = "0 0 0 1 * ?")
+    public void startPayment(LocalDateTime dateNow){
         
         List<String> uuids = this.ethServ.getAllCaseUUID();
         uuids.stream().forEach(uuid -> {
@@ -48,7 +48,7 @@ public class PaymentServiceImpl implements PaymentService{
             }
             Case caseToBePaid = theCase.get();
             LocalDateTime startDate = caseToBePaid.getHistory().entrySet().iterator().next().getKey();
-            LocalDateTime currentDate = LocalDateTime.now();
+            LocalDateTime currentDate = dateNow == null? LocalDateTime.now() : dateNow;
             Optional<SsiApplication> ssiApp = mongoServ.findByUuid(uuid);
             Set<String> householdAfms = ssiApp.get().getHouseholdComposition().stream().map(s -> s.getAfm()).collect(Collectors.toSet());
             List<SsiApplication> householdApps = mongoServ.findByTaxisAfmIn(householdAfms);
@@ -79,7 +79,7 @@ public class PaymentServiceImpl implements PaymentService{
 
     private void calculatePayment(Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDateTime currentDate){
         List<SsiApplication> allHouseholdApps = mongoServ.findByTaxisAfmIn(EthAppUtils.fetchAllHouseholdAfms(ssiApp)); 
-        BigDecimal paymentValue = MonitorUtils.calculateCurrentPayment(caseToBePaid, ssiApp, allHouseholdApps).subtract(caseToBePaid.getOffset());
+        BigDecimal paymentValue = MonitorUtils.calculateCurrentPayment(caseToBePaid, ssiApp, allHouseholdApps, currentDate.toLocalDate()).subtract(caseToBePaid.getOffset());
         //Call to payment service
         State paymentState = paymentService(paymentValue, caseToBePaid, ssiApp, householdApps);
         addPayment(paymentValue, caseToBePaid, currentDate, paymentState);

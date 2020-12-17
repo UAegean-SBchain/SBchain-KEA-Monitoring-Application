@@ -6,7 +6,6 @@
 package com.example.ethereumserviceapp.service.impl;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -57,8 +56,9 @@ public class MonitorServiceImpl implements MonitorService {
     MonitorUtils monitorUtils;
 
     @Override
-    @Scheduled(cron = "0 0 12 * * ?")
-    public void startMonitoring() {
+    //@Scheduled(cron = "0 0 12 * * ?")
+    public void startMonitoring(LocalDateTime dateNow) {
+        LocalDateTime currentDate = dateNow == null? LocalDateTime.now() : dateNow;
         List<String> uuids = this.ethServ.getAllCaseUUID();
         uuids.stream().forEach(uuid -> {
 
@@ -75,7 +75,7 @@ public class MonitorServiceImpl implements MonitorService {
                 while(itr.hasNext()){
                     Map.Entry<LocalDateTime, State> entry = itr.next();
                     //if the case is rejected for more than one month then delete it
-                    if(entry.getValue().equals(State.REJECTED) && entry.getKey().toLocalDate().isBefore(LocalDate.now().minusMonths(1))){
+                    if(entry.getValue().equals(State.REJECTED) && entry.getKey().toLocalDate().isBefore(currentDate.toLocalDate().minusMonths(1))){
                         Optional<SsiApplication> ssiCase = mongoServ.findByUuid(uuid);
                         Set<String> householdAfms = ssiCase.get().getHouseholdComposition().stream().map(s -> s.getAfm()).collect(Collectors.toSet());
                         for(String hhuuid: mongoServ.findUuidByTaxisAfmIn(householdAfms)){
@@ -89,12 +89,12 @@ public class MonitorServiceImpl implements MonitorService {
             log.info("looking into case {} with state {}", uuid, monitoredCase.get().getState());
             Optional<SsiApplication> ssiCase = mongoServ.findByUuid(uuid);
             if (!ssiCase.isPresent()) {
-                updateCase(uuid, State.REJECTED, null);
+                updateCase(uuid, State.REJECTED, null, currentDate);
                 return;
             }
             // if this is not a principal case update state as non principal and continue to the next case
             if(!ssiCase.get().getTaxisAfm().equals(ssiCase.get().getHouseholdPrincipal().getAfm())){
-                updateCase(uuid, State.NONPRINCIPAL, null);
+                updateCase(uuid, State.NONPRINCIPAL, null, currentDate);
                 return;
             }
 
@@ -102,7 +102,7 @@ public class MonitorServiceImpl implements MonitorService {
             List<SsiApplication> householdApps = mongoServ.findByTaxisAfmIn(householdAfms);
             
             // check if credentials are valid and not expired
-            if(!credentialsOk(uuid, householdApps)){
+            if(!credentialsOk(uuid, householdApps, currentDate)){
                 return;
             }
 
@@ -117,33 +117,33 @@ public class MonitorServiceImpl implements MonitorService {
                 }
             }
             
-            if (MonitorUtils.isCaseOlderThanSixMonths(firstAcceptedDate) || !MonitorUtils.checkExternalSources()) {
+            if (MonitorUtils.isCaseOlderThanSixMonths(firstAcceptedDate, currentDate) || !MonitorUtils.checkExternalSources()) {
                 //update the status of the case to REJECTED and the date with the current date
-                updateCase(uuid, State.REJECTED, ssiCase.isPresent()? ssiCase.get() : null);
+                updateCase(uuid, State.REJECTED, ssiCase.isPresent()? ssiCase.get() : null, currentDate);
                 //this.mongoServ.deleteByUuid(uuid);
             } else {
                 final SsiApplication ssiApp = ssiCase.get();
                 //check the application by the uuid and update the case accordingly
                 if (checkHouseholdCredentials(monitoredCase.get(), ssiApp, householdApps)) {
-                    updateCase(uuid, State.ACCEPTED, ssiApp);
+                    updateCase(uuid, State.ACCEPTED, ssiApp, currentDate);
                 } else {
-                    rejectOrSuspendCases(uuid, State.REJECTED, householdApps);
+                    rejectOrSuspendCases(uuid, State.REJECTED, householdApps, currentDate);
                 }
             }
         });
     }
 
-    private void rejectOrSuspendCases(String uuid, State state, List<SsiApplication> householdApps){
+    private void rejectOrSuspendCases(String uuid, State state, List<SsiApplication> householdApps, LocalDateTime currentDate){
         for(SsiApplication hhSsiApp:householdApps){
-            updateCase(hhSsiApp.getUuid(), state, hhSsiApp);
+            updateCase(hhSsiApp.getUuid(), state, hhSsiApp, currentDate);
         }
     }
 
-    private void updateCase(String uuid, State state, SsiApplication ssiApp) {
+    private void updateCase(String uuid, State state, SsiApplication ssiApp, LocalDateTime currentDate) {
         Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
         if (theCase.isPresent()) {
             theCase.get().setState(state);
-            theCase.get().setDate(LocalDateTime.now());
+            theCase.get().setDate(currentDate);
             if(ssiApp != null){
                 List<SsiApplication> allHouseholdApps = mongoServ.findByTaxisAfmIn(EthAppUtils.fetchAllHouseholdAfms(ssiApp)); 
                 MonitorUtils.calculateOffset(theCase.get(), ssiApp, allHouseholdApps);
@@ -155,7 +155,7 @@ public class MonitorServiceImpl implements MonitorService {
         }
     }
 
-    private Boolean credentialsOk(String uuid, List<SsiApplication> householdApps){
+    private Boolean credentialsOk(String uuid, List<SsiApplication> householdApps, LocalDateTime currentDate){
         Boolean credsOk = true;
         CredsAndExp[] credIdAndExp = this.mongoServ.findCredentialIdsByUuid(uuid);
         if(credIdAndExp == null){
@@ -167,9 +167,9 @@ public class MonitorServiceImpl implements MonitorService {
             LocalDateTime expiresAt = LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.parseLong(credIdAndExp[i].getExp())), ZoneId.systemDefault());
             //Date expiresAt = Date.from(Instant.ofEpochSecond(Long.parseLong(credIdAndExp[i].getExp())));
             log.info("credential expires at {}", expiresAt);
-            if (!expiresAt.isAfter(LocalDateTime.now())) {
+            if (!expiresAt.isAfter(currentDate)) {
                 //if credentials have expired update case as suspended(paused)
-                rejectOrSuspendCases(uuid, State.SUSPENDED, householdApps);
+                rejectOrSuspendCases(uuid, State.SUSPENDED, householdApps, currentDate);
                 credsOk = false;
                 break;
             }
@@ -177,7 +177,7 @@ public class MonitorServiceImpl implements MonitorService {
             boolean isRevoked = this.ethServ.checkRevocationStatus(credIdAndExp[i].getId());
             log.info("is credential {} revoked? == {}", credIdAndExp[i].getId(), isRevoked);
             if (isRevoked){
-                rejectOrSuspendCases(uuid, State.REJECTED, householdApps);
+                rejectOrSuspendCases(uuid, State.REJECTED, householdApps, currentDate);
                 credsOk = false;
                 break;
             }

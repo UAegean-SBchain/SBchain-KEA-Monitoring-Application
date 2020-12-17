@@ -37,8 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MonitorUtils extends EthAppUtils{
                 
-    public static Boolean isCaseOlderThanSixMonths(LocalDateTime firstAcceptedDate){
-        if(LocalDateTime.now().isAfter(firstAcceptedDate.plusMonths(6))){
+    public static Boolean isCaseOlderThanSixMonths(LocalDateTime firstAcceptedDate, LocalDateTime currentDate){
+        if(currentDate.isAfter(firstAcceptedDate.plusMonths(6))){
             return true;
         }
         return false;
@@ -191,11 +191,11 @@ public class MonitorUtils extends EthAppUtils{
         }
     }
 
-    public static BigDecimal calculateCurrentPayment(Case monitoredCase, SsiApplication ssiApp, List<SsiApplication> householdApps){
+    public static BigDecimal calculateCurrentPayment(Case monitoredCase, SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDate currentDate){
         
-        LocalDate startOfPayment = LocalDate.now().minusMonths(1).withDayOfMonth(1);
+        LocalDate startOfPayment = currentDate.minusMonths(1).withDayOfMonth(1);
         Integer fullMonthDays = monthDays(startOfPayment);
-        LocalDate endOfPayment = LocalDate.now().minusMonths(1).withDayOfMonth(fullMonthDays);
+        LocalDate endOfPayment = currentDate.minusMonths(1).withDayOfMonth(fullMonthDays);
 
         List<LocalDate> acceptedDates = monitoredCase.getHistory().entrySet().stream().filter(
             e -> e.getKey().toLocalDate().compareTo(startOfPayment) >= 0 
@@ -204,9 +204,9 @@ public class MonitorUtils extends EthAppUtils{
             .map(x -> x.getKey().toLocalDate()).collect(Collectors.toList());
 
         SsiApplication ssiAppProjection = filterHHAndAggregate(householdApps, ssiApp.getHouseholdComposition());           
-        BigDecimal projectedPayment = calculatePayment(fullMonthDays, acceptedDates.size(), ssiAppProjection, LocalDate.now());
+        BigDecimal projectedPayment = calculatePayment(fullMonthDays, acceptedDates.size(), ssiAppProjection, currentDate);
 
-        List<PaymentCredential> changedCredentials = latestAlteredCredentials(ssiApp, householdApps);
+        List<PaymentCredential> changedCredentials = latestAlteredCredentials(ssiApp, householdApps, currentDate);
         ssiApp = filterHHAndAggregate(householdApps, ssiApp.getHouseholdComposition());   
         
         BigDecimal correctedPayment = BigDecimal.ZERO;
@@ -319,7 +319,7 @@ public class MonitorUtils extends EthAppUtils{
         return changedCredentials;
     }
 
-    private static List<PaymentCredential> latestAlteredCredentials(SsiApplication ssiApp, List<SsiApplication> householdApps){
+    private static List<PaymentCredential> latestAlteredCredentials(SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDate currentDate){
 
         List<PaymentCredential> changedCredentials = new ArrayList<>();
 
@@ -330,7 +330,7 @@ public class MonitorUtils extends EthAppUtils{
             //if there are altered credentials (credential history size > 1) set the credential date and value to the default (first value) and add it to the list of changed credentials
             if(!credHistoriesMap.isEmpty()){
                 credHistoriesMap.entrySet().forEach(e -> {
-                    Optional<Entry<LocalDateTime, String>> maxEntry = e.getValue().entrySet().stream().filter(m -> m.getKey().toLocalDate().compareTo(LocalDate.now().minusMonths(1).withDayOfMonth(1)) <= 0)
+                    Optional<Entry<LocalDateTime, String>> maxEntry = e.getValue().entrySet().stream().filter(m -> m.getKey().toLocalDate().compareTo(currentDate.minusMonths(1).withDayOfMonth(1)) <= 0)
                     .max((Entry<LocalDateTime, String> e1, Entry<LocalDateTime, String> e2) -> e1.getKey()
                     .compareTo(e2.getKey()));
                     if(maxEntry.isPresent()){
@@ -338,7 +338,7 @@ public class MonitorUtils extends EthAppUtils{
                     }
                     if(e.getValue().size()>1){
                         e.getValue().entrySet().stream().skip(1).forEach(p -> {
-                            if(p.getKey().toLocalDate().compareTo(LocalDate.now().minusMonths(1).withDayOfMonth(1)) > 0){
+                            if(p.getKey().toLocalDate().compareTo(currentDate.minusMonths(1).withDayOfMonth(1)) > 0){
                                 updatePaymentCredential(p.getKey(), e.getKey(), p.getValue(), null, h.getTaxisAfm(), changedCredentials);
                             }
                         });
@@ -347,7 +347,7 @@ public class MonitorUtils extends EthAppUtils{
             }
         });
         if(ssiApp.getHouseholdCompositionHistory()!=null){
-            Optional<Entry<LocalDateTime, List<HouseholdMember>>> maxEntry = ssiApp.getHouseholdCompositionHistory().entrySet().stream().filter(m -> m.getKey().toLocalDate().compareTo(LocalDate.now().minusMonths(1).withDayOfMonth(1)) <= 0)
+            Optional<Entry<LocalDateTime, List<HouseholdMember>>> maxEntry = ssiApp.getHouseholdCompositionHistory().entrySet().stream().filter(m -> m.getKey().toLocalDate().compareTo(currentDate.minusMonths(1).withDayOfMonth(1)) <= 0)
             .max((Entry<LocalDateTime, List<HouseholdMember>> e1, Entry<LocalDateTime, List<HouseholdMember>> e2) -> e1.getKey()
             .compareTo(e2.getKey()));
             if(maxEntry.isPresent()){
@@ -355,7 +355,7 @@ public class MonitorUtils extends EthAppUtils{
             }
             if(ssiApp.getHouseholdCompositionHistory().size()>1){
                 ssiApp.getHouseholdCompositionHistory().entrySet().stream().skip(1).forEach(p -> {
-                    if(p.getKey().toLocalDate().compareTo(LocalDate.now().minusMonths(1).withDayOfMonth(1)) > 0){
+                    if(p.getKey().toLocalDate().compareTo(currentDate.minusMonths(1).withDayOfMonth(1)) > 0){
                         updatePaymentCredential(p.getKey(), "household", null, p.getValue(), null,  changedCredentials);
                     }
                 });

@@ -5,6 +5,8 @@
  */
 package com.example.ethereumserviceapp.service;
 
+import java.time.LocalDateTime;
+
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 
 /**
@@ -13,7 +15,7 @@ import com.example.ethereumserviceapp.model.entities.SsiApplication;
  */
 public interface MonitorService {
 
-    public void startMonitoring();
+    public void startMonitoring(LocalDateTime currentDate);
 
     public Boolean checkIndividualCredentials(SsiApplication ssiApp);
 
