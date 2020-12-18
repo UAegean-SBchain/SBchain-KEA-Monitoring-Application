@@ -109,6 +109,7 @@ public class SsiApplication {
     private String investmentsA;
     private LinkedHashMap<LocalDateTime, String> salariesRHistory;
     private LinkedHashMap<LocalDateTime, String> pensionsRHistory;
+    private LinkedHashMap<LocalDateTime, String> farmingRHistory;
     private LinkedHashMap<LocalDateTime, String> freelanceRHistory;
     private LinkedHashMap<LocalDateTime, String> otherBenefitsRHistory;
     private LinkedHashMap<LocalDateTime, String> depositsAHistory;

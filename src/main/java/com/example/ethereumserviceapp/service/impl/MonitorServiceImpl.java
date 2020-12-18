@@ -54,9 +54,14 @@ public class MonitorServiceImpl implements MonitorService {
     }
 
     MonitorUtils monitorUtils;
+    
+    @Override
+    @Scheduled(cron = "0 0 12 * * ?")
+    public void startScheduledMonitoring(){
+        startMonitoring(LocalDateTime.now());
+    }
 
     @Override
-    //@Scheduled(cron = "0 0 12 * * ?")
     public void startMonitoring(LocalDateTime dateNow) {
         LocalDateTime currentDate = dateNow == null? LocalDateTime.now() : dateNow;
         List<String> uuids = this.ethServ.getAllCaseUUID();

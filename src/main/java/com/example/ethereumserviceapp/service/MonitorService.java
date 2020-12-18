@@ -15,6 +15,8 @@ import com.example.ethereumserviceapp.model.entities.SsiApplication;
  */
 public interface MonitorService {
 
+    public void startScheduledMonitoring();
+
     public void startMonitoring(LocalDateTime currentDate);
 
     public Boolean checkIndividualCredentials(SsiApplication ssiApp);

@@ -33,9 +33,14 @@ public class PaymentServiceImpl implements PaymentService{
         this.ethServ = ethServ;
         this.mongoServ = mongoServ;
     }
-    
+
     @Override
-    //@Scheduled(cron = "0 0 0 1 * ?")
+    @Scheduled(cron = "0 0 0 1 * ?")
+    public void startScheduledPayment(){
+        startPayment(LocalDateTime.now());
+    }    
+
+    @Override
     public void startPayment(LocalDateTime dateNow){
         
         List<String> uuids = this.ethServ.getAllCaseUUID();
