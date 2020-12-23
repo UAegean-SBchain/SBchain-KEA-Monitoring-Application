@@ -1,5 +1,8 @@
 package com.example.ethereumserviceapp.controller;
 
+import java.io.BufferedInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,9 +12,10 @@ import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.repository.SsiApplicationRepository;
 import com.example.ethereumserviceapp.service.EthereumService;
+import com.example.ethereumserviceapp.service.HelperService;
 import com.example.ethereumserviceapp.service.MongoService;
 import com.example.ethereumserviceapp.service.MonitorService;
-import com.example.ethereumserviceapp.utils.VisualizationHelperUtils;
+import com.example.ethereumserviceapp.utils.CsvUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -19,6 +23,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
 import lombok.extern.slf4j.Slf4j;
@@ -28,16 +33,16 @@ import lombok.extern.slf4j.Slf4j;
 public class MonitoringAppController {
 
     @Autowired
-    EthereumService ethService;
+    private EthereumService ethService;
 
     @Autowired
-    MongoService mongoServ;
+    private MongoService mongoServ;
 
     @Autowired
-    MonitorService monitorService;
+    private SsiApplicationRepository ssiAppRepo;
 
     @Autowired
-    SsiApplicationRepository ssiAppRepo;
+    private HelperService helpService;
 
     @GetMapping("/listCaseUuids")
     protected ModelAndView listCaseUuids(ModelMap model, HttpServletRequest request){
@@ -59,5 +64,42 @@ public class MonitoringAppController {
         model.addAttribute("ssiApp", ssiApp.isPresent()? ssiApp.get() : "");
         
         return new ModelAndView("showCase");
+    }
+
+    @GetMapping("/prepareAddTestData")
+    protected ModelAndView submitCsv(ModelMap model, HttpServletRequest request){
+        return new ModelAndView("submitCsv");
+    }
+
+    @PostMapping("/addTestData")
+    protected ModelAndView addTestData(@RequestParam("file") MultipartFile file) {
+        String message = "";
+        List<SsiApplication> ssiApplications = new ArrayList<>();
+        
+        //if (CsvUtils.hasCSVFormat(file)) {
+            try {
+                ssiApplications = CsvUtils.csvToSsiApplication(file.getInputStream());
+            } catch (Exception e) {
+                message = "Could not upload the file: " + file.getOriginalFilename() + "!";
+            }
+        //}
+
+        if(!ssiApplications.isEmpty()){
+            ssiAppRepo.saveAll(ssiApplications);
+
+            for(SsiApplication ssiApp:ssiApplications){
+                helpService.addTestCase(ssiApp.getUuid());
+            }
+        }
+
+        return new ModelAndView("redirect:/listCaseUuids");
+    }
+
+    @GetMapping("/monitorCase")
+    protected ModelAndView runMonitoringOnCase(@RequestParam(value = "uuid", required = true) String uuid, ModelMap model, HttpServletRequest request){
+
+        helpService.runMonitoringOnCase(uuid);
+
+        return getCase(uuid, model, request);
     }
 }

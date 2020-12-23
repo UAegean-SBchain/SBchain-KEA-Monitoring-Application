@@ -31,10 +31,14 @@ import org.web3j.crypto.Bip32ECKeyPair;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.MnemonicUtils;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.FastRawTransactionManager;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.DefaultGasProvider;
+import org.web3j.tx.response.PollingTransactionReceiptProcessor;
+import org.web3j.tx.response.TransactionReceiptProcessor;
 import org.web3j.utils.Numeric;
 
 import lombok.extern.slf4j.Slf4j;
@@ -191,12 +195,13 @@ public class EthereumServiceImpl implements EthereumService {
     }
 
     @Override
-    public void updateCase(Case monitoredCase) {
+    public void updateCase(Case monitoredCase, Boolean sync) {
+        log.info("updateCase : synchronize transaction :{}", sync);
         if (this.checkIfCaseExists(monitoredCase.getUuid())) {
             try {
 
                 log.info("updating case with uuid {} State {}", monitoredCase.getUuid(), monitoredCase.getState().getValue());
-                LocalDateTime time = LocalDateTime.now();
+                LocalDateTime time = monitoredCase.getDate();
                 ZonedDateTime zdt = time.atZone(ZoneId.of("America/Los_Angeles"));
                 long millis = zdt.toInstant().toEpochMilli();
                 byte[] uuid = ByteConverters.stringToBytes16(monitoredCase.getUuid()).getValue();
@@ -204,8 +209,19 @@ public class EthereumServiceImpl implements EthereumService {
                         .updateCase(uuid,
                                 BigInteger.valueOf(millis), BigInteger.valueOf(monitoredCase.getState().getValue()), (monitoredCase.getOffset().multiply(BigDecimal.valueOf(100)).toBigInteger()) )
                         .encodeFunctionCall();
-                this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
+                String txHash = this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
                         contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
+
+                if(sync){
+                    TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(
+                        web3, 
+                        TransactionManager.DEFAULT_POLLING_FREQUENCY, 
+                        TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+                    TransactionReceipt txReceipt = receiptProcessor.waitForTransactionReceipt(txHash);
+                }
+
+            } catch (TransactionException e){
+                log.error(e.getMessage());
             } catch (IOException ex) {
                 log.error(ex.getMessage());
             }
@@ -215,22 +231,32 @@ public class EthereumServiceImpl implements EthereumService {
     }
 
     @Override
-    public void addPayment(Case monitoredCase, CasePayment payment){
+    public void addPayment(Case monitoredCase, CasePayment payment, Boolean sync){
         if (this.checkIfCaseExists(monitoredCase.getUuid())) {
             try {
 
                 log.info("add new payment for case with uuid :{} and state :{}", monitoredCase.getUuid(), monitoredCase.getState().getValue());
-                LocalDateTime time = LocalDateTime.now();
+                LocalDateTime time = monitoredCase.getDate();
                 ZonedDateTime zdt = time.atZone(ZoneId.of("America/Los_Angeles"));
                 long millis = zdt.toInstant().toEpochMilli();
                 byte[] uuid = ByteConverters.stringToBytes16(monitoredCase.getUuid()).getValue();
                 String functionCall = this.getContract()
-                        .addPayment(uuid, BigInteger.valueOf(monitoredCase.getState().getValue()), 
+                        .addPayment(uuid, BigInteger.valueOf(payment.getState().getValue()), 
                                 BigInteger.valueOf(millis), payment.getPayment().multiply(BigDecimal.valueOf(100)).toBigInteger(), 
                                 monitoredCase.getOffset().multiply(BigDecimal.valueOf(100)).toBigInteger())
                         .encodeFunctionCall();
-                this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
+                String txHash = this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
                         contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
+
+                if(sync){
+                    TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(
+                        web3, 
+                        TransactionManager.DEFAULT_POLLING_FREQUENCY, 
+                        TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+                    TransactionReceipt txReceipt = receiptProcessor.waitForTransactionReceipt(txHash);
+                }
+            } catch (TransactionException e){
+                log.error(e.getMessage());
             } catch (IOException ex) {
                 log.error(ex.getMessage());
             }

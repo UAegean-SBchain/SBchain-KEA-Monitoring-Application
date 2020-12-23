@@ -72,7 +72,7 @@ public class TestMonitorServ extends TestUtils{
         EthereumService ethServ = new EthereumServiceImpl();
         MonitorService monServ = new MonitorServiceImpl(monogServ, ethServ);
 
-        monServ.startMonitoring(null);
+        monServ.startScheduledMonitoring();
 
         assertEquals(true, true);
 
@@ -107,11 +107,11 @@ public class TestMonitorServ extends TestUtils{
         Mockito.when(ethServ.checkRevocationStatus(anyString())).thenReturn(false);
         Mockito.when(mongoServ.findByMeterNumber(anyString())).thenReturn(oneItemList);
         Mockito.when(mongoServ.findByIban(anyString())).thenReturn(oneItemList);
-        doNothing().when(ethServ).updateCase(any());
+        doNothing().when(ethServ).updateCase(any(), false);
 
-        monServ.startMonitoring(null);
+        monServ.startScheduledMonitoring();
 
-        verify(ethServ, times(1)).updateCase(any());
+        verify(ethServ, times(1)).updateCase(any(), false);
         
     }
 
@@ -153,11 +153,11 @@ public class TestMonitorServ extends TestUtils{
         Mockito.when(ethServ.checkRevocationStatus(anyString())).thenReturn(false);
         Mockito.when(mongoServ.findByMeterNumber(anyString())).thenReturn(oneItemList);
         Mockito.when(mongoServ.findByIban(anyString())).thenReturn(oneItemList);
-        doNothing().when(ethServ).updateCase(any());
+        doNothing().when(ethServ).updateCase(any(), false);
 
-        monServ.startMonitoring(null);
+        monServ.startScheduledMonitoring();
 
-        verify(ethServ, times(1)).updateCase(any());
+        verify(ethServ, times(1)).updateCase(any(), false);
         
     }
 
@@ -194,10 +194,10 @@ public class TestMonitorServ extends TestUtils{
         Mockito.when(mongoServ.findCredentialIdsByUuid(anyString())).thenReturn(credIdAndExp);
         Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(monitoredCase));
         Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(ssiApps);
-        doNothing().when(ethServ).updateCase(any());
-        monServ.startMonitoring(null);
+        doNothing().when(ethServ).updateCase(any(), false);
+        monServ.startScheduledMonitoring();
 
-        verify(ethServ, times(1)).updateCase(any());
+        verify(ethServ, times(1)).updateCase(any(), false);
         
     }
     
@@ -247,10 +247,10 @@ public class TestMonitorServ extends TestUtils{
         Mockito.when(ethServ.checkRevocationStatus(anyString())).thenReturn(true);
         Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(monitoredCase));
         Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(allSsiApps);
-        doNothing().when(ethServ).updateCase(any());
-        monServ.startMonitoring(null);
+        doNothing().when(ethServ).updateCase(any(), false);
+        monServ.startScheduledMonitoring();
         
-        verify(ethServ, times(1)).updateCase(any());
+        verify(ethServ, times(1)).updateCase(any(), false);
         
     }
 
@@ -290,11 +290,11 @@ public class TestMonitorServ extends TestUtils{
         Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(ssiApps);
         Mockito.when(mongoServ.findCredentialIdsByUuid(anyString())).thenReturn(credIdAndExp);
         Mockito.when(ethServ.checkRevocationStatus(anyString())).thenReturn(false);
-        doNothing().when(ethServ).updateCase(any());
+        doNothing().when(ethServ).updateCase(any(), false);
 
-        monServ.startMonitoring(null);
+        monServ.startScheduledMonitoring();
 
-        verify(ethServ, times(1)).updateCase(any());
+        verify(ethServ, times(1)).updateCase(any(), false);
         
     }
 
@@ -331,11 +331,11 @@ public class TestMonitorServ extends TestUtils{
         Mockito.when(ethServ.getAllCaseUUID()).thenReturn(uuids);
         Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(monitoredCase));
         Mockito.when(mongoServ.findByUuid(anyString())).thenReturn(Optional.empty());
-        doNothing().when(ethServ).updateCase(any());
+        doNothing().when(ethServ).updateCase(any(), false);
 
-        monServ.startMonitoring(null);
+        monServ.startScheduledMonitoring();
 
-        verify(ethServ, times(1)).updateCase(any());
+        verify(ethServ, times(1)).updateCase(any(), false);
         
     }
 
@@ -375,7 +375,7 @@ public class TestMonitorServ extends TestUtils{
         Mockito.when(mongoServ.findUuidByTaxisAfmIn(anySet())).thenReturn(uuids);
         doNothing().when(mongoServ).deleteByUuid(anyString());
 
-        monServ.startMonitoring(null);
+        monServ.startScheduledMonitoring();
         
     }
 
@@ -412,7 +412,7 @@ public class TestMonitorServ extends TestUtils{
         Mockito.when(ethServ.getAllCaseUUID()).thenReturn(uuids);
         Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(monitoredCase));
 
-        monServ.startMonitoring(null);
+        monServ.startScheduledMonitoring();
         
     }
 }

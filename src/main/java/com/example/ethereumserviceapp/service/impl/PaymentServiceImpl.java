@@ -19,10 +19,12 @@ import com.example.ethereumserviceapp.utils.MonitorUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Service
 public class PaymentServiceImpl implements PaymentService{
 
     private EthereumService ethServ;
@@ -37,14 +39,17 @@ public class PaymentServiceImpl implements PaymentService{
     @Override
     @Scheduled(cron = "0 0 0 1 * ?")
     public void startScheduledPayment(){
-        startPayment(LocalDateTime.now());
+        List<String> uuids = this.ethServ.getAllCaseUUID();
+        uuids.stream().forEach(uuid -> {
+            startPayment(LocalDateTime.now(), uuid, false);
+        });
     }    
 
     @Override
-    public void startPayment(LocalDateTime dateNow){
+    public void startPayment(LocalDateTime dateNow, String uuid, Boolean sync){
         
-        List<String> uuids = this.ethServ.getAllCaseUUID();
-        uuids.stream().forEach(uuid -> {
+        //List<String> uuids = this.ethServ.getAllCaseUUID();
+        //uuids.stream().forEach(uuid -> {
             // get the case from the block chain
             Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
             //if the case does not exist or is a case belonging to a non principal member, continue to the next case
@@ -59,7 +64,7 @@ public class PaymentServiceImpl implements PaymentService{
             List<SsiApplication> householdApps = mongoServ.findByTaxisAfmIn(householdAfms);
             if (caseToBePaid.getState().equals(State.ACCEPTED)) {
                 if(startDate.isBefore(currentDate)){
-                    calculatePayment(caseToBePaid, ssiApp.get(), householdApps, currentDate);
+                    calculatePayment(caseToBePaid, ssiApp.get(), householdApps, currentDate, sync);
                 }
             }
             //if case is rejected then check the previous month history for days during which the case was accepted
@@ -72,22 +77,23 @@ public class PaymentServiceImpl implements PaymentService{
                 if(acceptedDates.intValue() > 0){
                     //check payment credentials
                     if(ssiApp.isPresent() && ssiApp.get().getHouseholdPrincipal().getAfm().equals(ssiApp.get().getTaxisAfm())){
-                        calculatePayment(caseToBePaid, ssiApp.get(), householdApps, currentDate);
+                        calculatePayment(caseToBePaid, ssiApp.get(), householdApps, currentDate, sync);
                     }
                 } else if(caseToBePaid.getState().equals(State.REJECTED) ){
                     // if the case's state is rejected and there are no days during the month during which the case was accepted, delete it from the block chain 
                     ethServ.deleteCaseByUuid(uuid);
                 }
             }
-        });
+        //});
     }
 
-    private void calculatePayment(Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDateTime currentDate){
+    private void calculatePayment(Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDateTime currentDate, Boolean sync){
         List<SsiApplication> allHouseholdApps = mongoServ.findByTaxisAfmIn(EthAppUtils.fetchAllHouseholdAfms(ssiApp)); 
         BigDecimal paymentValue = MonitorUtils.calculateCurrentPayment(caseToBePaid, ssiApp, allHouseholdApps, currentDate.toLocalDate()).subtract(caseToBePaid.getOffset());
+        log.info("payment value :{}", paymentValue);
         //Call to payment service
         State paymentState = paymentService(paymentValue, caseToBePaid, ssiApp, householdApps);
-        addPayment(paymentValue, caseToBePaid, currentDate, paymentState);
+        addPayment(paymentValue, caseToBePaid, currentDate, paymentState, sync);
     }
 
     private State paymentService(BigDecimal valueToBePaid, Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps){
@@ -105,12 +111,12 @@ public class PaymentServiceImpl implements PaymentService{
         return true;
     }
 
-    private void addPayment(BigDecimal valueToBePaid, Case caseToBePaid, LocalDateTime currentDate, State state){
+    private void addPayment(BigDecimal valueToBePaid, Case caseToBePaid, LocalDateTime currentDate, State state, Boolean sync){
         CasePayment payment = new CasePayment();
         payment.setPaymentDate(currentDate);
         payment.setPayment(valueToBePaid);
         payment.setState(state);
-        ethServ.addPayment(caseToBePaid, payment);
+        ethServ.addPayment(caseToBePaid, payment, sync);
         log.info("new payment :{}", payment);
     }
 }

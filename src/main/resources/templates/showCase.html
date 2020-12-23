@@ -9,6 +9,9 @@
 <body>
     <!-- <div th:replace="fragments/header"></div> -->
     <div class="container">
+        <div th:if="${ethCase.state == T(com.example.ethereumserviceapp.model.State).UNDEFINED}" >
+            <a th:href="@{/monitorCase(uuid=${ssiApp.uuid})}">Start Monitoring Process</a>
+        </div>
         <table class="table caseTable" >
             <thead>
                 <tr>

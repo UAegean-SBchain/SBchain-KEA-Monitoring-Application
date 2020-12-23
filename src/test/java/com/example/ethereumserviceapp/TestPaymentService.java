@@ -61,11 +61,11 @@ public class TestPaymentService extends TestUtils{
         // Mockito.when(mongoServ.findByMeterNumber(any())).thenReturn(mockList);
         // Mockito.when(mongoServ.findByHouseholdCompositionIn(any())).thenReturn(mockList);
         // Mockito.when(mongoServ.findByIban(any())).thenReturn(mockList);
-        doNothing().when(ethServ).addPayment(any(), any());
+        doNothing().when(ethServ).addPayment(any(), any(), false);
 
-        paymentServ.startPayment(null);
+        paymentServ.startScheduledPayment();
 
-        verify(ethServ, times(1)).addPayment(any(), any());
+        verify(ethServ, times(1)).addPayment(any(), any(), false);
         
     }
 
@@ -87,11 +87,11 @@ public class TestPaymentService extends TestUtils{
         Mockito.when(mongoServ.findByUuid(anyString())).thenReturn(Optional.of(generateSsiApp1()));
         Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(mockList);
         Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(mockList);
-        doNothing().when(ethServ).addPayment(any(), any());
+        doNothing().when(ethServ).addPayment(any(), any(), false);
 
-        paymentServ.startPayment(null);
+        paymentServ.startScheduledPayment();
 
-        verify(ethServ, times(1)).addPayment(any(), any());
+        verify(ethServ, times(1)).addPayment(any(), any(), false);
     }
 
     @Test
@@ -113,7 +113,7 @@ public class TestPaymentService extends TestUtils{
         Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(mockList);
         doNothing().when(ethServ).deleteCaseByUuid(any());
 
-        paymentServ.startPayment(null);
+        paymentServ.startScheduledPayment();
 
         verify(ethServ, times(1)).deleteCaseByUuid(any());
         

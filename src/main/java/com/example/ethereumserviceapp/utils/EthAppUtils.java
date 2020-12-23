@@ -97,6 +97,8 @@ public class EthAppUtils {
         } else if(adultCount == 1 && !ssiApp.getParenthood().equals("single")){
             adultCount = adultCount + minorCount -1;
         }
+        log.info("adult count :{}, minor count :{}", adultCount, minorCount);
+
         paymentThresshold = BigDecimal.valueOf(6).multiply(BigDecimal.valueOf(200)
             .add((BigDecimal.valueOf(adultCount).multiply(BigDecimal.valueOf(100))
             .add(BigDecimal.valueOf(minorCount).multiply(BigDecimal.valueOf(50))))));
@@ -120,6 +122,8 @@ public class EthAppUtils {
                 foreignRe)
                 ).divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
 
+        log.info("payment check payment thresshold :{}, total income :{}", paymentThresshold, totalIncome);
+
         if(paymentThresshold.compareTo(totalIncome)<= 0){
             return BigDecimal.ZERO;
         }
@@ -142,8 +146,8 @@ public class EthAppUtils {
         //check if by the end of the month all the members of the household have submitted an application
         List<String> appAfms = householdApps.stream().map(a -> a.getTaxisAfm()).collect(Collectors.toList());
         List<String> householdAfms = household.stream().map(m -> m.getAfm()).collect(Collectors.toList());
-
-        if(!householdAfms.containsAll(appAfms)){
+        log.info("ssssssssssssssssssssss householdAfms :{}, appAfms :{}", householdAfms, appAfms);
+        if(!appAfms.containsAll(householdAfms)){
             return false;
         }
 
