@@ -112,6 +112,10 @@ public class PaymentServiceImpl implements PaymentService{
     }
 
     private void addPayment(BigDecimal valueToBePaid, Case caseToBePaid, LocalDateTime currentDate, State state, Boolean sync){
+        //synchronize transactions for test data, only for failed payments so that the offset can be updated
+        if(sync && !state.equals(State.FAILED)){
+            sync = false;
+        }
         CasePayment payment = new CasePayment();
         payment.setPaymentDate(currentDate);
         payment.setPayment(valueToBePaid);

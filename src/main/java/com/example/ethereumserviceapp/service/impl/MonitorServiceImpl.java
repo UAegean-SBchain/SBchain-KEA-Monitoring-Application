@@ -155,11 +155,20 @@ public class MonitorServiceImpl implements MonitorService {
     private void updateCase(String uuid, State state, SsiApplication ssiApp, LocalDateTime currentDate, Boolean sync) {
         Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
         if (theCase.isPresent()) {
+            // synchronize transaction for test data only if the state changes
+            if(sync && theCase.get().getState().equals(state)){
+                sync = false;
+            }
             theCase.get().setState(state);
             theCase.get().setDate(currentDate);
             if(ssiApp != null){
                 List<SsiApplication> allHouseholdApps = mongoServ.findByTaxisAfmIn(EthAppUtils.fetchAllHouseholdAfms(ssiApp)); 
+                BigDecimal offsetBefore = theCase.get().getOffset();
                 MonitorUtils.calculateOffset(theCase.get(), ssiApp, allHouseholdApps);
+                // synchronize transaction for test data only if the offset changes
+                if(offsetBefore.compareTo(theCase.get().getOffset()) == 0){
+                    sync = false;
+                }
             }
             this.ethServ.updateCase(theCase.get(), sync);
             log.info("updated case uuid :{}, date :{}, state :{}, offset:{} ", theCase.get().getUuid(), theCase.get().getDate(), theCase.get().getState(), theCase.get().getOffset());
