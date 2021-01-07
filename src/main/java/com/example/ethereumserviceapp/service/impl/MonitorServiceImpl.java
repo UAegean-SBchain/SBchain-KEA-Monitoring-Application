@@ -227,22 +227,26 @@ public class MonitorServiceImpl implements MonitorService {
 
         //check for deceased members in the household
         if(household.stream().anyMatch(h -> checkForDeceasedMembers(h))){
+            log.info("rejected - deceased member in household");
             return false;
         }
 
         //check for failed payments
         if(monitoredCase.getPaymentHistory() == null? false : monitoredCase.getPaymentHistory().stream().filter(s -> s.getState().equals(State.FAILED)).count() >= 3){
+            log.info("rejected - payment failed for 3 or more months");
             return false;
         }
 
         //check if there are more than one principal members
         if(mongoServ.findByHouseholdPrincipalIn(household).size()>1){
+            log.info("rejected - more than one principal in household");
             return false;
         }
 
         for(HouseholdMember member:household){
             List<SsiApplication> householdDuplicates = mongoServ.findByHouseholdComposition(member);
             if(householdDuplicates.size()>1){
+                log.info("rejected - duplicate applications in household");
                 return false;
             }
         }
@@ -253,6 +257,7 @@ public class MonitorServiceImpl implements MonitorService {
         LocalDate suspendEndDate = LocalDate.of(1900, 1, 1);
         while(it.hasNext()){
             if(suspendEndDate.equals(suspendStartDate.plusMonths(2))){
+                log.info("rejected - application suspended for 2 months or more");
                 return false;
             }
             Map.Entry<LocalDateTime, State> entry = it.next();
@@ -271,6 +276,7 @@ public class MonitorServiceImpl implements MonitorService {
 
         //economics check
         if(EthAppUtils.getTotalMonthlyValue(aggregatedSsiApp, null).compareTo(BigDecimal.ZERO) == 0){
+            log.info("rejected - financial data restriction (total household income > payment thresshold)");
             return false;
         }
 
@@ -288,33 +294,40 @@ public class MonitorServiceImpl implements MonitorService {
 
         List<HouseholdMember> household = ssiApp.getHouseholdComposition();
         if(household == null){
+            log.info("rejected - household missing");
             return false;
         }
 
         //external oaed check
         if(!oaedRegistrationCheck(ssiApp.getOaedId())){
+            log.info("rejected - applicant not found on OAED");
             return false;
         }
         //external housing subsidy check
         if(!houseBenefitCheck(ssiApp.getTaxisAfm())){
+            log.info("rejected - housing benefits");
             return false;
         }
         // check if meter number appears on other applications
         if(mongoServ.findByMeterNumber(ssiApp.getMeterNumber()).size() > 1){
+            log.info("rejected - duplicate meter number");
             return false;
         }
         // check for luxury living
         if(ssiApp.getLuxury() == null? false : ssiApp.getLuxury().equals(String.valueOf(Boolean.TRUE))){
+            log.info("rejected - luxury living");
             return false;
         }
         
         // check that if there differences in Amka register
         if(differenceInAmka(ssiApp.getTaxisAmka())){
+            log.info("rejected - differences in AMKA");
             return false;
         }
 
         //check if iban exists in other application
         if(mongoServ.findByIban(ssiApp.getIban()).size() > 1){
+            log.info("rejected - duplicate IBAN");
             return false;
         }
         log.info("return check true ?");
