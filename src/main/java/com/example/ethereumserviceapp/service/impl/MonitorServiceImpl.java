@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.example.ethereumserviceapp.model.Case;
+import com.example.ethereumserviceapp.model.CasePayment;
 import com.example.ethereumserviceapp.model.CredsAndExp;
 import com.example.ethereumserviceapp.model.HouseholdMember;
 import com.example.ethereumserviceapp.model.State;
@@ -111,6 +112,13 @@ public class MonitorServiceImpl implements MonitorService {
                 return;
             }
 
+            // if the payment has failed for 3 consecutive months delete the case
+            if(checkForFailedPayments(monitoredCase.get())){
+                mongoServ.deleteByUuid(uuid);
+                ethServ.deleteCaseByUuid(uuid);
+                return;
+            }
+
             Set<String> householdAfms = ssiCase.get().getHouseholdComposition().stream().map(s -> s.getAfm()).collect(Collectors.toSet());
             List<SsiApplication> householdApps = mongoServ.findByTaxisAfmIn(householdAfms);
             
@@ -138,6 +146,11 @@ public class MonitorServiceImpl implements MonitorService {
                 final SsiApplication ssiApp = ssiCase.get();
                 //check the application by the uuid and update the case accordingly
                 if (checkHouseholdCredentials(monitoredCase.get(), ssiApp, householdApps)) {
+                    //if there is a missing application in the household suspend the case
+                    if(checkHouseholdApplications(monitoredCase.get(), ssiApp, householdApps, currentDate.toLocalDate())){
+                        rejectOrSuspendCases(uuid, State.SUSPENDED, householdApps, currentDate, sync);
+                        return;
+                    }
                     updateCase(uuid, State.ACCEPTED, ssiApp, currentDate, sync);
                 } else {
                     rejectOrSuspendCases(uuid, State.REJECTED, householdApps, currentDate, sync);
@@ -209,6 +222,44 @@ public class MonitorServiceImpl implements MonitorService {
         return credsOk;
     }
 
+    private Boolean checkForFailedPayments(Case monitoredCase){
+        List<CasePayment> failedPayments = monitoredCase.getPaymentHistory().stream().filter(s -> s.getState().equals(State.FAILED)).collect(Collectors.toList());
+        int failedCount = 1;
+        if(failedPayments.size() >= 3){
+            for(int i = 1; i<failedPayments.size(); i++){
+                if(failedPayments.get(i).getPaymentDate().getMonthValue() == failedPayments.get(i-1).getPaymentDate().getMonthValue()+1){
+                    failedCount++;
+                    if(failedCount >= 3){
+                        log.info("rejected - payment failed for 3 or more months");
+                        return true; 
+                    }
+                } else{
+                    failedCount = 1;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private Boolean checkHouseholdApplications(Case monitoredCase, SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDate currentDate){
+        //final LocalDate currentDate = LocalDate.now();
+        final LocalDate endDate = LocalDate.of(currentDate.getYear(), currentDate.getMonthValue(), EthAppUtils.monthDays(currentDate));
+
+        List<HouseholdMember> household = ssiApp.getHouseholdComposition();
+
+        //check if by the end of the month all the members of the household have submitted an application
+        if(currentDate.equals(endDate)){
+            List<String> appAfms = householdApps.stream().map(a -> a.getTaxisAfm()).collect(Collectors.toList());
+            List<String> householdAfms = household.stream().map(m -> m.getAfm()).collect(Collectors.toList());
+
+            if(!householdAfms.containsAll(appAfms)){
+                return false;
+            }
+        }
+        return true;
+    }
+
     private Boolean checkHouseholdCredentials(Case monitoredCase, SsiApplication ssiApp, List<SsiApplication> householdApps){
         //final LocalDate currentDate = LocalDate.now();
         //final LocalDate endDate = LocalDate.of(currentDate.getYear(), currentDate.getMonthValue(), EthAppUtils.monthDays(currentDate));
@@ -228,12 +279,6 @@ public class MonitorServiceImpl implements MonitorService {
         //check for deceased members in the household
         if(household.stream().anyMatch(h -> checkForDeceasedMembers(h))){
             log.info("rejected - deceased member in household");
-            return false;
-        }
-
-        //check for failed payments
-        if(monitoredCase.getPaymentHistory() == null? false : monitoredCase.getPaymentHistory().stream().filter(s -> s.getState().equals(State.FAILED)).count() >= 3){
-            log.info("rejected - payment failed for 3 or more months");
             return false;
         }
 
@@ -308,11 +353,7 @@ public class MonitorServiceImpl implements MonitorService {
             log.info("rejected - housing benefits");
             return false;
         }
-        // check if meter number appears on other applications
-        if(mongoServ.findByMeterNumber(ssiApp.getMeterNumber()).size() > 1){
-            log.info("rejected - duplicate meter number");
-            return false;
-        }
+        
         // check for luxury living
         if(ssiApp.getLuxury() == null? false : ssiApp.getLuxury().equals(String.valueOf(Boolean.TRUE))){
             log.info("rejected - luxury living");
