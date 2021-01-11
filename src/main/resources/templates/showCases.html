@@ -10,8 +10,7 @@
     <!-- <div th:replace="fragments/header"></div> -->
     <div class="container">
         <a th:href="@{/prepareAddTestData}">Add Test Data</a>
-        <!-- <form method="post" action="#" th:action="@{/financialInfo/save}" th:object="${ssiInformation}" id="infoForm"> -->
-           
+        
        <!-- <div th:replace="fragments/navigation"></div> -->
        <table>
         <tr>
@@ -22,7 +21,15 @@
             <td> <a th:href="@{'/getCase?uuid='+${#strings.substring(uuid,0,6)}}" th:text="${#strings.substring(uuid,0,6)}" class="fetchLink">Fetch Info</a></td>
         </tr>
     </table>
-        <!-- </form> -->
+    <form method="post" action="#" th:action="@{/monitorCases}" th:object="${monitorCmdHelper}" id="infoForm">
+        <h4> Start Monitoring</h4>
+        <div>Start Date: <input type="datetime-local" th:field="*{startDate}" />
+        </div>
+        <div>Number of days: <input type="number" th:field="*{numDays}" /></div>
+        <div>
+            <input type="submit" value="Submit" />
+        </div>
+    </form>
     </div>
     <!-- <div th:replace="fragments/footer"></div> -->
 </body>

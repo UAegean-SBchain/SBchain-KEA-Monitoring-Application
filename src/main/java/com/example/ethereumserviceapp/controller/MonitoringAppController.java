@@ -1,7 +1,5 @@
 package com.example.ethereumserviceapp.controller;
 
-import java.io.BufferedInputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -9,18 +7,19 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 
 import com.example.ethereumserviceapp.model.Case;
+import com.example.ethereumserviceapp.model.MonitorCmdHelper;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.repository.SsiApplicationRepository;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.service.HelperService;
 import com.example.ethereumserviceapp.service.MongoService;
-import com.example.ethereumserviceapp.service.MonitorService;
 import com.example.ethereumserviceapp.utils.CsvUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
@@ -45,12 +44,12 @@ public class MonitoringAppController {
     private HelperService helpService;
 
     @GetMapping("/listCaseUuids")
-    protected ModelAndView listCaseUuids(ModelMap model, HttpServletRequest request){
+    protected ModelAndView listCaseUuids(@ModelAttribute MonitorCmdHelper monitorCmdHelper, ModelMap model, HttpServletRequest request){
 
         List<String> ethUuids = ethService.getAllCaseUUID();
         model.addAttribute("ethUuids", ethUuids);
 
-        return new ModelAndView("showCases");
+        return new ModelAndView("showCases", "monitorCmdHelper", monitorCmdHelper);
         
     }
 
@@ -95,11 +94,12 @@ public class MonitoringAppController {
         return new ModelAndView("redirect:/listCaseUuids");
     }
 
-    @GetMapping("/monitorCase")
-    protected ModelAndView runMonitoringOnCase(@RequestParam(value = "uuid", required = true) String uuid, ModelMap model, HttpServletRequest request){
+    @PostMapping("/monitorCases")
+    protected ModelAndView runMonitoringOnCase(@ModelAttribute MonitorCmdHelper monitorCmdHelper, ModelMap model, HttpServletRequest request){
+        log.info("aaaaaaaaaaaaaaaaaaaaaaa monitor helper start date:{}, number of days :{}", monitorCmdHelper.getStartDate(), monitorCmdHelper.getNumDays());
+        helpService.runMonitoring(monitorCmdHelper.getStartDate(), monitorCmdHelper.getNumDays());
+        model.addAttribute("monitorCmdHelper", monitorCmdHelper);
 
-        helpService.runMonitoringOnCase(uuid);
-
-        return getCase(uuid, model, request);
+        return listCaseUuids(monitorCmdHelper, model, request);
     }
 }

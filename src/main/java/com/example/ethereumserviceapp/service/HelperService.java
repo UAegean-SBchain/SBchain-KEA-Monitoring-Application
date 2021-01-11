@@ -2,6 +2,7 @@ package com.example.ethereumserviceapp.service;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 import com.example.ethereumserviceapp.model.Case;
@@ -38,24 +39,41 @@ public class HelperService {
         }
     }
 
-    public void runMonitoringOnCase(String uuid){
-        Optional<Case> monitoredCase = ethService.getCaseByUUID(uuid);
+    public void runMonitoring(String startDate, String numDays){
+        
+        String startDateFixed = startDate.replace("T", " ");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        LocalDateTime currentDate = LocalDateTime.parse(startDateFixed, formatter);
+        LocalDateTime endDate = currentDate.plusDays(Long.valueOf(numDays));
 
-        if(!monitoredCase.isPresent()){
-            return;
-        }
-
-        LocalDateTime startDate = monitoredCase.get().getDate();
-        LocalDateTime endDate = startDate.plusMonths(6).isBefore(LocalDateTime.now())? startDate.plusMonths(6) : LocalDateTime.now();
-
-        LocalDateTime currentDate = startDate;
         while(currentDate.compareTo(endDate) <=0){
-            monitorService.startMonitoring(currentDate, uuid, true);
-            if(currentDate.getDayOfMonth() == 1){
-                paymentService.startPayment(currentDate, uuid, true);
-            }
+            monitorService.startMonitoring(currentDate, false);
+                if(currentDate.getDayOfMonth() == 1){
+                    paymentService.startPayment(currentDate, false);
+                }
             currentDate = currentDate.plusDays(1);
         }
 
     }
+
+    // public void runMonitoringOnCase(String uuid){
+    //     Optional<Case> monitoredCase = ethService.getCaseByUUID(uuid);
+
+    //     if(!monitoredCase.isPresent()){
+    //         return;
+    //     }
+
+    //     LocalDateTime startDate = monitoredCase.get().getDate();
+    //     LocalDateTime endDate = startDate.plusMonths(6).isBefore(LocalDateTime.now())? startDate.plusMonths(6) : LocalDateTime.now();
+
+    //     LocalDateTime currentDate = startDate;
+    //     while(currentDate.compareTo(endDate) <=0){
+    //         monitorService.startMonitoring(currentDate, uuid, true);
+    //         if(currentDate.getDayOfMonth() == 1){
+    //             paymentService.startPayment(currentDate, uuid, true);
+    //         }
+    //         currentDate = currentDate.plusDays(1);
+    //     }
+
+    // }
 }

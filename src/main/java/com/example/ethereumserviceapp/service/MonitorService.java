@@ -17,7 +17,7 @@ public interface MonitorService {
 
     public void startScheduledMonitoring();
 
-    public void startMonitoring(LocalDateTime currentDate, String uuid, Boolean sync);
+    public void startMonitoring(LocalDateTime currentDate, Boolean sync);
 
     public Boolean checkIndividualCredentials(SsiApplication ssiApp);
 

@@ -18,6 +18,6 @@ public class TestHelperService {
     
     @Test
     public void testRunMonitoring() {
-        helpService.runMonitoringOnCase("1SiDa1");
+        helpService.runMonitoring("2020-01-01 13:45", "120");
     }
 }

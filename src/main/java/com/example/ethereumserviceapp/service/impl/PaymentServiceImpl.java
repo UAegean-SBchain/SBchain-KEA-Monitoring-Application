@@ -40,16 +40,14 @@ public class PaymentServiceImpl implements PaymentService{
     @Scheduled(cron = "0 0 0 1 * ?")
     public void startScheduledPayment(){
         List<String> uuids = this.ethServ.getAllCaseUUID();
-        uuids.stream().forEach(uuid -> {
-            startPayment(LocalDateTime.now(), uuid, false);
-        });
+        startPayment(LocalDateTime.now(), false);
     }    
 
     @Override
-    public void startPayment(LocalDateTime dateNow, String uuid, Boolean sync){
+    public void startPayment(LocalDateTime dateNow, Boolean sync){
         
-        //List<String> uuids = this.ethServ.getAllCaseUUID();
-        //uuids.stream().forEach(uuid -> {
+        List<String> uuids = this.ethServ.getAllCaseUUID();
+        uuids.stream().forEach(uuid -> {
             // get the case from the block chain
             Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
             //if the case does not exist or is a case belonging to a non principal member, continue to the next case
@@ -84,7 +82,7 @@ public class PaymentServiceImpl implements PaymentService{
                     ethServ.deleteCaseByUuid(uuid);
                 }
             }
-        //});
+        });
     }
 
     private void calculatePayment(Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDateTime currentDate, Boolean sync){
@@ -113,9 +111,9 @@ public class PaymentServiceImpl implements PaymentService{
 
     private void addPayment(BigDecimal valueToBePaid, Case caseToBePaid, LocalDateTime currentDate, State state, Boolean sync){
         //synchronize transactions for test data, only for failed payments so that the offset can be updated
-        if(sync && !state.equals(State.FAILED)){
-            sync = false;
-        }
+        // if(sync && !state.equals(State.FAILED)){
+        //     sync = false;
+        // }
         CasePayment payment = new CasePayment();
         payment.setPaymentDate(currentDate);
         payment.setPayment(valueToBePaid);

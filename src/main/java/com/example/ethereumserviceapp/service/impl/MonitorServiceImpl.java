@@ -60,10 +60,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     @Scheduled(cron = "0 0 12 * * ?")
     public void startScheduledMonitoring(){
-        List<String> uuids = this.ethServ.getAllCaseUUID();
-        uuids.stream().forEach(uuid -> {
-            startMonitoring(LocalDateTime.now(), uuid, false);
-        });
+        startMonitoring(LocalDateTime.now(), false);
     }
 
     // parameters:
@@ -71,17 +68,22 @@ public class MonitorServiceImpl implements MonitorService {
     // uuid: the uuid of the case to be monitored
     // sync: parameter used for testing true for synchronization with the blockchaing, false(default) make asynchronous transactions with the blockchain
     @Override
-    public void startMonitoring(LocalDateTime dateNow, String uuid, Boolean sync) {
+    public void startMonitoring(LocalDateTime dateNow, Boolean sync) {
         LocalDateTime currentDate = dateNow == null? LocalDateTime.now() : dateNow;
-        //List<String> uuids = this.ethServ.getAllCaseUUID();
-        //uuids.stream().forEach(uuid -> {
+        List<String> uuids = this.ethServ.getAllCaseUUID();
+        uuids.stream().forEach(uuid -> {
 
             //check if the case state is rejected, if so, skip the test
             Optional<Case> monitoredCase = this.ethServ.getCaseByUUID(uuid);
+            if(!monitoredCase.isPresent()){
+                log.info("error - case not present");
+                return;
+            }
             //int caseState = c.get().getState().getValue();
             Iterator<Entry<LocalDateTime, State>> it = monitoredCase.get().getHistory().entrySet().iterator();
             
             if(monitoredCase.get().getState().equals(State.NONPRINCIPAL)){
+                log.info("case non principal");
                 return;
             }
             if(monitoredCase.get().getState().equals(State.REJECTED)){
@@ -156,7 +158,7 @@ public class MonitorServiceImpl implements MonitorService {
                     rejectOrSuspendCases(uuid, State.REJECTED, householdApps, currentDate, sync);
                 }
             }
-        //});
+        });
     }
 
     private void rejectOrSuspendCases(String uuid, State state, List<SsiApplication> householdApps, LocalDateTime currentDate, Boolean sync){
@@ -169,19 +171,19 @@ public class MonitorServiceImpl implements MonitorService {
         Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
         if (theCase.isPresent()) {
             // synchronize transaction for test data only if the state changes
-            if(sync && theCase.get().getState().equals(state)){
-                sync = false;
-            }
+            // if(sync && theCase.get().getState().equals(state)){
+            //     sync = false;
+            // }
             theCase.get().setState(state);
             theCase.get().setDate(currentDate);
             if(ssiApp != null){
                 List<SsiApplication> allHouseholdApps = mongoServ.findByTaxisAfmIn(EthAppUtils.fetchAllHouseholdAfms(ssiApp)); 
-                BigDecimal offsetBefore = theCase.get().getOffset();
+                //BigDecimal offsetBefore = theCase.get().getOffset();
                 MonitorUtils.calculateOffset(theCase.get(), ssiApp, allHouseholdApps);
                 // synchronize transaction for test data only if the offset changes
-                if(offsetBefore.compareTo(theCase.get().getOffset()) == 0){
-                    sync = false;
-                }
+                // if(offsetBefore.compareTo(theCase.get().getOffset()) == 0){
+                //     sync = false;
+                // }
             }
             this.ethServ.updateCase(theCase.get(), sync);
             log.info("updated case uuid :{}, date :{}, state :{}, offset:{} ", theCase.get().getUuid(), theCase.get().getDate(), theCase.get().getState(), theCase.get().getOffset());

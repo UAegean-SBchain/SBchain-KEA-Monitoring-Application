@@ -6,5 +6,5 @@ public interface PaymentService {
 
     public void startScheduledPayment();
     
-    public void startPayment(LocalDateTime dateNow, String uuid, Boolean sync);
+    public void startPayment(LocalDateTime dateNow, Boolean sync);
 }
