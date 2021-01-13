@@ -346,10 +346,16 @@ public class MonitorServiceImpl implements MonitorService {
         }
 
         //external oaed check
-        if(!oaedRegistrationCheck(ssiApp.getOaedId())){
-            log.info("rejected - applicant not found on OAED");
+        // if(!oaedRegistrationCheck(ssiApp.getOaedId())){
+        //     log.info("rejected - applicant not found on OAED");
+        //     return false;
+        // }
+
+        //check unemployment status
+        if(ssiApp.getUnemployed().equals("false")){
             return false;
         }
+
         //external housing subsidy check
         if(!houseBenefitCheck(ssiApp.getTaxisAfm())){
             log.info("rejected - housing benefits");
