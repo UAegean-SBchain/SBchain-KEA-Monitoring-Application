@@ -9,6 +9,8 @@ import java.util.Map;
 
 import com.example.ethereumserviceapp.model.HouseholdMember;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.data.annotation.Id;
 
 import lombok.Getter;
@@ -74,7 +76,7 @@ public class SsiApplication {
     //employment info
     private String employmentStatus;
     private String unemployed;
-    private String employed; 
+    private String employed;
     private String oaedId;
     private String oaedDate;
 
@@ -119,13 +121,18 @@ public class SsiApplication {
     //household composition
     private HouseholdMember householdPrincipal;
     private List<HouseholdMember> householdComposition;
-    private LinkedHashMap<LocalDateTime,List<HouseholdMember>> householdCompositionHistory;
+    private LinkedHashMap<LocalDateTime, List<HouseholdMember>> householdCompositionHistory;
 
     //income guarantee
     private String monthlyGuarantee;
     private String totalIncome;
     private String monthlyIncome;
     private String monthlyAid;
+
+    @JsonAlias("streetNumber_1")
+    private String streetNumber1;
+    @JsonAlias("prefecture_2")
+    private String prefecture2;
 
     // helper object
     private boolean savedInDb;
