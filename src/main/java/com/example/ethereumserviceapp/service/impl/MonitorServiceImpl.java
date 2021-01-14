@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -146,6 +147,7 @@ public class MonitorServiceImpl implements MonitorService {
                 //this.mongoServ.deleteByUuid(uuid);
             } else {
                 final SsiApplication ssiApp = ssiCase.get();
+                handleDeceasedMember(ssiApp);
                 //check the application by the uuid and update the case accordingly
                 if (checkHouseholdCredentials(monitoredCase.get(), ssiApp, householdApps)) {
                     //if there is a missing application in the household suspend the case
@@ -279,10 +281,10 @@ public class MonitorServiceImpl implements MonitorService {
         // }
 
         //check for deceased members in the household
-        if(household.stream().anyMatch(h -> checkForDeceasedMembers(h))){
-            log.info("rejected - deceased member in household");
-            return false;
-        }
+        // if(household.stream().anyMatch(h -> checkForDeceasedMembers(h))){
+        //     log.info("rejected - deceased member in household");
+        //     return false;
+        // }
 
         //check if there are more than one principal members
         if(mongoServ.findByHouseholdPrincipalIn(household).size()>1){
@@ -386,6 +388,25 @@ public class MonitorServiceImpl implements MonitorService {
     //mock check for deceased members in the household
     private Boolean checkForDeceasedMembers(HouseholdMember member){
         return false;
+    }
+
+    private void handleDeceasedMember(SsiApplication ssiApp){
+        List<HouseholdMember> household = ssiApp.getHouseholdComposition();
+        boolean changed = false;
+        for(HouseholdMember member:household){
+            if(checkForDeceasedMembers(member)){
+                household.remove(member);
+                changed = true;
+            }
+        }
+
+        if(changed){
+            ssiApp.setHouseholdComposition(household);
+            LinkedHashMap<LocalDateTime, List<HouseholdMember>> hhHistory = ssiApp.getHouseholdCompositionHistory();
+            hhHistory.put(LocalDateTime.now(), household);
+            ssiApp.setHouseholdCompositionHistory(hhHistory);
+            mongoServ.updateSsiApp(ssiApp);
+        }
     }
 
     //mock oaed registration check

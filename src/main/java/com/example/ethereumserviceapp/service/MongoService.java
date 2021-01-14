@@ -47,4 +47,6 @@ public interface MongoService {
     public List<String> findUuidByTaxisAfmIn(Set<String> taxisAfms);
 
     public void deleteByUuid(String uuid);
+
+    public void updateSsiApp(SsiApplication ssiApp);
 }

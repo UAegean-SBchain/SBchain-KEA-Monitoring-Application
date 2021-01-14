@@ -122,4 +122,8 @@ public class MongoServiceImpl implements MongoService {
         rep.deleteByUuid(uuid);
     }
 
+    @Override
+    public void updateSsiApp(SsiApplication ssiApp){
+        rep.save(ssiApp);
+    }
 }
