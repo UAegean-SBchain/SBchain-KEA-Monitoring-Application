@@ -13,6 +13,7 @@ import java.util.Set;
 import com.example.ethereumserviceapp.model.CredsAndExp;
 import com.example.ethereumserviceapp.model.HouseholdMember;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
+import org.springframework.stereotype.Service;
 
 /**
  *
