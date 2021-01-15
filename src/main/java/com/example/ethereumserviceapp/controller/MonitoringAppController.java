@@ -96,7 +96,6 @@ public class MonitoringAppController {
 
     @PostMapping("/monitorCases")
     protected ModelAndView runMonitoringOnCase(@ModelAttribute MonitorCmdHelper monitorCmdHelper, ModelMap model, HttpServletRequest request){
-        log.info("aaaaaaaaaaaaaaaaaaaaaaa monitor helper start date:{}, number of days :{}", monitorCmdHelper.getStartDate(), monitorCmdHelper.getNumDays());
         helpService.runMonitoring(monitorCmdHelper.getStartDate(), monitorCmdHelper.getNumDays());
         model.addAttribute("monitorCmdHelper", monitorCmdHelper);
 

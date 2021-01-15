@@ -140,6 +140,7 @@ public class CsvUtils {
             }
             return ssiAppList;
         } catch (IOException e) {
+            log.error("error on submit csv :{}", e.getMessage());
             throw new RuntimeException("fail to parse CSV file: " + e.getMessage());
         }
     }

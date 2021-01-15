@@ -57,7 +57,7 @@ public class CaseMonitor extends Contract {
 
     static {
         _addresses = new HashMap<String, String>();
-        _addresses.put("3", "0x3027b1e481C3478E85f9adD58d239eD9742AB418");
+        _addresses.put("2018", "0xc8305EbbA9FCCFCfe95cf6a7B7c17C9dDf1620AE");
     }
 
     @Deprecated

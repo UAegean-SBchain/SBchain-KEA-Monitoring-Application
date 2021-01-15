@@ -61,7 +61,7 @@ public class EthereumServiceImpl implements EthereumService {
     private final TransactionManager txManager;
 
     public EthereumServiceImpl() {
-        this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/58249bdbdaf449d7b1cb4f3e1955ee77"));
+        this.web3 = Web3j.build(new HttpService("http://I4mlab-besu.westeurope.cloudapp.azure.com:8545"));
         String password = null; // no encryption
         this.mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
         // Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in
@@ -74,7 +74,7 @@ public class EthereumServiceImpl implements EthereumService {
         Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, derivationPath);
         // Load the wallet for the derived key
         this.credentials = Credentials.create(derivedKeyPair);
-        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x3027b1e481C3478E85f9adD58d239eD9742AB418"
+        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0xc0ED63E3A70BfCB003452B1Cc083db822e1f23e1" // 0x3027b1e481C3478E85f9adD58d239eD9742AB418
                 : System.getenv("CONTRACT_ADDRESS");
         this.REVOCATION_CONTRACT_ADDRESS = System.getenv("REVOCATION_CONTRACT_ADDRESS") == null
                 ? "0x9534d226e56826Cc4C01912Eb388b121Bb0683b5"
@@ -85,7 +85,7 @@ public class EthereumServiceImpl implements EthereumService {
     @Override
     public Credentials getCredentials() {
         if (this.credentials == null) {
-            this.web3 = Web3j.build(new HttpService("https://ropsten.infura.io/v3/58249bdbdaf449d7b1cb4f3e1955ee77"));
+            this.web3 = Web3j.build(new HttpService("http://I4mlab-besu.westeurope.cloudapp.azure.com:8545"));//https://ropsten.infura.io/v3/58249bdbdaf449d7b1cb4f3e1955ee77
             String password = null; // no encryption
             this.mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
             // Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in
@@ -187,8 +187,10 @@ public class EthereumServiceImpl implements EthereumService {
             String functionCall = this.getContract()
                     .addCase(uuid, BigInteger.valueOf(millis))
                     .encodeFunctionCall();
+            
             this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
                     contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
+
         } catch (IOException ex) {
             log.info(ex.getMessage());
         }
