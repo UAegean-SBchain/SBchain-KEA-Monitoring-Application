@@ -95,13 +95,20 @@ public class PaymentServiceImpl implements PaymentService{
     }
 
     private State paymentService(BigDecimal valueToBePaid, Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps){
+    
         //mock Call to external service
         if(!mockExternalPaymentService(valueToBePaid, caseToBePaid.getUuid()) || !EthAppUtils.areAppHouseholdAfmsTheSame(householdApps, ssiApp)){
-            caseToBePaid.setOffset(valueToBePaid);
+            caseToBePaid.setOffset(valueToBePaid.compareTo(BigDecimal.ZERO) < 0? valueToBePaid.negate() : valueToBePaid);
             //caseToBePaid.setState(State.PAID);
             return State.FAILED;
         } 
-        caseToBePaid.setOffset(BigDecimal.ZERO);
+         //set offset as the payment value if the total value is negative and set the total value to 0
+        if (valueToBePaid.compareTo(BigDecimal.ZERO) < 0) {
+            caseToBePaid.setOffset(valueToBePaid.negate());
+            valueToBePaid = BigDecimal.ZERO;
+        } else {
+            caseToBePaid.setOffset(BigDecimal.ZERO);
+        }
         return State.PAID;
     }
 
