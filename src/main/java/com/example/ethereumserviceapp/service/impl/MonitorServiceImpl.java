@@ -29,6 +29,7 @@ import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.service.MongoService;
 import com.example.ethereumserviceapp.service.MonitorService;
+import com.example.ethereumserviceapp.utils.DateUtils;
 import com.example.ethereumserviceapp.utils.EthAppUtils;
 import com.example.ethereumserviceapp.utils.MonitorUtils;
 
@@ -402,8 +403,8 @@ public class MonitorServiceImpl implements MonitorService {
 
         if(changed){
             ssiApp.setHouseholdComposition(household);
-            LinkedHashMap<LocalDateTime, List<HouseholdMember>> hhHistory = ssiApp.getHouseholdCompositionHistory();
-            hhHistory.put(LocalDateTime.now(), household);
+            LinkedHashMap<String, List<HouseholdMember>> hhHistory = ssiApp.getHouseholdCompositionHistory();
+            hhHistory.put(DateUtils.dateToString(LocalDateTime.now()), household);
             ssiApp.setHouseholdCompositionHistory(hhHistory);
             mongoServ.updateSsiApp(ssiApp);
         }
