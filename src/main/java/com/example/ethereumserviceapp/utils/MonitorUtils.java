@@ -9,16 +9,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.example.ethereumserviceapp.model.Case;
@@ -293,13 +285,15 @@ public class MonitorUtils extends EthAppUtils{
 
         if(ssiApp.getHouseholdCompositionHistory()!=null){
             ssiApp.getHouseholdCompositionHistory().entrySet().stream().skip(1).forEach(p -> {
-                updatePaymentCredential(p.getKey(), "household", null, p.getValue(), null,  changedCredentials);
+                String date = p.getKey();
+
+                updatePaymentCredential(DateUtils.historyDateStringToLDT(date), "household", null, p.getValue(), null,  changedCredentials);
             });
             updateSsiApplication("household", null, ssiApp, ssiApp.getHouseholdCompositionHistory().entrySet().iterator().next().getValue());
         }
 
         householdApps.forEach(h -> {
-            Map<String, LinkedHashMap<LocalDateTime, String>> credHistoriesMap = new HashMap<>();
+            Map<String, LinkedHashMap<String, String>> credHistoriesMap = new HashMap<>();
             groupAlteredCredentials(h, credHistoriesMap);
 
             //if there are altered credentials (credential history size > 1) set the credential date and value to the default (first value) and add it to the list of changed credentials
@@ -307,7 +301,7 @@ public class MonitorUtils extends EthAppUtils{
                 credHistoriesMap.entrySet().forEach(e -> {
                     if(e.getValue().size()>1){
                         e.getValue().entrySet().stream().skip(1).forEach(p -> {
-                            updatePaymentCredential(p.getKey(), e.getKey(), p.getValue(), null, h.getTaxisAfm(), changedCredentials);
+                            updatePaymentCredential(DateUtils.historyDateStringToLDT(p.getKey()), e.getKey(), p.getValue(), null, h.getTaxisAfm(), changedCredentials);
                         });
                         updateSsiApplication(e.getKey(), e.getValue().entrySet().iterator().next().getValue(), h, null);
                     }
@@ -324,22 +318,23 @@ public class MonitorUtils extends EthAppUtils{
         List<PaymentCredential> changedCredentials = new ArrayList<>();
 
         householdApps.forEach(h -> {
-            Map<String, LinkedHashMap<LocalDateTime, String>> credHistoriesMap = new HashMap<>();
+            Map<String, LinkedHashMap<String, String>> credHistoriesMap = new HashMap<>();
             groupAlteredCredentials(h, credHistoriesMap);
 
             //if there are altered credentials (credential history size > 1) set the credential date and value to the default (first value) and add it to the list of changed credentials
             if(!credHistoriesMap.isEmpty()){
                 credHistoriesMap.entrySet().forEach(e -> {
-                    Optional<Entry<LocalDateTime, String>> maxEntry = e.getValue().entrySet().stream().filter(m -> m.getKey().toLocalDate().compareTo(currentDate.minusMonths(1).withDayOfMonth(1)) <= 0)
-                    .max((Entry<LocalDateTime, String> e1, Entry<LocalDateTime, String> e2) -> e1.getKey()
-                    .compareTo(e2.getKey()));
+                    Optional<Entry<String, String>> maxEntry = e.getValue().entrySet().stream()
+                            .filter(m -> DateUtils.historyDateStringToLDT(m.getKey()).toLocalDate().compareTo(currentDate.minusMonths(1).withDayOfMonth(1)) <= 0)
+                    .max((Entry<String, String> e1, Entry<String, String> e2) -> DateUtils.historyDateStringToLDT(e1.getKey())
+                    .compareTo(DateUtils.historyDateStringToLDT(e2.getKey())));
                     if(maxEntry.isPresent()){
                         updateSsiApplication(e.getKey(), maxEntry.get().getValue(), h, null);
                     }
                     if(e.getValue().size()>1){
                         e.getValue().entrySet().stream().skip(1).forEach(p -> {
-                            if(p.getKey().toLocalDate().compareTo(currentDate.minusMonths(1).withDayOfMonth(1)) > 0){
-                                updatePaymentCredential(p.getKey(), e.getKey(), p.getValue(), null, h.getTaxisAfm(), changedCredentials);
+                            if(DateUtils.historyDateStringToLDT(p.getKey()).toLocalDate().compareTo(currentDate.minusMonths(1).withDayOfMonth(1)) > 0){
+                                updatePaymentCredential(DateUtils.historyDateStringToLDT(p.getKey()), e.getKey(), p.getValue(), null, h.getTaxisAfm(), changedCredentials);
                             }
                         });
                     }
@@ -347,16 +342,17 @@ public class MonitorUtils extends EthAppUtils{
             }
         });
         if(ssiApp.getHouseholdCompositionHistory()!=null){
-            Optional<Entry<LocalDateTime, List<HouseholdMember>>> maxEntry = ssiApp.getHouseholdCompositionHistory().entrySet().stream().filter(m -> m.getKey().toLocalDate().compareTo(currentDate.minusMonths(1).withDayOfMonth(1)) <= 0)
-            .max((Entry<LocalDateTime, List<HouseholdMember>> e1, Entry<LocalDateTime, List<HouseholdMember>> e2) -> e1.getKey()
-            .compareTo(e2.getKey()));
+            Optional<Entry<String, List<HouseholdMember>>> maxEntry = ssiApp.getHouseholdCompositionHistory().entrySet().stream()
+                    .filter(m -> DateUtils.historyDateStringToLDT(m.getKey()).toLocalDate().compareTo(currentDate.minusMonths(1).withDayOfMonth(1)) <= 0)
+            .max((Entry<String, List<HouseholdMember>> e1, Entry<String, List<HouseholdMember>> e2) -> DateUtils.historyDateStringToLDT(e1.getKey())
+            .compareTo(DateUtils.historyDateStringToLDT(e2.getKey())));
             if(maxEntry.isPresent()){
                 updateSsiApplication("household", null, ssiApp, maxEntry.get().getValue());
             }
             if(ssiApp.getHouseholdCompositionHistory().size()>1){
                 ssiApp.getHouseholdCompositionHistory().entrySet().stream().skip(1).forEach(p -> {
-                    if(p.getKey().toLocalDate().compareTo(currentDate.minusMonths(1).withDayOfMonth(1)) > 0){
-                        updatePaymentCredential(p.getKey(), "household", null, p.getValue(), null,  changedCredentials);
+                    if(DateUtils.historyDateStringToLDT(p.getKey()).toLocalDate().compareTo(currentDate.minusMonths(1).withDayOfMonth(1)) > 0){
+                        updatePaymentCredential(DateUtils.historyDateStringToLDT(p.getKey()), "household", null, p.getValue(), null,  changedCredentials);
                     }
                 });
             }
@@ -365,7 +361,7 @@ public class MonitorUtils extends EthAppUtils{
         return changedCredentials;
     }
 
-    private static void groupAlteredCredentials(SsiApplication ssiApp, Map<String, LinkedHashMap<LocalDateTime, String>> credHistoriesMap){
+    private static void groupAlteredCredentials(SsiApplication ssiApp, Map<String, LinkedHashMap<String, String>> credHistoriesMap){
         
         if(ssiApp.getPensionsRHistory()!=null){
             credHistoriesMap.put("pension", ssiApp.getPensionsRHistory());

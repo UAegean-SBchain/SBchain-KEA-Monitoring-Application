@@ -132,7 +132,7 @@ public class EthAppUtils {
 
     public static Set<String> fetchAllHouseholdAfms(SsiApplication ssiApp){
         Set<String> allAfms = new HashSet<>();
-        for (Map.Entry<LocalDateTime, List<HouseholdMember>> app : ssiApp.getHouseholdCompositionHistory().entrySet()) {
+        for (Map.Entry<String, List<HouseholdMember>> app : ssiApp.getHouseholdCompositionHistory().entrySet()) {
             for(HouseholdMember member : app.getValue()){
                 allAfms.add(member.getAfm());
             }

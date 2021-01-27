@@ -11,12 +11,14 @@ import com.example.ethereumserviceapp.model.entities.SsiApplication;
 public class VisualizationHelperUtils {
 
     public static SsiApplication generateSsiAppAltered1(){
+
+
         SsiApplication ssiApp = new SsiApplication();
         ssiApp.setOtherBenefitsR("150");
-        LinkedHashMap<LocalDateTime, String> otherBenHistory = new LinkedHashMap<>();
-        otherBenHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0), "100");
+        LinkedHashMap<String, String> otherBenHistory = new LinkedHashMap<>();
+        otherBenHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0)), "100");
         //otherBenHistory.put(LocalDateTime.of(2020, 6, 15, 1, 1, 1), "550");
-        otherBenHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(7).withNano(0), "150");
+        otherBenHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(2).withDayOfMonth(7).withNano(0)), "150");
         ssiApp.setOtherBenefitsRHistory(otherBenHistory);
         // ssiApp.setUnemploymentBenefitR("5");
         // ssiApp.setErgomeR("5");
@@ -35,10 +37,10 @@ public class VisualizationHelperUtils {
         ssiApp.setMeterNumber("123456789");
         ssiApp.setIban("iban123456");
 
-        LinkedHashMap<LocalDateTime, String> pensionHistory = new LinkedHashMap<>();
-        pensionHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0), "500");
-        pensionHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(12).withNano(0), "600");
-        pensionHistory.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(12).withNano(0), "650");
+        LinkedHashMap<String, String> pensionHistory = new LinkedHashMap<>();
+        pensionHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0)), "500");
+        pensionHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(2).withDayOfMonth(12).withNano(0)), "600");
+        pensionHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(1).withDayOfMonth(12).withNano(0)), "650");
         ssiApp.setPensionsRHistory(pensionHistory);
         
         HouseholdMember member1 = new HouseholdMember();
@@ -80,15 +82,15 @@ public class VisualizationHelperUtils {
         ssiApp.setHouseholdPrincipal(member1);
         ssiApp.setHouseholdComposition(householdLatest);
 
-        LinkedHashMap<LocalDateTime, List<HouseholdMember>> housholdHistory = new LinkedHashMap<>();
+        LinkedHashMap<String, List<HouseholdMember>> housholdHistory = new LinkedHashMap<>();
         List<HouseholdMember> householdH = new ArrayList<>();
         householdH.add(member1);
         householdH.add(member2);
         householdH.add(member3);
         householdH.add(member4);
-        housholdHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0), householdH);
-        housholdHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(11).withNano(0), household);
-        housholdHistory.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(16).withNano(0), householdLatest);
+        housholdHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0)), householdH);
+        housholdHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(2).withDayOfMonth(11).withNano(0)), household);
+        housholdHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(1).withDayOfMonth(16).withNano(0)), householdLatest);
 
         ssiApp.setHouseholdCompositionHistory(housholdHistory);
 
@@ -98,10 +100,10 @@ public class VisualizationHelperUtils {
     public static SsiApplication generateSsiAppAltered2(){
         SsiApplication ssiApp = new SsiApplication();
         ssiApp.setOtherBenefitsR("120");
-        LinkedHashMap<LocalDateTime, String> otherBenHistory = new LinkedHashMap<>();
-        otherBenHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0), "150");
+        LinkedHashMap<String, String> otherBenHistory = new LinkedHashMap<>();
+        otherBenHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0)), "150");
         //otherBenHistory.put(LocalDateTime.of(2020, 6, 15, 1, 1, 1), "550");
-        otherBenHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(7).withNano(0), "120");
+        otherBenHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(2).withDayOfMonth(7).withNano(0)), "120");
         ssiApp.setOtherBenefitsRHistory(otherBenHistory);
         ssiApp.setLuxury("false");
         ssiApp.setTotalIncome("10");
@@ -114,9 +116,9 @@ public class VisualizationHelperUtils {
         ssiApp.setTaxisDateOfBirth("12/08/1960");
         ssiApp.setUuid("2WiYi1");
 
-        LinkedHashMap<LocalDateTime, String> pensionHistory = new LinkedHashMap<>();
-        pensionHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0), "600");
-        pensionHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(5).withNano(0), "700");
+        LinkedHashMap<String, String> pensionHistory = new LinkedHashMap<>();
+        pensionHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0)), "600");
+        pensionHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(2).withDayOfMonth(5).withNano(0)), "700");
         ssiApp.setPensionsRHistory(pensionHistory);
         
         HouseholdMember member1 = new HouseholdMember();
@@ -158,15 +160,15 @@ public class VisualizationHelperUtils {
         ssiApp.setHouseholdPrincipal(member1);
         ssiApp.setHouseholdComposition(householdLatest);
 
-        LinkedHashMap<LocalDateTime, List<HouseholdMember>> housholdHistory = new LinkedHashMap<>();
+        LinkedHashMap<String, List<HouseholdMember>> housholdHistory = new LinkedHashMap<>();
         List<HouseholdMember> householdH = new ArrayList<>();
         householdH.add(member1);
         householdH.add(member2);
         householdH.add(member3);
         householdH.add(member4);
-        housholdHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0), householdH);
-        housholdHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(11).withNano(0), household);
-        housholdHistory.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(16).withNano(0), householdLatest);
+        housholdHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0)), householdH);
+        housholdHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(2).withDayOfMonth(11).withNano(0)), household);
+        housholdHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(1).withDayOfMonth(16).withNano(0)), householdLatest);
 
         ssiApp.setHouseholdCompositionHistory(housholdHistory);
 
@@ -176,10 +178,10 @@ public class VisualizationHelperUtils {
     public static SsiApplication generateSsiAppAltered3(){
         SsiApplication ssiApp = new SsiApplication();
         ssiApp.setOtherBenefitsR("200");
-        LinkedHashMap<LocalDateTime, String> otherBenHistory = new LinkedHashMap<>();
-        otherBenHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0), "150");
+        LinkedHashMap<String, String> otherBenHistory = new LinkedHashMap<>();
+        otherBenHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0)), "150");
         //otherBenHistory.put(LocalDateTime.of(2020, 6, 15, 1, 1, 1), "550");
-        otherBenHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(7).withNano(0), "200");
+        otherBenHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(2).withDayOfMonth(7).withNano(0)), "200");
         ssiApp.setOtherBenefitsRHistory(otherBenHistory);
         ssiApp.setLuxury("false");
         ssiApp.setTotalIncome("10");
@@ -192,8 +194,8 @@ public class VisualizationHelperUtils {
         ssiApp.setTaxisDateOfBirth("19/09/2002");
         ssiApp.setUuid("2WiYi2");
 
-        LinkedHashMap<LocalDateTime, String> pensionHistory = new LinkedHashMap<>();
-        pensionHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0), "0");
+        LinkedHashMap<String, String> pensionHistory = new LinkedHashMap<>();
+        pensionHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0)), "0");
         ssiApp.setPensionsRHistory(pensionHistory);
         
         HouseholdMember member1 = new HouseholdMember();
@@ -235,15 +237,15 @@ public class VisualizationHelperUtils {
         ssiApp.setHouseholdPrincipal(member1);
         ssiApp.setHouseholdComposition(householdLatest);
 
-        LinkedHashMap<LocalDateTime, List<HouseholdMember>> housholdHistory = new LinkedHashMap<>();
+        LinkedHashMap<String, List<HouseholdMember>> housholdHistory = new LinkedHashMap<>();
         List<HouseholdMember> householdH = new ArrayList<>();
         householdH.add(member1);
         householdH.add(member2);
         householdH.add(member3);
         householdH.add(member4);
-        housholdHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0), householdH);
-        housholdHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(11).withNano(0), household);
-        housholdHistory.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(16).withNano(0), householdLatest);
+        housholdHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0)), householdH);
+        housholdHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(2).withDayOfMonth(11).withNano(0)), household);
+        housholdHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(1).withDayOfMonth(16).withNano(0)), householdLatest);
 
         ssiApp.setHouseholdCompositionHistory(housholdHistory);
 
@@ -253,8 +255,8 @@ public class VisualizationHelperUtils {
     public static SsiApplication generateSsiAppAltered4(){
         SsiApplication ssiApp = new SsiApplication();
         ssiApp.setOtherBenefitsR("150");
-        LinkedHashMap<LocalDateTime, String> otherBenHistory = new LinkedHashMap<>();
-        otherBenHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0), "150");
+        LinkedHashMap<String, String> otherBenHistory = new LinkedHashMap<>();
+        otherBenHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0)), "150");
         //otherBenHistory.put(LocalDateTime.of(2020, 6, 15, 1, 1, 1), "550");
         ssiApp.setOtherBenefitsRHistory(otherBenHistory);
         ssiApp.setLuxury("false");
@@ -268,8 +270,8 @@ public class VisualizationHelperUtils {
         ssiApp.setTaxisDateOfBirth("24/10/1970");
         ssiApp.setUuid("2WiYi3");
 
-        LinkedHashMap<LocalDateTime, String> pensionHistory = new LinkedHashMap<>();
-        pensionHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0), "200");
+        LinkedHashMap<String, String> pensionHistory = new LinkedHashMap<>();
+        pensionHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0)), "200");
         ssiApp.setPensionsRHistory(pensionHistory);
         
         HouseholdMember member1 = new HouseholdMember();
@@ -311,15 +313,15 @@ public class VisualizationHelperUtils {
         ssiApp.setHouseholdPrincipal(member1);
         ssiApp.setHouseholdComposition(householdLatest);
 
-        LinkedHashMap<LocalDateTime, List<HouseholdMember>> housholdHistory = new LinkedHashMap<>();
+        LinkedHashMap<String, List<HouseholdMember>> housholdHistory = new LinkedHashMap<>();
         List<HouseholdMember> householdH = new ArrayList<>();
         householdH.add(member1);
         householdH.add(member2);
         householdH.add(member3);
         householdH.add(member4);
-        housholdHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0), householdH);
-        housholdHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(11).withNano(0), household);
-        housholdHistory.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(16).withNano(0), householdLatest);
+        housholdHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0)), householdH);
+        housholdHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(2).withDayOfMonth(11).withNano(0)), household);
+        housholdHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(1).withDayOfMonth(16).withNano(0)), householdLatest);
 
         ssiApp.setHouseholdCompositionHistory(housholdHistory);
 
@@ -329,8 +331,8 @@ public class VisualizationHelperUtils {
     public static SsiApplication generateSsiAppAltered5(){
         SsiApplication ssiApp = new SsiApplication();
         ssiApp.setOtherBenefitsR("100");
-        LinkedHashMap<LocalDateTime, String> otherBenHistory = new LinkedHashMap<>();
-        otherBenHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0), "100");
+        LinkedHashMap<String, String> otherBenHistory = new LinkedHashMap<>();
+        otherBenHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0)), "100");
         //otherBenHistory.put(LocalDateTime.of(2020, 6, 15, 1, 1, 1), "550");
         ssiApp.setOtherBenefitsRHistory(otherBenHistory);
         ssiApp.setLuxury("false");
@@ -344,8 +346,8 @@ public class VisualizationHelperUtils {
         ssiApp.setTaxisDateOfBirth("14/05/1956");
         ssiApp.setUuid("2WiYi4");
 
-        LinkedHashMap<LocalDateTime, String> pensionHistory = new LinkedHashMap<>();
-        pensionHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0), "100");
+        LinkedHashMap<String, String> pensionHistory = new LinkedHashMap<>();
+        pensionHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0)), "100");
         ssiApp.setPensionsRHistory(pensionHistory);
         
         HouseholdMember member1 = new HouseholdMember();
@@ -387,15 +389,15 @@ public class VisualizationHelperUtils {
         ssiApp.setHouseholdPrincipal(member1);
         ssiApp.setHouseholdComposition(householdLatest);
 
-        LinkedHashMap<LocalDateTime, List<HouseholdMember>> housholdHistory = new LinkedHashMap<>();
+        LinkedHashMap<String , List<HouseholdMember>> housholdHistory = new LinkedHashMap<>();
         List<HouseholdMember> householdH = new ArrayList<>();
         householdH.add(member1);
         householdH.add(member2);
         householdH.add(member3);
         householdH.add(member4);
-        housholdHistory.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0), householdH);
-        housholdHistory.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(11).withNano(0), household);
-        housholdHistory.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(16).withNano(0), householdLatest);
+        housholdHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1).withNano(0)), householdH);
+        housholdHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(2).withDayOfMonth(11).withNano(0)), household);
+        housholdHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(1).withDayOfMonth(16).withNano(0)), householdLatest);
 
         ssiApp.setHouseholdCompositionHistory(housholdHistory);
 

@@ -172,16 +172,17 @@ public class CsvUtils {
         return householdComposition;
     }
 
-    private static LinkedHashMap<LocalDateTime, List<HouseholdMember>> transformHhHistory(String history) {
+    private static LinkedHashMap<String, List<HouseholdMember>> transformHhHistory(String history) {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-        LinkedHashMap<LocalDateTime, List<HouseholdMember>> hhHistory = new LinkedHashMap<>();
+        LinkedHashMap<String, List<HouseholdMember>> hhHistory = new LinkedHashMap<>();
         try{
             String[] hhs = history.split("-");
             for (String s : hhs) {
                 String[] hh = s.split("_");
                 List<HouseholdMember> householdEntry = transformHousehold(hh[1]);
-                hhHistory.put(LocalDateTime.parse(hh[0], formatter), householdEntry);
+//                hhHistory.put(LocalDateTime.parse(hh[0], formatter), householdEntry);
+                hhHistory.put( hh[0] , householdEntry);
             }
         }catch(IndexOutOfBoundsException e){
             log.error(e.getMessage());
@@ -190,15 +191,15 @@ public class CsvUtils {
         return hhHistory;
     }
 
-    private static LinkedHashMap<LocalDateTime, String> transformHistoryField(String history) {
+    private static LinkedHashMap<String, String> transformHistoryField(String history) {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-        LinkedHashMap<LocalDateTime, String> histField = new LinkedHashMap<>();
+        LinkedHashMap<String, String> histField = new LinkedHashMap<>();
         if (!"".equals(history)) {
             String[] histArray = history.split("\\|");
             for (String s : histArray) {
                 String[] historyEntry = s.split("_");
-                histField.put(LocalDateTime.parse(historyEntry[0], formatter), historyEntry[1]);
+                histField.put( historyEntry[0] , historyEntry[1]);
             }
         }
         return histField;

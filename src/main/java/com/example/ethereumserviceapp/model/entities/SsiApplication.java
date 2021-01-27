@@ -9,8 +9,10 @@ import java.util.Map;
 
 import com.example.ethereumserviceapp.model.HouseholdMember;
 
+import com.example.ethereumserviceapp.utils.LocalDateMapDeserializer;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.springframework.data.annotation.Id;
 
 import lombok.Getter;
@@ -109,19 +111,19 @@ public class SsiApplication {
     private String foreignRealEstateA;
     private String vehicleValueA;
     private String investmentsA;
-    private LinkedHashMap<LocalDateTime, String> salariesRHistory;
-    private LinkedHashMap<LocalDateTime, String> pensionsRHistory;
-    private LinkedHashMap<LocalDateTime, String> farmingRHistory;
-    private LinkedHashMap<LocalDateTime, String> freelanceRHistory;
-    private LinkedHashMap<LocalDateTime, String> otherBenefitsRHistory;
-    private LinkedHashMap<LocalDateTime, String> depositsAHistory;
-    private LinkedHashMap<LocalDateTime, String> domesticRealEstateAHistory;
-    private LinkedHashMap<LocalDateTime, String> foreignRealEstateAHistory;
+    private LinkedHashMap<String, String> salariesRHistory;
+    private LinkedHashMap<String, String> pensionsRHistory;
+    private LinkedHashMap<String, String> farmingRHistory;
+    private LinkedHashMap<String, String> freelanceRHistory;
+    private LinkedHashMap<String, String> otherBenefitsRHistory;
+    private LinkedHashMap<String, String> depositsAHistory;
+    private LinkedHashMap<String, String> domesticRealEstateAHistory;
+    private LinkedHashMap<String, String> foreignRealEstateAHistory;
 
     //household composition
     private HouseholdMember householdPrincipal;
     private List<HouseholdMember> householdComposition;
-    private LinkedHashMap<LocalDateTime, List<HouseholdMember>> householdCompositionHistory;
+    private LinkedHashMap<String, List<HouseholdMember>> householdCompositionHistory;
 
     //income guarantee
     private String monthlyGuarantee;
