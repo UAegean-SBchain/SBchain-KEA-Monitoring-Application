@@ -125,7 +125,7 @@ public class TestCsvUtils {
 
     @Test
     public void testMakeHouseholdAppCSV() {
-        List<SsiApplication> houshold = CsvUtils.generateMockData(50);
+        List<SsiApplication> houshold = CsvUtils.generateMockData(400);
         CsvUtils.writeToCSV(houshold);
 
     }

@@ -1,70 +1,70 @@
-///*
-// * To change this license header, choose License Headers in Project Properties.
-// * To change this template file, choose Tools | Templates
-// * and open the template in the editor.
-// */
-//package com.example.ethereumserviceapp;
-//
-//import com.example.ethereumserviceapp.model.Case;
-//import com.example.ethereumserviceapp.model.State;
-//import com.example.ethereumserviceapp.service.EthereumService;
-//import com.example.ethereumserviceapp.service.impl.EthereumServiceImpl;
-//import lombok.extern.slf4j.Slf4j;
-//import org.junit.jupiter.api.Assertions;
-//import org.junit.jupiter.api.Test;
-//
-///**
-// *
-// * @author nikos
-// */
-//@Slf4j
-//public class TestEthService {
-//
-//    @Test
-//    public void testGetAllCases() {
-//
-//        EthereumService ethServ = new EthereumServiceImpl();
-//        ethServ.getAllCaseUUID().stream().forEach(uuid -> {
-//            System.out.println(uuid);
-//            System.out.println("the case stat is:");
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.example.ethereumserviceapp;
+
+import com.example.ethereumserviceapp.model.Case;
+import com.example.ethereumserviceapp.model.State;
+import com.example.ethereumserviceapp.service.EthereumService;
+import com.example.ethereumserviceapp.service.impl.EthereumServiceImpl;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+/**
+ *
+ * @author nikos
+ */
+@Slf4j
+public class TestEthService {
+
+    @Test
+    public void testGetAllCases() {
+
+        EthereumService ethServ = new EthereumServiceImpl();
+        ethServ.getAllCaseUUID().stream().forEach(uuid -> {
+            System.out.println(uuid);
+            System.out.println("the case stat is:");
 //            System.out.println(ethServ.getCaseByUUID(uuid).get().getState().getValue());
-//        });
-//        //fakeuuid
-//        Assertions.assertEquals(ethServ.getCaseByUUID("fakeuuid").isPresent(), false);
-//    }
-//
-//    @Test
-//    public void testAddCaseDelete() {
-//        EthereumService ethServ = new EthereumServiceImpl();
-//        Case theCase = new Case();
-//        theCase.setUuid("6YLVALU9V5FXMTJS");
-//        ethServ.addCase(theCase);
+        });
+        //fakeuuid
+        Assertions.assertEquals(ethServ.getCaseByUUID("fakeuuid").isPresent(), false);
+    }
+
+    @Test
+    public void testAddCaseDelete() {
+        EthereumService ethServ = new EthereumServiceImpl();
+        Case theCase = new Case();
+        theCase.setUuid("6YLVALU9V5FXMTJS");
+        ethServ.addCase(theCase);
 //        Assertions.assertEquals(ethServ.getCaseByUUID("6YLVALU9V5FXMTJS").isPresent(), true);
 //        ethServ.deleteCaseByUuid("5YLVALU9V5FXMTJS");
-//
-//    }
-//
-//    @Test
-//    public void testUpdateCase() {
-//        EthereumService ethServ = new EthereumServiceImpl();
-//        Case theCase = new Case();
-//        theCase.setUuid("2WiYi8");
-//        theCase.setState(State.PAID);
-//
-//        // this tests needs to be runned twice, once with calling the contract
-//        // and once after the transaction has been processed
-////        ethServ.updateCase(theCase);
+
+    }
+
+    @Test
+    public void testUpdateCase() {
+        EthereumService ethServ = new EthereumServiceImpl();
+        Case theCase = new Case();
+        theCase.setUuid("2WiYi8");
+        theCase.setState(State.PAID);
+
+        // this tests needs to be runned twice, once with calling the contract
+        // and once after the transaction has been processed
+//        ethServ.updateCase(theCase);
 //        Assertions.assertEquals(ethServ.getCaseByUUID("2WiYi8").isPresent(), true);
-//
-//    }
-//
-//    @Test
-//    public void testGetCase() {
-//        EthereumService ethServ = new EthereumServiceImpl();
-//        final String uuid = "1SiYd2";
-//
+
+    }
+
+    @Test
+    public void testGetCase() {
+        EthereumService ethServ = new EthereumServiceImpl();
+        final String uuid = "1SiYd2";
+
 //        Assertions.assertEquals(ethServ.getCaseByUUID(uuid).isPresent(), false);
-//
-//    }
-//
-//}
+
+    }
+
+}

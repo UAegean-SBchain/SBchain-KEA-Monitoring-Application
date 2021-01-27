@@ -28,7 +28,8 @@ import org.web3j.utils.Numeric;
  */
 public class ContractBuilder {
 
-    public static Case buildCaseFromTuple(Tuple9<byte[], BigInteger, List<BigInteger>, List<BigInteger>, BigInteger, List<BigInteger>, List<BigInteger>, List<BigInteger>, BigInteger> theCase) {
+    public static Case buildCaseFromTuple(Tuple9<byte[], BigInteger, List<BigInteger>,
+            List<BigInteger>, BigInteger, List<BigInteger>, List<BigInteger>, List<BigInteger>, BigInteger> theCase) {
         Case transformedCase = new Case();
         List<CasePayment> paymentHistory = new ArrayList<>();
         LinkedHashMap<LocalDateTime, State> history = new LinkedHashMap<>();

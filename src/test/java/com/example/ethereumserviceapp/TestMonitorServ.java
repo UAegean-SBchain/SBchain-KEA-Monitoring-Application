@@ -72,7 +72,7 @@
 //        EthereumService ethServ = new EthereumServiceImpl();
 //        MonitorService monServ = new MonitorServiceImpl(monogServ, ethServ);
 //
-//        monServ.startScheduledMonitoring();
+////        monServ.startScheduledMonitoring();
 //
 //        assertEquals(true, true);
 //
@@ -107,7 +107,7 @@
 //        Mockito.when(ethServ.checkRevocationStatus(anyString())).thenReturn(false);
 //        Mockito.when(mongoServ.findByMeterNumber(anyString())).thenReturn(oneItemList);
 //        Mockito.when(mongoServ.findByIban(anyString())).thenReturn(oneItemList);
-//        doNothing().when(ethServ).updateCase(any(), false);
+////        doNothing().when(ethServ).updateCase(any(), false);
 //
 //        monServ.startScheduledMonitoring();
 //
@@ -153,7 +153,7 @@
 //        Mockito.when(ethServ.checkRevocationStatus(anyString())).thenReturn(false);
 //        Mockito.when(mongoServ.findByMeterNumber(anyString())).thenReturn(oneItemList);
 //        Mockito.when(mongoServ.findByIban(anyString())).thenReturn(oneItemList);
-//        doNothing().when(ethServ).updateCase(any(), false);
+////        doNothing().when(ethServ).updateCase(any(), false);
 //
 //        monServ.startScheduledMonitoring();
 //

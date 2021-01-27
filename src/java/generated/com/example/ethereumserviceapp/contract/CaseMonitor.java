@@ -27,7 +27,7 @@ import org.web3j.tx.gas.ContractGasProvider;
  * <p>Auto generated code.
  * <p><strong>Do not modify!</strong>
  * <p>Please use the <a href="https://docs.web3j.io/command_line.html">web3j command line tools</a>,
- * or the org.web3j.codegen.SolidityFunctionWrapperGenerator in the
+ * or the org.web3j.codegen.SolidityFunctionWrapperGenerator in the 
  * <a href="https://github.com/web3j/web3j/tree/master/codegen">codegen module</a> to update.
  *
  * <p>Generated with web3j version 4.5.11.
@@ -72,52 +72,52 @@ public class CaseMonitor extends Contract {
 
     public RemoteFunctionCall<TransactionReceipt> deleteCase(byte[] _uuid) {
         final Function function = new Function(
-                FUNC_DELETECASE,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes16(_uuid)),
+                FUNC_DELETECASE, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes16(_uuid)), 
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }
 
     public RemoteFunctionCall<BigInteger> _getCaseIndex(byte[] _uuid) {
-        final Function function = new Function(FUNC__GETCASEINDEX,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes16(_uuid)),
+        final Function function = new Function(FUNC__GETCASEINDEX, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes16(_uuid)), 
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
         return executeRemoteCallSingleValueReturn(function, BigInteger.class);
     }
 
     public RemoteFunctionCall<TransactionReceipt> addPayment(byte[] _uuid, BigInteger _state, BigInteger _pDate, BigInteger _payHistory, BigInteger _offset) {
         final Function function = new Function(
-                FUNC_ADDPAYMENT,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes16(_uuid),
-                        new org.web3j.abi.datatypes.generated.Uint8(_state),
-                        new org.web3j.abi.datatypes.generated.Uint256(_pDate),
-                        new org.web3j.abi.datatypes.generated.Uint256(_payHistory),
-                        new org.web3j.abi.datatypes.generated.Uint256(_offset)),
+                FUNC_ADDPAYMENT, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes16(_uuid), 
+                new org.web3j.abi.datatypes.generated.Uint8(_state), 
+                new org.web3j.abi.datatypes.generated.Uint256(_pDate), 
+                new org.web3j.abi.datatypes.generated.Uint256(_payHistory), 
+                new org.web3j.abi.datatypes.generated.Uint256(_offset)), 
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }
 
     public RemoteFunctionCall<TransactionReceipt> updateCase(byte[] _uuid, BigInteger _date, BigInteger _state, BigInteger _offset) {
         final Function function = new Function(
-                FUNC_UPDATECASE,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes16(_uuid),
-                        new org.web3j.abi.datatypes.generated.Uint256(_date),
-                        new org.web3j.abi.datatypes.generated.Uint8(_state),
-                        new org.web3j.abi.datatypes.generated.Uint256(_offset)),
+                FUNC_UPDATECASE, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes16(_uuid), 
+                new org.web3j.abi.datatypes.generated.Uint256(_date), 
+                new org.web3j.abi.datatypes.generated.Uint8(_state), 
+                new org.web3j.abi.datatypes.generated.Uint256(_offset)), 
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }
 
     public RemoteFunctionCall<Boolean> caseExists(byte[] _uuid) {
-        final Function function = new Function(FUNC_CASEEXISTS,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes16(_uuid)),
+        final Function function = new Function(FUNC_CASEEXISTS, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes16(_uuid)), 
                 Arrays.<TypeReference<?>>asList(new TypeReference<Bool>() {}));
         return executeRemoteCallSingleValueReturn(function, Boolean.class);
     }
 
     public RemoteFunctionCall<Tuple9<byte[], BigInteger, List<BigInteger>, List<BigInteger>, BigInteger, List<BigInteger>, List<BigInteger>, List<BigInteger>, BigInteger>> getCase(byte[] _uuid) {
-        final Function function = new Function(FUNC_GETCASE,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes16(_uuid)),
+        final Function function = new Function(FUNC_GETCASE, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes16(_uuid)), 
                 Arrays.<TypeReference<?>>asList(new TypeReference<Bytes16>() {}, new TypeReference<Uint256>() {}, new TypeReference<DynamicArray<Uint256>>() {}, new TypeReference<DynamicArray<Uint8>>() {}, new TypeReference<Uint8>() {}, new TypeReference<DynamicArray<Uint256>>() {}, new TypeReference<DynamicArray<Uint256>>() {}, new TypeReference<DynamicArray<Uint8>>() {}, new TypeReference<Uint256>() {}));
         return new RemoteFunctionCall<Tuple9<byte[], BigInteger, List<BigInteger>, List<BigInteger>, BigInteger, List<BigInteger>, List<BigInteger>, List<BigInteger>, BigInteger>>(function,
                 new Callable<Tuple9<byte[], BigInteger, List<BigInteger>, List<BigInteger>, BigInteger, List<BigInteger>, List<BigInteger>, List<BigInteger>, BigInteger>>() {
@@ -125,14 +125,14 @@ public class CaseMonitor extends Contract {
                     public Tuple9<byte[], BigInteger, List<BigInteger>, List<BigInteger>, BigInteger, List<BigInteger>, List<BigInteger>, List<BigInteger>, BigInteger> call() throws Exception {
                         List<Type> results = executeCallMultipleValueReturn(function);
                         return new Tuple9<byte[], BigInteger, List<BigInteger>, List<BigInteger>, BigInteger, List<BigInteger>, List<BigInteger>, List<BigInteger>, BigInteger>(
-                                (byte[]) results.get(0).getValue(),
-                                (BigInteger) results.get(1).getValue(),
-                                convertToNative((List<Uint256>) results.get(2).getValue()),
-                                convertToNative((List<Uint8>) results.get(3).getValue()),
-                                (BigInteger) results.get(4).getValue(),
-                                convertToNative((List<Uint256>) results.get(5).getValue()),
-                                convertToNative((List<Uint256>) results.get(6).getValue()),
-                                convertToNative((List<Uint8>) results.get(7).getValue()),
+                                (byte[]) results.get(0).getValue(), 
+                                (BigInteger) results.get(1).getValue(), 
+                                convertToNative((List<Uint256>) results.get(2).getValue()), 
+                                convertToNative((List<Uint8>) results.get(3).getValue()), 
+                                (BigInteger) results.get(4).getValue(), 
+                                convertToNative((List<Uint256>) results.get(5).getValue()), 
+                                convertToNative((List<Uint256>) results.get(6).getValue()), 
+                                convertToNative((List<Uint8>) results.get(7).getValue()), 
                                 (BigInteger) results.get(8).getValue());
                     }
                 });
@@ -140,16 +140,16 @@ public class CaseMonitor extends Contract {
 
     public RemoteFunctionCall<TransactionReceipt> addCase(byte[] _uuid, BigInteger _date) {
         final Function function = new Function(
-                FUNC_ADDCASE,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes16(_uuid),
-                        new org.web3j.abi.datatypes.generated.Uint256(_date)),
+                FUNC_ADDCASE, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes16(_uuid), 
+                new org.web3j.abi.datatypes.generated.Uint256(_date)), 
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }
 
     public RemoteFunctionCall<List> getAllCases() {
-        final Function function = new Function(FUNC_GETALLCASES,
-                Arrays.<Type>asList(),
+        final Function function = new Function(FUNC_GETALLCASES, 
+                Arrays.<Type>asList(), 
                 Arrays.<TypeReference<?>>asList(new TypeReference<DynamicArray<Bytes16>>() {}));
         return new RemoteFunctionCall<List>(function,
                 new Callable<List>() {
