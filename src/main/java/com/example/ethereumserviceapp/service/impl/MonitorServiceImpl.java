@@ -107,6 +107,7 @@ public class MonitorServiceImpl implements MonitorService {
             log.info("looking into case {} with state {}", uuid, monitoredCase.get().getState());
             Optional<SsiApplication> ssiCase = mongoServ.findByUuid(uuid);
             if (!ssiCase.isPresent()) {
+                log.info("application in database not present");
                 updateCase(uuid, State.REJECTED, null, currentDate, sync);
                 return;
             }

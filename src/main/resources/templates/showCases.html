@@ -18,7 +18,10 @@
             
         </tr>
         <tr th:each="uuid : ${ethUuids}">
-            <td> <a th:href="@{'/getCase?uuid='+${#strings.substring(uuid,0,6)}}" th:text="${#strings.substring(uuid,0,6)}" class="fetchLink">Fetch Info</a></td>
+            <td> 
+                <!-- <a th:href="@{'/getCase?uuid='+${#strings.substring(uuid,0,6)}}" th:text="${#strings.substring(uuid,0,6)}" class="fetchLink">Fetch Info</a> -->
+                <a th:href="@{'/getCase?uuid='+${uuid}}" th:text="${uuid}" class="fetchLink">Fetch Info</a>
+            </td>
         </tr>
     </table>
     <form method="post" action="#" th:action="@{/monitorCases}" th:object="${monitorCmdHelper}" id="infoForm">
