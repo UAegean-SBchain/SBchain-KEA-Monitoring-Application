@@ -90,7 +90,7 @@ public class EthAppUtils {
         // remove one adult because the first one has a fixed payment value of 200
         if(adultCount == 0 && minorCount > 0){
             adultCount = minorCount - 1;
-        } else if(adultCount == 1 && ssiApp.getParenthood().equals("single") && minorCount > 0){
+        } else if(adultCount == 1 && ssiApp.getParenthood() != null && ssiApp.getParenthood().equals("single") && minorCount > 0){
             minorCount--;
         } else if ((adultCount == 1  && minorCount == 0) || adultCount >=2 ){
             adultCount--;
@@ -132,7 +132,7 @@ public class EthAppUtils {
 
     public static Set<String> fetchAllHouseholdAfms(SsiApplication ssiApp){
         Set<String> allAfms = new HashSet<>();
-        for (Map.Entry<LocalDateTime, List<HouseholdMember>> app : ssiApp.getHouseholdCompositionHistory().entrySet()) {
+        for (Map.Entry<String, List<HouseholdMember>> app : ssiApp.getHouseholdCompositionHistory().entrySet()) {
             for(HouseholdMember member : app.getValue()){
                 allAfms.add(member.getAfm());
             }

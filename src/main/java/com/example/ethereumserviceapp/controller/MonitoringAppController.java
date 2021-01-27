@@ -80,6 +80,8 @@ public class MonitoringAppController {
                 ssiApplications = CsvUtils.csvToSsiApplication(file.getInputStream());
             } catch (Exception e) {
                 message = "Could not upload the file: " + file.getOriginalFilename() + "!";
+                log.info(message);
+                log.error(e.getMessage());
             }
         //}
 

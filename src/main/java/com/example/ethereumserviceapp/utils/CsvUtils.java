@@ -27,90 +27,20 @@ import org.thymeleaf.util.StringUtils;
 @Slf4j
 public class CsvUtils {
     public static String TYPE = "text/csv";
-    static String[] HEADERs = {"uuid",
-            "taxisAfm",
-            "taxisFamilyName",
-            "taxisFirstName",
-            "taxisFathersName",
-            "taxisMothersName",
-            "taxisFamilyNameLatin",
-            "taxisFirstNameLatin",
-            "taxisFathersNameLatin",
-            "taxisMothersNameLatin",
-            "taxisAmka",
-            "taxisDateOfBirth",
-            "taxisGender",
-            "nationality",
-            "maritalStatus",
-            "hospitalized",
-            "hospitalizedSpecific",
-            "monk",
-            "luxury",
-            "street",
-            "streetNumber",
-            "po",
-            "prefecture",
-            "ownership",
-            "supplyType",
-            "meterNumber",
-            "participateFead",
-            "selectProvider",
-            "gender",
-            "disabilityStatus",
-            "levelOfEducation",
-            "employmentStatus",
-            "unemployed",
-            "employed",
-            "oaedId",
-            "oaedDate",
-            "email",
-            "mobilePhone",
-            "landline",
-            "iban",
-            "streetNumber_1",
-            "prefecture_2",
-            "municipality",
-            "parenthood",
-            "custody",
-            "additionalAdults",
-            "salariesR",
-            "pensionsR",
-            "farmingR",
-            "freelanceR",
-            "rentIncomeR",
-            "unemploymentBenefitR",
-            "otherBenefitsR",
-            "ekasR",
-            "otherIncomeR",
-            "ergomeR",
-            "depositInterestA",
-            "depositsA",
-            "domesticRealEstateA",
-            "foreignRealEstateA",
-            "vehicleValueA",
-            "investmentsA",
-            "totalIncome",
-            "savedInDb",
-            "status",
-            "submittedMunicipality",
-            "time",
-            "householdPrincipal",
-            "householdComposition",
-            "householdCompositionHistory",
-            "salariesRHistory",
-            "pensionsRHistory",
-            "farmingRHistory",
-            "freelanceRHistory",
-            "otherBenefitsRHistory",
-            "depositsAHistory",
-            "domesticRealEstateAHistory",
-            "foreignRealEstateAHistory",
-            "monthlyGuarantee",
-            "totalIncome_3",
-            "monthlyIncome",
-            "monthlyAid",
-            "savedInDb_4",
-            "status_5"};
+    static String[] HEADERs = {"_id/$oid",	"uuid",	"ssn",	"taxisAfm",	"taxisFamilyName",
+            "taxisFirstName",	"taxisFathersName",	"taxisMothersName",	"taxisFamilyNameLatin",	"taxisFirstNameLatin",	"taxisFathersNameLatin",	"taxisMothersNameLatin",
+            "taxisAmka",	"taxisDateOfBirth",	"taxisGender",	"nationality",	"maritalStatus",	"hospitalized",	"hospitalizedSpecific",
+            "monk",	"luxury",	"street",	"streetNumber",	"po",	"prefecture",	"ownership",	"supplyType",	"meterNumber",
+            "participateFead",	"selectProvider",	"gender",	"disabilityStatus",	"levelOfEducation",	"employmentStatus",	"unemployed",	"employed",
+            "oaedId",	"oaedDate",	"email",	"mobilePhone",	"landline",	"iban",	"streetNumber_1",	"prefecture_2",	"municipality",	"parenthood",	"custody",
+            "additionalAdults",	"salariesR",	"pensionsR",	"farmingR",	"freelanceR",	"rentIncomeR",	"unemploymentBenefitR",	"otherBenefitsR",	"ekasR",
+            "otherIncomeR",	"ergomeR",	"depositInterestA",	"depositsA",	"domesticRealEstateA",	"foreignRealEstateA",	"vehicleValueA",	"investmentsA",
+            "totalIncome",	"savedInDb",	"status",	"submittedMunicipality",	"time",	"householdPrincipal",	"householdComposition",	"householdCompositionHistory",
+
+            "salariesRHistory",	"pensionsRHistory",	"farmingRHistory",	"freelanceRHistory",	"otherBenefitsRHistory",	"depositsAHistory",	"domesticRealEstateAHistory",
+            "foreignRealEstateAHistory",	"monthlyGuarantee",	"totalIncome_3",	"monthlyIncome",	"monthlyAid",	"savedInDb_4",	"status_5"};
+
+
 
     private final static List<String> GREEK_FIRST_NAMES = new ArrayList<>();
     private final static List<String> GREEK_LAST_NAMES = new ArrayList<>();
@@ -243,28 +173,34 @@ public class CsvUtils {
         return householdComposition;
     }
 
-    private static LinkedHashMap<LocalDateTime, List<HouseholdMember>> transformHhHistory(String history) {
+    private static LinkedHashMap<String, List<HouseholdMember>> transformHhHistory(String history) {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-        LinkedHashMap<LocalDateTime, List<HouseholdMember>> hhHistory = new LinkedHashMap<>();
-        String[] hhs = history.split("-");
-        for (String s : hhs) {
-            String[] hh = s.split("_");
-            List<HouseholdMember> householdEntry = transformHousehold(hh[1]);
-            hhHistory.put(LocalDateTime.parse(hh[0], formatter), householdEntry);
+        LinkedHashMap<String, List<HouseholdMember>> hhHistory = new LinkedHashMap<>();
+        try{
+            String[] hhs = history.split("-");
+            for (String s : hhs) {
+                String[] hh = s.split("_");
+                List<HouseholdMember> householdEntry = transformHousehold(hh[1]);
+//                hhHistory.put(LocalDateTime.parse(hh[0], formatter), householdEntry);
+                hhHistory.put( hh[0] , householdEntry);
+            }
+        }catch(IndexOutOfBoundsException e){
+            log.error(e.getMessage());
         }
+
         return hhHistory;
     }
 
-    private static LinkedHashMap<LocalDateTime, String> transformHistoryField(String history) {
+    private static LinkedHashMap<String, String> transformHistoryField(String history) {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-        LinkedHashMap<LocalDateTime, String> histField = new LinkedHashMap<>();
+        LinkedHashMap<String, String> histField = new LinkedHashMap<>();
         if (!"".equals(history)) {
             String[] histArray = history.split("\\|");
             for (String s : histArray) {
                 String[] historyEntry = s.split("_");
-                histField.put(LocalDateTime.parse(historyEntry[0], formatter), historyEntry[1]);
+                histField.put( historyEntry[0] , historyEntry[1]);
             }
         }
         return histField;
@@ -352,7 +288,7 @@ public class CsvUtils {
         //TODO add correct initial amount allocation
         // amounts are calculated for 6months period, but in the application the amounts for 12 months are submitted
         // (200 E for adults, 100E for adults, 50E for children) *12
-        int maxAmount = (200 + (int) additionalAdults * 100 + (principalApp.getHouseholdComposition().size() - (int) additionalAdults) * 50) * 12;
+        int maxAmount = (200 + (int) additionalAdults * 100 + (principalApp.getHouseholdComposition().size() - (int) additionalAdults) * 50) * 6;
         int leftOverAmount = addFinancialDataToSsiApp(principalApp, maxAmount);
         for (SsiApplication app : householdAppList) {// for all non principal applications
             if (!app.getHouseholdPrincipal().getAfm().equals(app.getTaxisAfm()) && isAdult(app.getTaxisDateOfBirth())) {
@@ -786,8 +722,11 @@ public class CsvUtils {
             bw.newLine();
             for (SsiApplication app : appList) {
                 oneLine = new StringBuffer();
+                oneLine.append(UUID.randomUUID().toString()).append(CSV_SEPARATOR);
 
                 oneLine.append(app.getUuid()).append(CSV_SEPARATOR);
+                //ssn
+                oneLine.append("").append(CSV_SEPARATOR);
                 //uuid
                 //taxisAfm
                 oneLine.append(app.getTaxisAfm()).append(CSV_SEPARATOR);
