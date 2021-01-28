@@ -8,8 +8,10 @@ package com.example.ethereumserviceapp.service.impl;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -152,7 +154,12 @@ public class EthereumServiceImpl implements EthereumService {
         if (match.isPresent()) {
             byte[] byteUuid = ByteConverters.stringToBytes16(match.get()).getValue();
             try {
-                return Optional.of(ContractBuilder.buildCaseFromTuple(this.getContract().getCase(byteUuid).send()));
+                Optional<Case> theCase = Optional.of(ContractBuilder.buildCaseFromTuple(this.getContract().getCase(byteUuid).send()));
+
+                if(theCase.isPresent()){
+                    ContractBuilder.linkPaymentToCase(this.getContract().getPayment(byteUuid).send(), theCase.get());
+                }
+                return theCase;
             } catch (Exception ex) {
                 log.error(ex.getMessage());
             }
@@ -205,12 +212,16 @@ public class EthereumServiceImpl implements EthereumService {
 
                 log.info("updating case with uuid {} State {}", monitoredCase.getUuid(), monitoredCase.getState().getValue());
                 LocalDateTime time = monitoredCase.getDate();
+                LocalDate rejectionDate = monitoredCase.getRejectionDate();
+
                 ZonedDateTime zdt = time.atZone(ZoneId.of("America/Los_Angeles"));
                 long millis = zdt.toInstant().toEpochMilli();
+                long rjctMillis = rejectionDate.isEqual(LocalDate.of(1900, 0 ,0))? 0L : rejectionDate.atStartOfDay(ZoneId.of("America/Los_Angeles")).toInstant().toEpochMilli();
+                
                 byte[] uuid = ByteConverters.stringToBytes16(monitoredCase.getUuid()).getValue();
                 String functionCall = this.getContract()
                         .updateCase(uuid,
-                                BigInteger.valueOf(millis), BigInteger.valueOf(monitoredCase.getState().getValue()), (monitoredCase.getOffset().multiply(BigDecimal.valueOf(100)).toBigInteger()) )
+                                BigInteger.valueOf(millis), BigInteger.valueOf(monitoredCase.getState().getValue()), (monitoredCase.getDailyValue().multiply(BigDecimal.valueOf(100)).toBigInteger()), (monitoredCase.getOffset().multiply(BigDecimal.valueOf(100)).toBigInteger()), BigInteger.valueOf(rjctMillis) )
                         .encodeFunctionCall();
                 String txHash = this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
                         contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
