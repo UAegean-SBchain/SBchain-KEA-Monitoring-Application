@@ -1,6 +1,7 @@
 package com.example.ethereumserviceapp;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -25,6 +26,7 @@ public class TestUtils {
         monitoredCase.setDate(LocalDateTime.now().withDayOfMonth(1));
         monitoredCase.setState(state);
         LinkedHashMap<LocalDateTime, State> history = new LinkedHashMap<>();
+        LinkedHashMap<LocalDateTime, BigDecimal> dailyValue = new LinkedHashMap<>();
         Integer daysOfCurrentPayment = monthDays(LocalDateTime.now().minusMonths(1));
         Integer daysOfMinus2 = monthDays(LocalDateTime.now().minusMonths(2));
         Integer daysOfMinus3 = monthDays(LocalDateTime.now().minusMonths(3));
@@ -61,12 +63,15 @@ public class TestUtils {
         } else {
             for(int i=1; i<=daysOfMinus3; i++){
                 history.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(i), State.ACCEPTED);
+                dailyValue.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(i), BigDecimal.valueOf(15));
             }
             for(int i=1; i<=daysOfMinus2; i++){
                 history.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(i), State.ACCEPTED);
+                dailyValue.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(i), BigDecimal.valueOf(15));
             }
             for(int i=1; i<=daysOfCurrentPayment; i++){
                 history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.ACCEPTED);
+                dailyValue.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(i), BigDecimal.valueOf(15));
             }
         }
         
@@ -504,6 +509,7 @@ public class TestUtils {
         ssiApp.setTaxisDateOfBirth("05/05/1953");
         ssiApp.setMeterNumber("123456789");
         ssiApp.setIban("iban123456");
+        ssiApp.setTime(LocalDate.now().minusMonths(3));
 
         LinkedHashMap<String , String> pensionHistory = new LinkedHashMap<>();
         pensionHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1)), "500");
@@ -556,6 +562,7 @@ public class TestUtils {
         //ssiApp.setSalariesR("2000");
         ssiApp.setPensionsR("700");
         ssiApp.setTaxisDateOfBirth("12/08/1960");
+        ssiApp.setTime(LocalDate.now().minusMonths(3));
 
         LinkedHashMap<String, String> pensionHistory = new LinkedHashMap<>();
         pensionHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1)), "700");
@@ -607,6 +614,7 @@ public class TestUtils {
         //ssiApp.setSalariesR("2000");
         ssiApp.setPensionsR("0");
         ssiApp.setTaxisDateOfBirth("19/03/2007");
+        ssiApp.setTime(LocalDate.now().minusMonths(3));
 
         LinkedHashMap<String, String> pensionHistory = new LinkedHashMap<>();
         pensionHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1)), "0");

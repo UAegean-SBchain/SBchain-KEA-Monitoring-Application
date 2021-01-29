@@ -61,6 +61,13 @@ public class EthAppUtils {
 
     public static BigDecimal calculatePayment(Integer numDays, Integer days, SsiApplication ssiApp, LocalDate referenceDate){
 
+        BigDecimal valueToBePaid = BigDecimal.valueOf(days).multiply(calculateDailyPayment(numDays, days, ssiApp, referenceDate));
+
+        return valueToBePaid;
+    }
+
+    public static BigDecimal calculateDailyPayment(Integer numDays, Integer days, SsiApplication ssiApp, LocalDate referenceDate){
+
         BigDecimal totalMonthlyValue = getTotalMonthlyValue(ssiApp, referenceDate);
 
         //maximum monthly allowance is 900
@@ -73,13 +80,11 @@ public class EthAppUtils {
         }
         BigDecimal totalDailyValue = totalMonthlyValue.divide(BigDecimal.valueOf(numDays), 2, RoundingMode.HALF_UP);
 
-        BigDecimal valueToBePaid = BigDecimal.valueOf(days).multiply(totalDailyValue);
-
-        return valueToBePaid;
+        return totalDailyValue;
     }
 
     public static BigDecimal getTotalMonthlyValue(SsiApplication ssiApp, LocalDate date){
-        BigDecimal paymentThresshold = BigDecimal.valueOf(0);
+        BigDecimal paymentThresshold = BigDecimal.ZERO;
         List<HouseholdMember> household = ssiApp.getHouseholdComposition();
         final LocalDate referenceDate = date == null? LocalDate.now(): date;
 

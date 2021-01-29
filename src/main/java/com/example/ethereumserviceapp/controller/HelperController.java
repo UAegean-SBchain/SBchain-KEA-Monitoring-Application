@@ -56,7 +56,7 @@ public class HelperController {
             Case mCase = ethCase.get();
             mCase.setDate(currDate.plusDays(i));
             mCase.setState(State.ACCEPTED);
-            ethService.updateCase(mCase, true);
+            ethService.updateCase(mCase/*, true*/);
         }
         
     }

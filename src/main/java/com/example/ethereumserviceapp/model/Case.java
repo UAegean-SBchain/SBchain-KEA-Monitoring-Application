@@ -24,7 +24,7 @@ public class Case {
     private LinkedHashMap<LocalDateTime, BigDecimal> dailyBenefit;
     private List<CasePayment> paymentHistory;
     private BigDecimal offset;
-    private LocalDate rejectionDate;
+    private String rejectionDate;
     // helper value does not get saved in BC
     private BigDecimal dailyValue;
 }

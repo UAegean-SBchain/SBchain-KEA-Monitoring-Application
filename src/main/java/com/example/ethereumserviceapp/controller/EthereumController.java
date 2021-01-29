@@ -54,7 +54,7 @@ public class EthereumController {
         Optional<Case> c = this.ethService.getCaseByUUID(uuid);
         if (c.isPresent()) {
             c.get().setState(State.ACCEPTED);
-            this.ethService.updateCase(c.get(), false);
+            this.ethService.updateCase(c.get()/*, false*/);
             return "OK";
         }
         return "FAIL";
@@ -74,7 +74,7 @@ public class EthereumController {
                 return "FAIL";
             }
             c.get().setState(State.ACCEPTED);
-            this.ethService.updateCase(c.get(), false);
+            this.ethService.updateCase(c.get()/*, false*/);
             return "OK";
         }
         return "FAIL";

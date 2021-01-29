@@ -33,7 +33,7 @@ public interface EthereumService {
 
     public void deleteCaseByUuid(String uuid);
 
-    public void updateCase(Case monitoredCase, Boolean sync);
+    public void updateCase(Case monitoredCase);
 
     public void addPayment(Case monitoredCase, CasePayment payment, Boolean sync);
 

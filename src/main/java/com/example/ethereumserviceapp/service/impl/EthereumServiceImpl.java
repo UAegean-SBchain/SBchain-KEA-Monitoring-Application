@@ -25,6 +25,7 @@ import com.example.ethereumserviceapp.model.CasePayment;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.utils.ByteConverters;
 import com.example.ethereumserviceapp.utils.ContractBuilder;
+import com.example.ethereumserviceapp.utils.DateUtils;
 import com.example.ethereumserviceapp.utils.RandomIdGenerator;
 
 import org.springframework.stereotype.Service;
@@ -205,18 +206,17 @@ public class EthereumServiceImpl implements EthereumService {
     }
 
     @Override
-    public void updateCase(Case monitoredCase, Boolean sync) {
-        log.info("updateCase : synchronize transaction :{}", sync);
+    public void updateCase(Case monitoredCase) {
+        //log.info("updateCase : synchronize transaction :{}", sync);
         if (this.checkIfCaseExists(monitoredCase.getUuid())) {
             try {
 
                 log.info("updating case with uuid {} State {}", monitoredCase.getUuid(), monitoredCase.getState().getValue());
                 LocalDateTime time = monitoredCase.getDate();
-                LocalDate rejectionDate = monitoredCase.getRejectionDate();
 
                 ZonedDateTime zdt = time.atZone(ZoneId.of("America/Los_Angeles"));
                 long millis = zdt.toInstant().toEpochMilli();
-                long rjctMillis = rejectionDate.isEqual(LocalDate.of(1900, 0 ,0))? 0L : rejectionDate.atStartOfDay(ZoneId.of("America/Los_Angeles")).toInstant().toEpochMilli();
+                long rjctMillis = monitoredCase.getRejectionDate().equals("")? 0L : DateUtils.historyDateStringToLDT(monitoredCase.getRejectionDate()).atZone(ZoneId.of("America/Los_Angeles")).toInstant().toEpochMilli();
                 
                 byte[] uuid = ByteConverters.stringToBytes16(monitoredCase.getUuid()).getValue();
                 String functionCall = this.getContract()
@@ -226,16 +226,16 @@ public class EthereumServiceImpl implements EthereumService {
                 String txHash = this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
                         contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
 
-                if(sync){
-                    TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(
-                        web3, 
-                        TransactionManager.DEFAULT_POLLING_FREQUENCY, 
-                        TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
-                    TransactionReceipt txReceipt = receiptProcessor.waitForTransactionReceipt(txHash);
-                }
+                // if(sync){
+                //     TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(
+                //         web3, 
+                //         TransactionManager.DEFAULT_POLLING_FREQUENCY, 
+                //         TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+                //     TransactionReceipt txReceipt = receiptProcessor.waitForTransactionReceipt(txHash);
+                // }
 
-            } catch (TransactionException e){
-                log.error(e.getMessage());
+            // } catch (TransactionException e){
+            //     log.error(e.getMessage());
             } catch (IOException ex) {
                 log.error(ex.getMessage());
             }

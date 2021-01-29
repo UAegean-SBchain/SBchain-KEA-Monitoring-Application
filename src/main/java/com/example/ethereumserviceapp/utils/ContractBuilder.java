@@ -61,9 +61,9 @@ public class ContractBuilder {
         //transformedCase.setPaymentHistory(paymentHistory);
         transformedCase.setOffset(new BigDecimal(theCase.component7()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
         if(theCase.component8().longValue() == 0){
-            transformedCase.setRejectionDate(LocalDate.of(1900,0,0));
+            transformedCase.setRejectionDate("");
         }else{
-            transformedCase.setRejectionDate(Instant.ofEpochMilli(theCase.component8().longValue()).atZone(ZoneId.systemDefault()).toLocalDate());
+            transformedCase.setRejectionDate(DateUtils.dateToString(Instant.ofEpochMilli(theCase.component8().longValue()).atZone(ZoneId.systemDefault()).toLocalDateTime()));
         }
         return transformedCase;
     }
