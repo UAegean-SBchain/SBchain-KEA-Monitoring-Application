@@ -101,7 +101,7 @@ public class TestMonitorServ extends TestUtils{
        oneItemList.add(generateSsiApp1());
 
        Mockito.when(ethServ.getAllCaseUUID()).thenReturn(uuids);
-       Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(generateMockCase("2WiYi1", State.ACCEPTED, false, false)));
+       Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(generateMockCase("2WiYi1", State.ACCEPTED, false, false, "")));
        Mockito.when(mongoServ.findByUuid(anyString())).thenReturn(Optional.of(generateSsiApp1()));
        Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(mockList);
        Mockito.when(mongoServ.findCredentialIdsByUuid(anyString())).thenReturn(credIdAndExp);

@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -45,13 +46,29 @@ public class MonitorUtils extends EthAppUtils{
 
         List<PaymentCredential> changedCredentials = alteredCredentialsList(ssiApp, householdApps);
 
+        final Boolean isAsyncRejected = monitoredCase.getRejectionDate() != null && !"".equals(monitoredCase.getRejectionDate());
+
+        // add a dummy payment credential in the altered credentials list denoting the date the case should have been rejected 
+        if(isAsyncRejected){
+            //if there is an asynchronous rejection then remove any other alterations in the application after the date of the rejection, since they should not be calculated
+            changedCredentials = changedCredentials.stream().filter(c -> c.getDate().toLocalDate().isBefore(DateUtils.dateStringToLD(monitoredCase.getRejectionDate()))).collect(Collectors.toList());
+            PaymentCredential rejectedCred = new PaymentCredential();
+            rejectedCred.setDate(LocalDateTime.of(DateUtils.dateStringToLD(monitoredCase.getRejectionDate()), LocalTime.of(00, 00, 00)));
+            rejectedCred.setValue("rejected");
+            rejectedCred.setName("asyncRejection");
+            changedCredentials.add(rejectedCred);
+        }
+
         if(changedCredentials.isEmpty()){
             return;
         }
+        
         //sort the list of altered credentials by date
         List<PaymentCredential> changedCredentialsSorted = changedCredentials.stream().sorted(Comparator.comparing(PaymentCredential::getDate)).collect(Collectors.toList());
         //create a map of altered credentials grouped by month, with key the start date of the month and value the credentials that were altered during this month
         Map<LocalDate, List<PaymentCredential>> monthlyGroupMap = changedCredentialsSorted.stream().collect(Collectors.groupingBy(e -> e.getDate().withDayOfMonth(1).toLocalDate()));
+        monthlyGroupMap.entrySet().stream().map(e -> e.getValue().stream().sorted(Comparator.comparing(PaymentCredential::getDate)).collect(Collectors.toList()));
+        
         List<CasePayment> paymentHistory = monitoredCase.getPaymentHistory().stream().sorted(Comparator.comparing(CasePayment::getPaymentDate)).collect(Collectors.toList());
         Boolean credBeforeAppStart = false;
         LocalDate firstAcceptedDate = LocalDate.of(2000, 1, 1);
@@ -62,16 +79,25 @@ public class MonitorUtils extends EthAppUtils{
                 break;
             }
         }
+ 
+         //if the case should have been rejected from the start then add all payments as offset
+         if(isAsyncRejected && DateUtils.dateStringToLD(monitoredCase.getRejectionDate()).compareTo(firstAcceptedDate) <=0){
+            rejectAllPayments(paymentHistory, monitoredCase);
+            return;
+         }
+
         //check if any credential has been altered at a date before the start of the application and use that value as the base one
         for (Map.Entry<LocalDate, List<PaymentCredential>> mCred : monthlyGroupMap.entrySet()) {
-            if(mCred.getKey().compareTo(firstAcceptedDate) > 0){
+            if(mCred.getKey().compareTo(firstAcceptedDate) >= 0){
                 continue;
             }
             credBeforeAppStart = true;
             for(PaymentCredential credential: mCred.getValue()){
-                if(credential.getName().equals("household")){
+                if("household".equals(credential.getName())){
                     updateSsiApplication(credential.getName(), null, ssiApp, credential.getHousehold());
-                } else {
+                } else if("rejected".equals(credential.getValue())) {
+                    break;
+                }else {
                     updateSsiApplication(credential.getName(), credential.getValue(), householdApps.stream().filter(h -> credential.getAfm().equals(h.getTaxisAfm())).collect(Collectors.toList()).get(0), null);
                 }
             }
@@ -84,6 +110,18 @@ public class MonitorUtils extends EthAppUtils{
             LocalDate startOfMonth = ph.getPaymentDate().minusMonths(1).withDayOfMonth(1).toLocalDate();
             LocalDate endOfMonth = ph.getPaymentDate().minusMonths(1).withDayOfMonth(monthDays(ph.getPaymentDate().minusMonths(1).toLocalDate())).toLocalDate();
             Integer fullMonthDays = monthDays(startOfMonth);
+
+
+            // if rejected date is before start of month then all the payment of this month is invalid and becomes offset
+            if(isAsyncRejected && DateUtils.dateStringToLD(monitoredCase.getRejectionDate()).compareTo(startOfMonth) <= 0){
+                BigDecimal monthlyOffset = ph.getPayment();
+
+                monitoredCase.setOffset(monitoredCase.getOffset().add(monthlyOffset));
+
+                continue;
+            }
+
+
             List<LocalDate> monthDates =  monitoredCase.getHistory().entrySet().stream().filter(
                     e -> e.getKey().toLocalDate().compareTo(startOfMonth) >= 0 && e.getKey().toLocalDate().compareTo(endOfMonth) <=0 && e.getValue().equals(State.ACCEPTED)).map(e -> e.getKey().toLocalDate()).collect(Collectors.toList());
 
@@ -133,6 +171,12 @@ public class MonitorUtils extends EthAppUtils{
                 for(int i = 0; i< monthlyGroupMap.get(startOfMonth).size(); i++){
                     List<LocalDate> offsetDates = new ArrayList<>();
                     final int innerI = i;
+
+                    // if the case should be rejected at this point then the payment of the rest of the month until either the end of the month or the actual rejection of the case is offset
+                     if("rejected".equals(monthlyGroupMap.get(startOfMonth).get(i).getValue())){
+                        break;
+                    }
+
                     //if there are more credentials in the history list for this month then calculate the offset days and payment value for each period
                     if( i+1 <  monthlyGroupMap.get(startOfMonth).size() ) {
                         offsetDates = monitoredCase.getHistory().entrySet().stream().filter(
@@ -189,27 +233,47 @@ public class MonitorUtils extends EthAppUtils{
         Integer fullMonthDays = monthDays(startOfPayment);
         LocalDate endOfPayment = currentDate.minusMonths(1).withDayOfMonth(fullMonthDays);
 
+
+        final Boolean isAsyncRejected = monitoredCase.getRejectionDate() != null && !"".equals(monitoredCase.getRejectionDate());
+
+        //if the case should have been rejected from before the start of the month then return zero ammount as payment
+        if(isAsyncRejected && DateUtils.dateStringToLD(monitoredCase.getRejectionDate()).compareTo(startOfPayment) <=0){
+            log.info("case has been rejected before the start of the payment month, at date :{}", monitoredCase.getRejectionDate());
+            return BigDecimal.ZERO;
+         }
+
+
         List<LocalDate> acceptedDates = monitoredCase.getHistory().entrySet().stream().filter(
             e -> e.getKey().toLocalDate().compareTo(startOfPayment) >= 0 
             && e.getKey().toLocalDate().compareTo(endOfPayment) <=0 
             && e.getValue().equals(State.ACCEPTED))
             .map(x -> x.getKey().toLocalDate()).collect(Collectors.toList());
 
-        SsiApplication ssiAppProjection = filterHHAndAggregate(householdApps, ssiApp.getHouseholdComposition());           
+        SsiApplication ssiAppProjection = filterHHAndAggregate(householdApps, ssiApp.getHouseholdComposition());       
         BigDecimal projectedPayment = calculatePayment(fullMonthDays, acceptedDates.size(), ssiAppProjection, currentDate);
-
         List<PaymentCredential> changedCredentials = latestAlteredCredentials(ssiApp, householdApps, currentDate);
+
+        if(isAsyncRejected){
+            //if there is an asynchronous rejection then remove any other alterations in the application after the date of the rejection, since they should not be calculated
+            changedCredentials = changedCredentials.stream().filter(c -> c.getDate().toLocalDate().isBefore(DateUtils.dateStringToLD(monitoredCase.getRejectionDate()))).collect(Collectors.toList());
+            PaymentCredential rejectedCred = new PaymentCredential();
+            rejectedCred.setDate(LocalDateTime.of(DateUtils.dateStringToLD(monitoredCase.getRejectionDate()), LocalTime.of(00, 00, 00)));
+            rejectedCred.setValue("rejected");
+            rejectedCred.setName("asyncRejection");
+            changedCredentials.add(rejectedCred);
+        }
+
         ssiApp = filterHHAndAggregate(householdApps, ssiApp.getHouseholdComposition());   
-        
         BigDecimal correctedPayment = BigDecimal.ZERO;
+
         //find all the dates that minors become adults during this month, get the taxis date of birth of all the applications of the household history
         List<LocalDate> ageOffsetDates = findOffsetAgeDates(householdApps.stream().map(h -> h.getTaxisDateOfBirth()).collect(Collectors.toList()), acceptedDates).stream().sorted().collect(Collectors.toList());
         if((changedCredentials.isEmpty() || !changedCredentials.stream().anyMatch(c -> c.getDate().withDayOfMonth(1).toLocalDate().equals(startOfPayment))) && ageOffsetDates.isEmpty()){
             return projectedPayment;
         }
+
         //sort the list of altered credentials by date
         List<PaymentCredential> changedCredentialsSorted = changedCredentials.stream().sorted(Comparator.comparing(PaymentCredential::getDate)).collect(Collectors.toList());
-        
         List<LocalDate> nonOffsetDates = monitoredCase.getHistory().entrySet().stream().filter(
                 e -> e.getKey().toLocalDate().compareTo(startOfPayment) >= 0 
                 && e.getKey().toLocalDate().compareTo(changedCredentialsSorted.get(0).getDate().toLocalDate()) <0 
@@ -225,16 +289,19 @@ public class MonitorUtils extends EthAppUtils{
                 }
             }
         }
-
         if(ageList.isEmpty()){
             correctedPayment = calculatePayment(fullMonthDays, nonOffsetDates.size(), ssiApp, startOfPayment);
         } else {
             BigDecimal offsetPayment = calculateAges(ageList, monitoredCase, nonOffsetDates.get(0), nonOffsetDates.get(nonOffsetDates.size()-1), fullMonthDays, ssiApp);
             correctedPayment = correctedPayment.add(offsetPayment);
         }
-
         for(int i = 0; i< changedCredentialsSorted.size(); i++){
             List<LocalDate> offsetDates = new ArrayList<>();
+
+            if("rejected".equals(changedCredentialsSorted.get(i).getValue())){
+                break;
+            }
+
             if( i+1 < changedCredentialsSorted.size() ) {
                 final int innerI = i;
                 offsetDates = monitoredCase.getHistory().entrySet().stream().filter(
@@ -308,8 +375,8 @@ public class MonitorUtils extends EthAppUtils{
                 });
             }
         });
+        
         ssiApp = filterHHAndAggregate(householdApps, ssiApp.getHouseholdComposition());
-         
         return changedCredentials;
     }
 
@@ -458,7 +525,7 @@ public class MonitorUtils extends EthAppUtils{
         for(String birthDate:birthDates){
             Set<Integer> ages = new HashSet<>();
             for(LocalDate referenceDate:offsetDates){
-                Integer age = calculateAge(LocalDate.parse(birthDate, formatter), referenceDate);
+                Integer age = calculateAge(DateUtils.dateStringToLD(birthDate), referenceDate);
                 
                 ages.add(age);
                 if(!ages.contains(17)){
@@ -503,4 +570,13 @@ public class MonitorUtils extends EthAppUtils{
         return correctedPayment;
     } 
 
+    private static void rejectAllPayments(List<CasePayment> paymentHistory, Case monitoredCase){
+        for(CasePayment ph:paymentHistory){
+            BigDecimal monthlyOffset = ph.getPayment();
+
+            monitoredCase.setOffset(monitoredCase.getOffset().add(monthlyOffset));
+        }
+    }
+
 }
+

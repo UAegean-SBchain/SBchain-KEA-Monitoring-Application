@@ -56,11 +56,18 @@ public class EthAppUtils {
         return ssiApp;
     }
 
-    
-    static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
     public static BigDecimal calculatePayment(Integer numDays, Integer days, SsiApplication ssiApp, LocalDate referenceDate){
 
+        //if the total days are the same as the calculated days then return the total ammount
+        if(numDays == days){
+            BigDecimal totalMonthlyValue = getTotalMonthlyValue(ssiApp, referenceDate);
+    
+            //maximum monthly allowance is 900
+            if(totalMonthlyValue.compareTo(BigDecimal.valueOf(900)) > 0){
+                totalMonthlyValue = BigDecimal.valueOf(900);
+            }
+            return totalMonthlyValue;
+        }
         BigDecimal valueToBePaid = BigDecimal.valueOf(days).multiply(calculateDailyPayment(numDays, days, ssiApp, referenceDate));
 
         return valueToBePaid;
@@ -75,9 +82,6 @@ public class EthAppUtils {
             totalMonthlyValue = BigDecimal.valueOf(900);
         }
 
-        if(numDays == days){
-            return totalMonthlyValue;
-        }
         BigDecimal totalDailyValue = totalMonthlyValue.divide(BigDecimal.valueOf(numDays), 2, RoundingMode.HALF_UP);
 
         return totalDailyValue;
@@ -88,7 +92,7 @@ public class EthAppUtils {
         List<HouseholdMember> household = ssiApp.getHouseholdComposition();
         final LocalDate referenceDate = date == null? LocalDate.now(): date;
 
-        Long adults = household.stream().filter(h -> calculateAge(LocalDate.parse(h.getDateOfBirth(), formatter), referenceDate) >= 18).count();
+        Long adults = household.stream().filter(h -> calculateAge(DateUtils.dateStringToLD(h.getDateOfBirth()), referenceDate) >= 18).count();
         Integer adultCount = adults.intValue();
         Integer minorCount = household.size() - adultCount;
 
@@ -151,7 +155,6 @@ public class EthAppUtils {
         //check if by the end of the month all the members of the household have submitted an application
         List<String> appAfms = householdApps.stream().map(a -> a.getTaxisAfm()).collect(Collectors.toList());
         List<String> householdAfms = household.stream().map(m -> m.getAfm()).collect(Collectors.toList());
-        log.info("ssssssssssssssssssssss householdAfms :{}, appAfms :{}", householdAfms, appAfms);
         if(!appAfms.containsAll(householdAfms)){
             return false;
         }
