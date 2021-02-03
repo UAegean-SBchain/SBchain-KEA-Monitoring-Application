@@ -15,6 +15,7 @@ contract CaseMonitor{
         uint[] datesHistory;
         CaseState[] statesHistory; 
         uint[] payPerDayHistory;
+        uint[] sumDailyValueHistory;
         CaseState currState;
         uint paymentOffset;
         uint rejectionDate;
@@ -56,11 +57,12 @@ contract CaseMonitor{
         CaseState[] memory statesHistory = new CaseState[](1);
         statesHistory[0] = CaseState.Undefined;
         uint[] memory payPerDayHistory = new uint[](1);
+        uint[] memory sumDailyValueHistory = new uint[](1);
         payPerDayHistory[0] = 0;
-       
+        sumDailyValueHistory[0] = 0;
 
         //add the case 
-        cases.push(Case(_uuid, _date, datesHistory, statesHistory, payPerDayHistory, CaseState.Undefined, 0, 0)); 
+        cases.push(Case(_uuid, _date, datesHistory, statesHistory, payPerDayHistory, sumDailyValueHistory, CaseState.Undefined, 0, 0)); 
         uint newIndex = cases.length-1;
         caseUuidToIndex[_uuid] = newIndex;
         addCasePayment(_uuid);
@@ -86,7 +88,7 @@ contract CaseMonitor{
         paymentUuidToIndex[_uuid] = newIndex;
     }
 
-    function updateCase(bytes16 _uuid, uint _date, CaseState _state, uint _payPerDay, uint _offset, uint _rejectionDate) public {
+    function updateCase(bytes16 _uuid, uint _date, CaseState _state, uint _payPerDay, uint _sumDaily, uint _offset, uint _rejectionDate) public {
 
         require(caseExists(_uuid));
         
@@ -97,6 +99,7 @@ contract CaseMonitor{
         theCase.datesHistory.push(_date);
         theCase.statesHistory.push(_state);
         theCase.payPerDayHistory.push(_payPerDay);
+        theCase.sumDailyValueHistory.push(_sumDaily);
         theCase.currState= _state;
         theCase.paymentOffset = _offset;
         theCase.rejectionDate = _rejectionDate;
@@ -169,6 +172,7 @@ contract CaseMonitor{
         uint[] memory datesHistory,
         CaseState[] memory statesHistory,
         uint[] memory payPerDayHistory,
+        uint[] memory sumDailyValueHistory,
         CaseState currState,
         uint paymentOffset,
         uint rejectionDate) {
@@ -179,7 +183,7 @@ contract CaseMonitor{
         
         
         return (theCase.uuid, theCase.latestDate, 
-                 theCase.datesHistory, theCase.statesHistory, theCase.payPerDayHistory, theCase.currState,
+                 theCase.datesHistory, theCase.statesHistory, theCase.payPerDayHistory, theCase.sumDailyValueHistory, theCase.currState,
                  theCase.paymentOffset, theCase.rejectionDate); 
         
     }

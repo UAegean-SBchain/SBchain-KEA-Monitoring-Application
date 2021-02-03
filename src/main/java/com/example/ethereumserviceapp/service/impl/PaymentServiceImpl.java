@@ -88,7 +88,7 @@ public class PaymentServiceImpl implements PaymentService{
     private void calculatePayment(Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDateTime currentDate, Boolean sync){
         List<SsiApplication> allHouseholdApps = mongoServ.findByTaxisAfmIn(EthAppUtils.fetchAllHouseholdAfms(ssiApp)); 
         //calculate the current payment and subtract the any previous offset from it
-        BigDecimal paymentValue = MonitorUtils.calculateCurrentPayment(caseToBePaid, ssiApp, allHouseholdApps, currentDate.toLocalDate()).subtract(caseToBePaid.getOffset());
+        BigDecimal paymentValue = MonitorUtils.calculateCurrentPayment(caseToBePaid, ssiApp, allHouseholdApps, currentDate.toLocalDate(), false).subtract(caseToBePaid.getOffset());
         log.info("payment value :{}", paymentValue);
         //Call to payment service
         State paymentState = paymentService(paymentValue, caseToBePaid, ssiApp, householdApps);

@@ -198,6 +198,7 @@ public class MonitorServiceImpl implements MonitorService {
                 //BigDecimal offsetBefore = theCase.get().getOffset();
                 if(state.equals(State.ACCEPTED)){
                     monitoredCase.setDailyValue(MonitorUtils.calculateDailyPayment(EthAppUtils.monthDays(currentDate.toLocalDate()), 1, aggregatedSsiApp, currentDate.toLocalDate()));
+                    monitoredCase.setDailySum(MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp, allHouseholdApps, currentDate.toLocalDate(), true));
                 }
                 
                 MonitorUtils.calculateOffset(monitoredCase, ssiApp, allHouseholdApps);
@@ -207,7 +208,7 @@ public class MonitorServiceImpl implements MonitorService {
                 // }
             }
             this.ethServ.updateCase(monitoredCase);
-            log.info("updated case uuid :{}, date :{}, state :{}, dailyValue :{}, offset:{} ", monitoredCase.getUuid(), monitoredCase.getDate(), monitoredCase.getState(), monitoredCase.getDailyValue(), monitoredCase.getOffset());
+            log.info("updated case uuid :{}, date :{}, state :{}, dailyValue :{}, offset:{}, sum:{} ", monitoredCase.getUuid(), monitoredCase.getDate(), monitoredCase.getState(), monitoredCase.getDailyValue(), monitoredCase.getOffset(), monitoredCase.getDailySum());
         } else {
             log.error("cannot find case {} while trying to update it", uuid);
         }

@@ -227,12 +227,18 @@ public class MonitorUtils extends EthAppUtils{
         }
     }
 
-    public static BigDecimal calculateCurrentPayment(Case monitoredCase, SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDate currentDate){
+    public static BigDecimal calculateCurrentPayment(Case monitoredCase, SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDate currentDate, Boolean isDailySum){
         
-        LocalDate startOfPayment = currentDate.minusMonths(1).withDayOfMonth(1);
+        // use current month if calculating daily sum or previous month for payment
+        LocalDate startOfPayment = isDailySum? currentDate.withDayOfMonth(1) : currentDate.minusMonths(1).withDayOfMonth(1);
         Integer fullMonthDays = monthDays(startOfPayment);
-        LocalDate endOfPayment = currentDate.minusMonths(1).withDayOfMonth(fullMonthDays);
+        LocalDate endOfPayment =  isDailySum? currentDate : currentDate.minusMonths(1).withDayOfMonth(fullMonthDays);
 
+        // if(isDailySum){
+        //     startOfPayment = currentDate.withDayOfMonth(1);
+        //     fullMonthDays = monthDays(startOfPayment);
+        //     endOfPayment = currentDate;
+        // }
 
         final Boolean isAsyncRejected = monitoredCase.getRejectionDate() != null && !"".equals(monitoredCase.getRejectionDate());
 
@@ -249,9 +255,16 @@ public class MonitorUtils extends EthAppUtils{
             && e.getValue().equals(State.ACCEPTED))
             .map(x -> x.getKey().toLocalDate()).collect(Collectors.toList());
 
+            log.info("111111111111111111 accepted dates :{}", acceptedDates);
+        
+        //if calculating daily sums then add the current date to the accepted dates since it's called only when case has been accepted
+        if(isDailySum){
+            acceptedDates.add(currentDate);
+        }
+
         SsiApplication ssiAppProjection = filterHHAndAggregate(householdApps, ssiApp.getHouseholdComposition());       
         BigDecimal projectedPayment = calculatePayment(fullMonthDays, acceptedDates.size(), ssiAppProjection, currentDate);
-        List<PaymentCredential> changedCredentials = latestAlteredCredentials(ssiApp, householdApps, currentDate);
+        List<PaymentCredential> changedCredentials = latestAlteredCredentials(ssiApp, householdApps, startOfPayment);
 
         if(isAsyncRejected){
             //if there is an asynchronous rejection then remove any other alterations in the application after the date of the rejection, since they should not be calculated
@@ -380,7 +393,7 @@ public class MonitorUtils extends EthAppUtils{
         return changedCredentials;
     }
 
-    private static List<PaymentCredential> latestAlteredCredentials(SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDate currentDate){
+    private static List<PaymentCredential> latestAlteredCredentials(SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDate startOfPayment){
 
         List<PaymentCredential> changedCredentials = new ArrayList<>();
 
@@ -392,7 +405,7 @@ public class MonitorUtils extends EthAppUtils{
             if(!credHistoriesMap.isEmpty()){
                 credHistoriesMap.entrySet().forEach(e -> {
                     Optional<Entry<String, String>> maxEntry = e.getValue().entrySet().stream()
-                            .filter(m -> DateUtils.historyDateStringToLDT(m.getKey()).toLocalDate().compareTo(currentDate.minusMonths(1).withDayOfMonth(1)) <= 0)
+                            .filter(m -> DateUtils.historyDateStringToLDT(m.getKey()).toLocalDate().compareTo(startOfPayment) <= 0)
                     .max((Entry<String, String> e1, Entry<String, String> e2) -> DateUtils.historyDateStringToLDT(e1.getKey())
                     .compareTo(DateUtils.historyDateStringToLDT(e2.getKey())));
                     if(maxEntry.isPresent()){
@@ -400,7 +413,7 @@ public class MonitorUtils extends EthAppUtils{
                     }
                     if(e.getValue().size()>1){
                         e.getValue().entrySet().stream().skip(1).forEach(p -> {
-                            if(DateUtils.historyDateStringToLDT(p.getKey()).toLocalDate().compareTo(currentDate.minusMonths(1).withDayOfMonth(1)) > 0){
+                            if(DateUtils.historyDateStringToLDT(p.getKey()).toLocalDate().compareTo(startOfPayment) > 0){
                                 updatePaymentCredential(DateUtils.historyDateStringToLDT(p.getKey()), e.getKey(), p.getValue(), null, h.getTaxisAfm(), changedCredentials);
                             }
                         });
@@ -410,7 +423,7 @@ public class MonitorUtils extends EthAppUtils{
         });
         if(ssiApp.getHouseholdCompositionHistory()!=null){
             Optional<Entry<String, List<HouseholdMember>>> maxEntry = ssiApp.getHouseholdCompositionHistory().entrySet().stream()
-                    .filter(m -> DateUtils.historyDateStringToLDT(m.getKey()).toLocalDate().compareTo(currentDate.minusMonths(1).withDayOfMonth(1)) <= 0)
+                    .filter(m -> DateUtils.historyDateStringToLDT(m.getKey()).toLocalDate().compareTo(startOfPayment) <= 0)
             .max((Entry<String, List<HouseholdMember>> e1, Entry<String, List<HouseholdMember>> e2) -> DateUtils.historyDateStringToLDT(e1.getKey())
             .compareTo(DateUtils.historyDateStringToLDT(e2.getKey())));
             if(maxEntry.isPresent()){
@@ -418,7 +431,7 @@ public class MonitorUtils extends EthAppUtils{
             }
             if(ssiApp.getHouseholdCompositionHistory().size()>1){
                 ssiApp.getHouseholdCompositionHistory().entrySet().stream().skip(1).forEach(p -> {
-                    if(DateUtils.historyDateStringToLDT(p.getKey()).toLocalDate().compareTo(currentDate.minusMonths(1).withDayOfMonth(1)) > 0){
+                    if(DateUtils.historyDateStringToLDT(p.getKey()).toLocalDate().compareTo(startOfPayment) > 0){
                         updatePaymentCredential(DateUtils.historyDateStringToLDT(p.getKey()), "household", null, p.getValue(), null,  changedCredentials);
                     }
                 });
@@ -436,8 +449,14 @@ public class MonitorUtils extends EthAppUtils{
         if(ssiApp.getSalariesRHistory()!=null){
             credHistoriesMap.put("salaries", ssiApp.getSalariesRHistory());
         }
+        if(ssiApp.getFarmingRHistory()!=null){
+            credHistoriesMap.put("farming", ssiApp.getFarmingRHistory());
+        }
         if(ssiApp.getOtherBenefitsRHistory()!=null){
             credHistoriesMap.put("otherBnfts", ssiApp.getOtherBenefitsRHistory());
+        }
+        if(ssiApp.getUnemploymentBenefitRHistory()!=null){
+            credHistoriesMap.put("unemploymentBnft", ssiApp.getUnemploymentBenefitRHistory());
         }
         if(ssiApp.getFreelanceRHistory()!=null){
             credHistoriesMap.put("freelance", ssiApp.getFreelanceRHistory());
@@ -471,8 +490,14 @@ public class MonitorUtils extends EthAppUtils{
             case "salaries":
             ssiApp.setSalariesR(value);
             break;
+            case "farming":
+            ssiApp.setFarmingR(value);
+            break;
             case "otherBnfts":
             ssiApp.setOtherBenefitsR(value);
+            break;
+            case "unemploymentBnft":
+            ssiApp.setUnemploymentBenefitR(value);
             break;
             case "freelance":
             ssiApp.setFreelanceR(value);

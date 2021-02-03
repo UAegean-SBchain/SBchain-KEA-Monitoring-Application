@@ -85,7 +85,7 @@ public class TestMonitorUtils extends TestUtils {
         ssiApps.add(ssiApp4);
         ssiApps.add(ssiApp5);
 
-        BigDecimal payment = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp1, ssiApps, LocalDate.now());
+        BigDecimal payment = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp1, ssiApps, LocalDate.now(), false);
 
         log.info("xxxxxxxxxxxxxxxxxxx payment :{}", payment);
 
@@ -108,7 +108,7 @@ public class TestMonitorUtils extends TestUtils {
         ssiApps.add(ssiApp4);
         ssiApps.add(ssiApp5);
 
-        BigDecimal payment = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp1, ssiApps, LocalDate.now());
+        BigDecimal payment = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp1, ssiApps, LocalDate.now(), false);
 
         log.info("xxxxxxxxxxxxxxxxxxx payment :{}", payment);
 
@@ -127,7 +127,7 @@ public class TestMonitorUtils extends TestUtils {
         ssiApps.add(ssiApp2);
         ssiApps.add(ssiApp3);
 
-        BigDecimal payment = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp1, ssiApps, LocalDate.now());
+        BigDecimal payment = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp1, ssiApps, LocalDate.now(), false);
 
         log.info("xxxxxxxxxxxxxxxxxxx payment :{}", payment);
         //log.info("ssiApp after :{}", ssiApp);
@@ -147,7 +147,7 @@ public class TestMonitorUtils extends TestUtils {
         ssiApps.add(ssiApp2);
         ssiApps.add(ssiApp3);
 
-        BigDecimal payment = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp1, ssiApps, LocalDate.now());
+        BigDecimal payment = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp1, ssiApps, LocalDate.now(), false);
 
         log.info("xxxxxxxxxxxxxxxxxxx payment :{}", payment);
         //log.info("ssiApp after :{}", ssiApp);
@@ -193,7 +193,7 @@ public class TestMonitorUtils extends TestUtils {
         ssiApps.add(ssiApp4);
         ssiApps.add(ssiApp5);
 
-        BigDecimal payment = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp1, ssiApps, LocalDate.now());
+        BigDecimal payment = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp1, ssiApps, LocalDate.now(), false);
 
         log.info("xxxxxxxxxxxxxxxxxxx payment :{}", payment);
 

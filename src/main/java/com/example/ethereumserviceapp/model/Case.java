@@ -22,9 +22,12 @@ public class Case {
     private State state;
     private LinkedHashMap<LocalDateTime, State> history;
     private LinkedHashMap<LocalDateTime, BigDecimal> dailyBenefit;
+    private LinkedHashMap<LocalDateTime, BigDecimal> dailySums;
+    private List<CaseHistory> caseHistory;
     private List<CasePayment> paymentHistory;
     private BigDecimal offset;
     private String rejectionDate;
     // helper value does not get saved in BC
     private BigDecimal dailyValue;
+    private BigDecimal dailySum;
 }

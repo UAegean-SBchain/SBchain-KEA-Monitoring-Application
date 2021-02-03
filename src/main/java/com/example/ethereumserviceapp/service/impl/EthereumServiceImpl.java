@@ -8,10 +8,8 @@ package com.example.ethereumserviceapp.service.impl;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -221,7 +219,11 @@ public class EthereumServiceImpl implements EthereumService {
                 byte[] uuid = ByteConverters.stringToBytes16(monitoredCase.getUuid()).getValue();
                 String functionCall = this.getContract()
                         .updateCase(uuid,
-                                BigInteger.valueOf(millis), BigInteger.valueOf(monitoredCase.getState().getValue()), (monitoredCase.getDailyValue().multiply(BigDecimal.valueOf(100)).toBigInteger()), (monitoredCase.getOffset().multiply(BigDecimal.valueOf(100)).toBigInteger()), BigInteger.valueOf(rjctMillis) )
+                                BigInteger.valueOf(millis), BigInteger.valueOf(monitoredCase.getState().getValue()),
+                                 (monitoredCase.getDailyValue().multiply(BigDecimal.valueOf(100)).toBigInteger()),
+                                 (monitoredCase.getDailySum().multiply(BigDecimal.valueOf(100)).toBigInteger()), 
+                                 (monitoredCase.getOffset().multiply(BigDecimal.valueOf(100)).toBigInteger()),
+                                  BigInteger.valueOf(rjctMillis) )
                         .encodeFunctionCall();
                 String txHash = this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
                         contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();

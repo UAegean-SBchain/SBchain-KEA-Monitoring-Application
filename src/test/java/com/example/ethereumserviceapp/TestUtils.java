@@ -30,6 +30,7 @@ public class TestUtils {
         Integer daysOfCurrentPayment = monthDays(LocalDateTime.now().minusMonths(1));
         Integer daysOfMinus2 = monthDays(LocalDateTime.now().minusMonths(2));
         Integer daysOfMinus3 = monthDays(LocalDateTime.now().minusMonths(3));
+        LocalDateTime currentDate = LocalDateTime.now();
 
         if(asyncRejectedDate != null && !"".equals(asyncRejectedDate)){
             monitoredCase.setRejectionDate(asyncRejectedDate);
@@ -78,6 +79,11 @@ public class TestUtils {
             for(int i=1; i<=daysOfCurrentPayment; i++){
                 history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.ACCEPTED);
                 dailyValue.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), BigDecimal.valueOf(15));
+            }
+            for(int i=1; i<currentDate.getDayOfMonth(); i++){
+                history.put(currentDate.withDayOfMonth(i), State.ACCEPTED);
+                dailyValue.put(currentDate.withDayOfMonth(i), BigDecimal.valueOf(15));
+
             }
         }
         
