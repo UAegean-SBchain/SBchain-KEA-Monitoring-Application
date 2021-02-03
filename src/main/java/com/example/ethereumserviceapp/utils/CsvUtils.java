@@ -4,6 +4,7 @@ import java.io.*;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -250,6 +251,7 @@ public class CsvUtils {
         principalApp.setTaxisDateOfBirth(principalMember.getDateOfBirth());
         principalApp.setHouseholdPrincipal(principalMember);
 
+        principalApp.setTime(LocalDate.now());
         householdAppList.add(principalApp);
         householdMemberList.add(principalMember);
 
@@ -257,6 +259,7 @@ public class CsvUtils {
         for (int i = 0; i < householdSize - 1; i++) {
 
             SsiApplication memberApp = makeRandomApplicant();
+            memberApp.setTime(LocalDate.now());
             memberApp.setHouseholdPrincipal(principalMember);
             // initially everyone is an adult, minors are added later based on percentages
             memberApp.setTaxisDateOfBirth(getAdultDateOfBirth());
@@ -392,9 +395,9 @@ public class CsvUtils {
         //employed
         randomSsiApp.setEmployed("TRUE");
         //oaedId
-        randomSsiApp.setOaedId("null");
+        randomSsiApp.setOaedId("");
         //oaedDate
-        randomSsiApp.setOaedDate("null");
+        randomSsiApp.setOaedDate("");
         //email
         randomSsiApp.setEmail("xxx@gmail.com");
         //mobilePhone
@@ -412,6 +415,8 @@ public class CsvUtils {
         randomSsiApp.setParenthood("FALSE");
         //custody
         randomSsiApp.setCustody("FALSE");
+        //
+        randomSsiApp.setAdditionalAdults("0");
         return randomSsiApp;
     }
 
@@ -646,6 +651,22 @@ public class CsvUtils {
         application.setVehicleValueA(String.valueOf(0));
         application.setInvestmentsA(String.valueOf(0));
         //totalIncome
+        Double total =   Double.parseDouble(application.getEkasR() == null ? "0.0" : application.getEkasR());
+        Double.parseDouble(application.getDepositsA() == null ? "0.0" : application.getDepositsA());
+        Double.parseDouble(application.getDepositInterestA() == null ? "0.0" : application.getDepositInterestA());
+        Double.parseDouble(application.getDomesticRealEstateA() == null ? "0.0" : application.getDomesticRealEstateA());
+        Double.parseDouble(application.getErgomeR() == null ? "0.0" : application.getErgomeR());
+        Double.parseDouble(application.getFarmingR() == null ? "0.0" : application.getFarmingR());
+        Double.parseDouble(application.getForeignRealEstateA() == null ? "0.0" : application.getForeignRealEstateA());
+        Double.parseDouble(application.getFreelanceR() == null ? "0.0" : application.getFreelanceR());
+        Double.parseDouble(application.getFreelanceR() == null ? "0.0" : application.getFreelanceR());
+        Double.parseDouble(application.getInvestmentsA() == null ? "0.0" : application.getInvestmentsA());
+        Double.parseDouble(application.getOtherBenefitsR() == null ? "0.0" : application.getOtherBenefitsR());
+        Double.parseDouble(application.getOtherIncomeR() == null ? "0.0" : application.getOtherIncomeR());
+        Double.parseDouble(application.getRentIncomeR() == null ? "0.0" : application.getRentIncomeR());
+        Double.parseDouble(application.getSalariesR() == null ? "0.0" : application.getSalariesR());
+
+        application.setTotalIncome(total.toString());
         return maxAmount;
     }
 
@@ -682,8 +703,8 @@ public class CsvUtils {
                     appList.get(i).setEmploymentStatus("unemployed");
                     appList.get(i).setParenthood("FALSE");
                     appList.get(i).setCustody("FALSE");
-                    appList.get(i).setOaedDate("null");
-                    appList.get(i).setOaedId("null");
+                    appList.get(i).setOaedDate("");
+                    appList.get(i).setOaedId("");
                     childrenAdded++;
                 }
             }
@@ -855,7 +876,7 @@ public class CsvUtils {
                 //            "savedInDb",
                 oneLine.append("OK").append(CSV_SEPARATOR);
                 //            "status",
-                oneLine.append(app.getStatus()).append(CSV_SEPARATOR);
+                oneLine.append("ACCEPTED").append(CSV_SEPARATOR);
                 //            "submittedMunicipality",
                 oneLine.append("Dimos Paianias").append(CSV_SEPARATOR);
                 //            "time",

@@ -125,7 +125,7 @@ public class TestCsvUtils {
 
     @Test
     public void testMakeHouseholdAppCSV() {
-        List<SsiApplication> houshold = CsvUtils.generateMockData(50);
+        List<SsiApplication> houshold = CsvUtils.generateMockData(200);
         CsvUtils.writeToCSV(houshold);
 
     }
@@ -144,7 +144,7 @@ public class TestCsvUtils {
                     SsiApplication aggregatedSsiApp = EthAppUtils.aggregateHouseholdValues(householdApps);
                     //economics check
                     if (EthAppUtils.getTotalMonthlyValue(aggregatedSsiApp, null).compareTo(BigDecimal.ZERO) == 0) {
-                        log.info("*****REJECTED - financial data restriction (total household income > payment thresshold)");
+                        log.info("*****REJECTEthAppUtils.getTotalMonthlyValue(aggregatedSsiApp, null)ED - financial data restriction (total household income > payment thresshold)");
                     }
                     assertTrue(EthAppUtils.getTotalMonthlyValue(aggregatedSsiApp, null).compareTo(BigDecimal.ZERO) != 0);
 
