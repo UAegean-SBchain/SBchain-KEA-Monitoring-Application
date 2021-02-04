@@ -106,12 +106,12 @@ public class ExampleRunTest extends TestUtils{
 
     private SsiApplication generateExampleSsiApp1(){
         SsiApplication ssiApp = new SsiApplication();
-        ssiApp.setOtherBenefitsR("500");
+        ssiApp.setOtherBenefitsR("700");
         LinkedHashMap<String, String> otherBenHistory = new LinkedHashMap<>();
         otherBenHistory.put(DateUtils.dateToString(LocalDateTime.of(2020, 12, 15, 00, 00, 00)), "500");
         otherBenHistory.put(DateUtils.dateToString(LocalDateTime.of(2021, 1, 17, 00, 00, 00)), "700");
         ssiApp.setOtherBenefitsRHistory(otherBenHistory);
-        ssiApp.setUnemploymentBenefitR("480");
+        ssiApp.setUnemploymentBenefitR("0");
         LinkedHashMap<String , String> unmplBnftHistory = new LinkedHashMap<>();
         unmplBnftHistory.put(DateUtils.dateToString(LocalDateTime.of(2020, 12, 15, 00, 00, 00)), "480");
         unmplBnftHistory.put(DateUtils.dateToString(LocalDateTime.of(2021, 1, 10, 00, 00, 00)), "0");
@@ -329,7 +329,7 @@ public class ExampleRunTest extends TestUtils{
         //ssiApp.setSalariesR("0.5");
         ssiApp.setPensionsR("2760");
         LinkedHashMap<String, String> pensionsHistory = new LinkedHashMap<>();
-        pensionsHistory.put(DateUtils.dateToString(LocalDateTime.of(2020, 12, 15, 00, 00, 00)), "0");
+        pensionsHistory.put(DateUtils.dateToString(LocalDateTime.of(2020, 12, 15, 00, 00, 00)), "2760");
         ssiApp.setPensionsRHistory(pensionsHistory);
         ssiApp.setTaxisDateOfBirth(DateUtils.dateToString(LocalDate.of(1948, 11, 14)));
         ssiApp.setMeterNumber("123456789");
@@ -399,9 +399,10 @@ public class ExampleRunTest extends TestUtils{
         } else {
             monitoredCase.setRejectionDate("");
         }
-
+        int count = 0;
         for(int i=startDateTime.getDayOfMonth(); i<=daysOfMinus2; i++){
-            BigDecimal dailySum = new BigDecimal(0.03).multiply(BigDecimal.valueOf(i));
+            count++;
+            BigDecimal dailySum = new BigDecimal(0.03).multiply(BigDecimal.valueOf(count));
             CaseHistory ch = new CaseHistory();
             ch.setDailyBenefit(new BigDecimal(0.03));
             ch.setDailySum(dailySum);

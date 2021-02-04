@@ -242,7 +242,7 @@ public class MonitorServiceImpl implements MonitorService {
                     monitoredCase.setDailySum(dailySum);
 
                     if (isTest) {
-                        ExportCaseToExcel excelExporter = new ExportCaseToExcel(monitoredCase);
+                        ExportCaseToExcel excelExporter = new ExportCaseToExcel(monitoredCase, allHouseholdApps);
                         try {
                             excelExporter.export();
                         } catch (IOException e1) {
