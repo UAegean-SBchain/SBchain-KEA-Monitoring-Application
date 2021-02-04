@@ -116,7 +116,6 @@ public class SsiApplication {
     private LinkedHashMap<String, String> farmingRHistory;
     private LinkedHashMap<String, String> freelanceRHistory;
     private LinkedHashMap<String, String> otherBenefitsRHistory;
-    private LinkedHashMap<String, String> unemploymentBenefitHistory;
     private LinkedHashMap<String, String> depositsAHistory;
     private LinkedHashMap<String, String> domesticRealEstateAHistory;
     private LinkedHashMap<String, String> foreignRealEstateAHistory;
