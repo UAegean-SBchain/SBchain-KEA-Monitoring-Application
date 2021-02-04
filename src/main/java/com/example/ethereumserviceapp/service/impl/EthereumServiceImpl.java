@@ -220,9 +220,9 @@ public class EthereumServiceImpl implements EthereumService {
                 String functionCall = this.getContract()
                         .updateCase(uuid,
                                 BigInteger.valueOf(millis), BigInteger.valueOf(monitoredCase.getState().getValue()),
-                                 (monitoredCase.getDailyValue().multiply(BigDecimal.valueOf(100)).toBigInteger()),
-                                 (monitoredCase.getDailySum().multiply(BigDecimal.valueOf(100)).toBigInteger()), 
-                                 (monitoredCase.getOffset().multiply(BigDecimal.valueOf(100)).toBigInteger()),
+                                 (monitoredCase.getDailyValue() != null? monitoredCase.getDailyValue().multiply(BigDecimal.valueOf(100)).toBigInteger() : BigInteger.valueOf(0)),
+                                 (monitoredCase.getDailySum() != null? monitoredCase.getDailySum().multiply(BigDecimal.valueOf(100)).toBigInteger() : BigInteger.valueOf(0)), 
+                                 (monitoredCase.getOffset() != null? monitoredCase.getOffset().multiply(BigDecimal.valueOf(100)).toBigInteger() : BigInteger.valueOf(0)),
                                   BigInteger.valueOf(rjctMillis) )
                         .encodeFunctionCall();
                 String txHash = this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
