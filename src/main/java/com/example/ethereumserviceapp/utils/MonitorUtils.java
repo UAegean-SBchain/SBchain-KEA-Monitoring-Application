@@ -79,6 +79,9 @@ public class MonitorUtils extends EthAppUtils{
                 break;
             }
         }
+
+        //this method recalculates all offset so remove any current offset
+        monitoredCase.setOffset(BigDecimal.ZERO);
  
          //if the case should have been rejected from the start then add all payments as offset
          if(isAsyncRejected && DateUtils.dateStringToLD(monitoredCase.getRejectionDate()).compareTo(firstAcceptedDate) <=0){
