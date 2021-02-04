@@ -254,15 +254,13 @@ public class MonitorUtils extends EthAppUtils{
             && e.getKey().toLocalDate().compareTo(endOfPayment) <=0 
             && e.getValue().equals(State.ACCEPTED))
             .map(x -> x.getKey().toLocalDate()).collect(Collectors.toList());
-
-            log.info("111111111111111111 accepted dates :{}", acceptedDates);
         
         //if calculating daily sums then add the current date to the accepted dates since it's called only when case has been accepted
         if(isDailySum){
             acceptedDates.add(currentDate);
         }
 
-        SsiApplication ssiAppProjection = filterHHAndAggregate(householdApps, ssiApp.getHouseholdComposition());       
+        SsiApplication ssiAppProjection = filterHHAndAggregate(householdApps, ssiApp.getHouseholdComposition());  
         BigDecimal projectedPayment = calculatePayment(fullMonthDays, acceptedDates.size(), ssiAppProjection, currentDate);
         List<PaymentCredential> changedCredentials = latestAlteredCredentials(ssiApp, householdApps, startOfPayment);
 

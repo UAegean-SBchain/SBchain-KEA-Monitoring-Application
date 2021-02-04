@@ -53,6 +53,9 @@ public class EthAppUtils {
         ssiApp.setForeignRealEstateA(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getForeignRealEstateA() == null? "0" : x.getForeignRealEstateA()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add)));
 
+        ssiApp.setUnemploymentBenefitR(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getUnemploymentBenefitR() == null? "0" : x.getUnemploymentBenefitR()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)));
+
         return ssiApp;
     }
 
@@ -112,7 +115,7 @@ public class EthAppUtils {
             .add((BigDecimal.valueOf(adultCount).multiply(BigDecimal.valueOf(100))
             .add(BigDecimal.valueOf(minorCount).multiply(BigDecimal.valueOf(50))))));
 
-            BigDecimal salaries = new BigDecimal(ssiApp.getSalariesR()== null? "0" : ssiApp.getSalariesR()).subtract(new BigDecimal(ssiApp.getSalariesR()== null? "0" : ssiApp.getSalariesR()).multiply(BigDecimal.valueOf(0.2)));
+            BigDecimal salaries = new BigDecimal(ssiApp.getSalariesR()== null? "0" : ssiApp.getSalariesR());//.subtract(new BigDecimal(ssiApp.getSalariesR()== null? "0" : ssiApp.getSalariesR()).multiply(BigDecimal.valueOf(0.2)));
             BigDecimal pensions = new BigDecimal(ssiApp.getPensionsR() == null? "0" : ssiApp.getPensionsR());
             BigDecimal farming = new BigDecimal(ssiApp.getFarmingR() == null? "0" : ssiApp.getFarmingR());
             BigDecimal freelance = new BigDecimal(ssiApp.getFreelanceR() == null? "0" : ssiApp.getFreelanceR());
@@ -120,7 +123,10 @@ public class EthAppUtils {
             BigDecimal deposits = new BigDecimal(ssiApp.getDepositsA() == null? "0" : ssiApp.getDepositsA());
             BigDecimal domesticRe = new BigDecimal(ssiApp.getDomesticRealEstateA() == null? "0" : ssiApp.getDomesticRealEstateA());
             BigDecimal foreignRe = new BigDecimal(ssiApp.getForeignRealEstateA() == null? "0" : ssiApp.getForeignRealEstateA());
+            BigDecimal unemplBenefit = new BigDecimal(ssiApp.getUnemploymentBenefitR() == null? "0" : ssiApp.getUnemploymentBenefitR());
             
+        //log.info("salaries :{}, pensions :{}, farming :{}, freelance :{}, otherBnfts :{}, deposits :{}, domesticRe :{}, foreignRe :{}, unemplBenefit :{}", salaries, pensions, farming, freelance, otherBnfts, deposits, domesticRe, foreignRe, unemplBenefit);
+
             BigDecimal totalIncome = (salaries.add( 
                 pensions).add(
                 farming).add(
@@ -128,7 +134,8 @@ public class EthAppUtils {
                 otherBnfts).add(
                 deposits).add(
                 domesticRe).add(
-                foreignRe)
+                foreignRe).add(
+                unemplBenefit)
                 ).divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
 
         log.info("payment check payment thresshold :{}, total income :{}", paymentThresshold, totalIncome);
