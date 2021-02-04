@@ -3,9 +3,9 @@ package com.example.ethereumserviceapp.utils;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.example.ethereumserviceapp.model.Case;
@@ -48,21 +48,6 @@ public class ExportCaseToExcel {
         for(int i=0; i<headerStr.size(); i++){
             createCell(row, i, headerStr.get(i), style);     
         }
-        //createCell(row, cellNum, headerStr, style);      
-        // createCell(row, 1, "Latest Date", style);       
-        // createCell(row, 2, "Latest State", style);    
-        // createCell(row, 3, "Offset", style);
-        // createCell(row, 4, "Rejection Date", style);
-
-        // createCell(row, 6, "History Date", style);
-        // createCell(row, 7, "History State", style);
-        // createCell(row, 8, "History Daily Benefit", style);
-        // createCell(row, 9, "History Daily Sum", style);
-
-        // createCell(row, 11, "Payment Date", style);
-        // createCell(row, 12, "Payment State", style);
-        // createCell(row, 13, "Payment Value", style);
-         
     }
      
     private void createCell(Row row, int columnCount, Object value, CellStyle style) {
@@ -100,7 +85,7 @@ public class ExportCaseToExcel {
         "otherIncomeR",	"ergomeR",	"depositInterestA",	"depositsA",	"domesticRealEstateA",	"foreignRealEstateA",	"vehicleValueA",	"investmentsA",
         "totalIncome",	"savedInDb",	"status",	"submittedMunicipality",	"time",	"householdPrincipal",	"householdComposition",	"householdCompositionHistory",
         "salariesRHistory",	"pensionsRHistory",	"farmingRHistory",	"freelanceRHistory",	"otherBenefitsRHistory",	"depositsAHistory",	"domesticRealEstateAHistory",
-        "foreignRealEstateAHistory",	"monthlyGuarantee",	"totalIncome_3",	"monthlyIncome",	"monthlyAid",	"savedInDb_4",	"status_5");
+        "foreignRealEstateAHistory", "unemploymentBenefitRHistory",	"monthlyGuarantee",	"totalIncome_3",	"monthlyIncome",	"monthlyAid",	"savedInDb_4",	"status_5");
         writeHeaderLine(rowCount, ssiAppHeaders);
         int columnCount = 0;
 
@@ -251,22 +236,24 @@ public class ExportCaseToExcel {
             //            "householdComposition",
             createCell(row, columnCount++, makeHouseHoldString(app.getHouseholdComposition()), style);
             //            "householdCompositionHistory",
-            createCell(row, columnCount++, " ", style);
+            createCell(row, columnCount++, makeFinancialHistoryString(app.getSalariesRHistory()), style);
             //            "salariesRHistory",
-            createCell(row, columnCount++, " ", style);
+            createCell(row, columnCount++, makeFinancialHistoryString(app.getPensionsRHistory()), style);
             //            "pensionsRHistory",
-            createCell(row, columnCount++, " ", style);
+            createCell(row, columnCount++, makeFinancialHistoryString(app.getFarmingRHistory()), style);
             //            "farmingRHistory",
-            createCell(row, columnCount++, " ", style);
+            createCell(row, columnCount++, makeFinancialHistoryString(app.getFreelanceRHistory()), style);
             //            "freelanceRHistory",
-            createCell(row, columnCount++, " ", style);
+            createCell(row, columnCount++, makeFinancialHistoryString(app.getOtherBenefitsRHistory()), style);
             //            "otherBenefitsRHistory",
-            createCell(row, columnCount++, " ", style);
+            createCell(row, columnCount++, makeFinancialHistoryString(app.getDepositsAHistory()), style);
             //            "depositsAHistory",
-            createCell(row, columnCount++, " ", style);
+            createCell(row, columnCount++, makeFinancialHistoryString(app.getDomesticRealEstateAHistory()), style);
             //            "domesticRealEstateAHistory",
-            createCell(row, columnCount++, " ", style);
+            createCell(row, columnCount++, makeFinancialHistoryString(app.getForeignRealEstateAHistory()), style);
             //            "foreignRealEstateAHistory",
+            createCell(row, columnCount++, makeFinancialHistoryString(app.getUnemploymentBenefitRHistory()), style);
+            //            "unemploymentBenefitRHistory",
             createCell(row, columnCount++, " ", style);
             //            "monthlyGuarantee",
             createCell(row, columnCount++, " ", style);
@@ -338,18 +325,6 @@ public class ExportCaseToExcel {
             createCell(payRow, columnCount++, String.valueOf(ph.getPayment()), style);
         }
         
-                 
-        // for (Case user : listUsers) {
-        //     Row row = sheet.createRow(rowCount++);
-        //     int columnCount = 0;
-             
-        //     createCell(row, columnCount++, user.getId(), style);
-        //     createCell(row, columnCount++, user.getEmail(), style);
-        //     createCell(row, columnCount++, user.getFullName(), style);
-        //     createCell(row, columnCount++, user.getRoles().toString(), style);
-        //     createCell(row, columnCount++, user.isEnabled(), style);
-             
-        // }
     }
      
     public void export() throws IOException {
@@ -398,6 +373,16 @@ public class ExportCaseToExcel {
                 .append(member.getAfm()).append(";")
                 .append(StringUtils.isEmpty(member.getDateOfBirth()) ? "" : member.getDateOfBirth()).append(";")
         ;
+        return sb.toString();
+    }
+
+    public static String makeFinancialHistoryString(Map<String, String> finHistory){
+
+        StringBuilder sb = new StringBuilder();
+        if(finHistory != null && !finHistory.isEmpty()){
+            finHistory.forEach((k,v)-> sb.append(k).append("==").append(v).append("|"));
+        }
+        
         return sb.toString();
     }
 }

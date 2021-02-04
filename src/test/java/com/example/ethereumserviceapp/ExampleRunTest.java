@@ -83,7 +83,7 @@ public class ExampleRunTest extends TestUtils{
 
         LocalDate startDate = exampleApp1.getTime();
 
-        Case exampleCase = generateExampleCase("2WiYi1", State.ACCEPTED, false, false, "", LocalDate.now(), startDate);
+        Case exampleCase = generateExampleCase("2WiYi1", State.ACCEPTED, false, false, "", runDate.toLocalDate(), startDate);
 
         Mockito.when(ethServ.getAllCaseUUID()).thenReturn(uuids);
         Mockito.when(ethServ.getCaseByUUID(anyString())).thenReturn(Optional.of(exampleCase));
@@ -269,7 +269,7 @@ public class ExampleRunTest extends TestUtils{
         ssiApp.setTime(LocalDate.of(2020, 12, 15));
 
         LinkedHashMap<String , String> unmplBnftHistory = new LinkedHashMap<>();
-        unmplBnftHistory.put(DateUtils.dateToString(LocalDateTime.of(2020, 12, 15, 00, 00, 00)), "480");
+        unmplBnftHistory.put(DateUtils.dateToString(LocalDateTime.of(2020, 12, 15, 00, 00, 00)), "0");
         ssiApp.setUnemploymentBenefitRHistory(unmplBnftHistory);
 
         HouseholdMember member1 = new HouseholdMember();
