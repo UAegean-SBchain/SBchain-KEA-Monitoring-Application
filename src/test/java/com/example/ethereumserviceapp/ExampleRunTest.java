@@ -25,6 +25,7 @@ import com.example.ethereumserviceapp.model.State;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.repository.SsiApplicationRepository;
 import com.example.ethereumserviceapp.service.EthereumService;
+import com.example.ethereumserviceapp.service.MockServices;
 import com.example.ethereumserviceapp.service.MongoService;
 import com.example.ethereumserviceapp.service.MonitorService;
 import com.example.ethereumserviceapp.service.impl.MonitorServiceImpl;
@@ -52,12 +53,15 @@ public class ExampleRunTest extends TestUtils{
     @Mock
     MongoService mongoServ;
 
+    @Mock
+    MockServices mockServ;
+
     @Test
    public void executeExample(){
 
         LocalDateTime runDate = LocalDateTime.of(2021, 2, 4, 12, 00, 00);
 
-        MonitorService monServ = new MonitorServiceImpl(mongoServ, ethServ);
+        MonitorService monServ = new MonitorServiceImpl(mongoServ, ethServ, mockServ);
 
         List<String> uuids = new ArrayList<>();
         uuids.add("2WiYi1");

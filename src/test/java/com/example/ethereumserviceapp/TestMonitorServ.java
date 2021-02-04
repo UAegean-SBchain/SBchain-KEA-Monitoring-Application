@@ -9,29 +9,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 
-import com.example.ethereumserviceapp.model.Case;
-import com.example.ethereumserviceapp.model.CasePayment;
 import com.example.ethereumserviceapp.model.CredsAndExp;
-import com.example.ethereumserviceapp.model.HouseholdMember;
 import com.example.ethereumserviceapp.model.State;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.repository.SsiApplicationRepository;
 import com.example.ethereumserviceapp.service.EthereumService;
+import com.example.ethereumserviceapp.service.MockServices;
 import com.example.ethereumserviceapp.service.MongoService;
 import com.example.ethereumserviceapp.service.MonitorService;
 import com.example.ethereumserviceapp.service.impl.EthereumServiceImpl;
@@ -40,15 +33,12 @@ import com.example.ethereumserviceapp.service.impl.MonitorServiceImpl;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.build.Plugin.Engine.Source.Empty;
 
 /**
 *
@@ -67,11 +57,14 @@ public class TestMonitorServ extends TestUtils{
    @Mock
    MongoService mongoServ;
 
+   @Mock
+   MockServices mockServ;
+
    @Test
    public void testGetBallance() throws IOException {
        MongoService monogServ = new MongoServiceImpl(rep);
        EthereumService ethServ = new EthereumServiceImpl();
-       MonitorService monServ = new MonitorServiceImpl(monogServ, ethServ);
+       MonitorService monServ = new MonitorServiceImpl(monogServ, ethServ, mockServ);
 
 //        monServ.startScheduledMonitoring();
 
@@ -82,7 +75,7 @@ public class TestMonitorServ extends TestUtils{
    @Test
    public void testStartMonitoringAcceptedNoOffset(){
 
-       MonitorService monServ = new MonitorServiceImpl(mongoServ, ethServ);
+       MonitorService monServ = new MonitorServiceImpl(mongoServ, ethServ, mockServ);
 
        List<String> uuids = new ArrayList<>();
        uuids.add("2WiYi1");
