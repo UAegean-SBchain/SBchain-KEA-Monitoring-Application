@@ -851,7 +851,7 @@ public class CsvUtils {
                 //rentIncomeR
                 oneLine.append(app.getUnemploymentBenefitR()).append(CSV_SEPARATOR);
                 //unemploymentBenefitR
-                oneLine.append(app.getUnemploymentBenefitR()).append(CSV_SEPARATOR);
+                oneLine.append(app.getOtherBenefitsR()).append(CSV_SEPARATOR);
                 //otherBenefitsR
                 oneLine.append(app.getEkasR()).append(CSV_SEPARATOR);
                 //ekasR
