@@ -31,6 +31,7 @@ import com.example.ethereumserviceapp.model.HouseholdMember;
 import com.example.ethereumserviceapp.model.State;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.service.EthereumService;
+import com.example.ethereumserviceapp.service.MockServices;
 import com.example.ethereumserviceapp.service.MongoService;
 import com.example.ethereumserviceapp.service.MonitorService;
 import com.example.ethereumserviceapp.utils.DateUtils;
@@ -56,10 +57,13 @@ public class MonitorServiceImpl implements MonitorService {
 
     private EthereumService ethServ;
 
+    private MockServices mockServ;
+
     @Autowired
-    public MonitorServiceImpl(MongoService mongoS, EthereumService ethServ) {
+    public MonitorServiceImpl(MongoService mongoS, EthereumService ethServ, MockServices mockServices) {
         this.mongoServ = mongoS;
         this.ethServ = ethServ;
+        this.mockServ = mockServices;
     }
 
     MonitorUtils monitorUtils;
