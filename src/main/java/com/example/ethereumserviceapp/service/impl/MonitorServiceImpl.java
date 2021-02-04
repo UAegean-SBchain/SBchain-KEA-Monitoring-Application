@@ -208,13 +208,18 @@ public class MonitorServiceImpl implements MonitorService {
             // if(sync && theCase.get().getState().equals(state)){
             // sync = false;
             // }
-            monitoredCase.setState(state);
+            
             monitoredCase.setDate(currentDate);
             if (ssiApp != null) {
                 List<SsiApplication> allHouseholdApps = mongoServ
                         .findByTaxisAfmIn(EthAppUtils.fetchAllHouseholdAfms(ssiApp));
                 // BigDecimal offsetBefore = theCase.get().getOffset();
-                MonitorUtils.calculateOffset(monitoredCase, ssiApp, allHouseholdApps);
+                if(!monitoredCase.getState().equals(State.NONPRINCIPAL)){
+                    MonitorUtils.calculateOffset(monitoredCase, ssiApp, allHouseholdApps);
+                }
+
+                monitoredCase.setState(state);
+                
                 if (state.equals(State.ACCEPTED)) {
 
                     // find the dates the case is accepted during this month and add 1 for the
