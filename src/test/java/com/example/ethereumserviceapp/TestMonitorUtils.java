@@ -32,6 +32,7 @@ public class TestMonitorUtils extends TestUtils {
     public void testOffsetPayment(){
 
         Case monitoredCase = generateMockCase("2WiYi1", State.ACCEPTED, false, false, "");
+        //monitoredCase.setOffset(BigDecimal.valueOf(20));
         SsiApplication ssiApp1 = generateSsiAppAltered1();
         SsiApplication ssiApp2 = generateSsiAppAltered2();
         SsiApplication ssiApp3 = generateSsiAppAltered3();

@@ -55,6 +55,8 @@ public class ExampleRunTest extends TestUtils{
     @Test
    public void executeExample(){
 
+        LocalDateTime runDate = LocalDateTime.of(2021, 2, 4, 12, 00, 00);
+
         MonitorService monServ = new MonitorServiceImpl(mongoServ, ethServ);
 
         List<String> uuids = new ArrayList<>();
@@ -67,7 +69,7 @@ public class ExampleRunTest extends TestUtils{
         mockList.add(generateExampleSsiApp3());
         mockList.add(generateExampleSsiApp4());
 
-        String expDateStr = String.valueOf(LocalDateTime.now().plusDays(1).toEpochSecond(ZoneOffset.UTC));
+        String expDateStr = String.valueOf(runDate.plusDays(1).toEpochSecond(ZoneOffset.UTC));
         CredsAndExp cred = new CredsAndExp();
         cred.setExp(expDateStr);
         cred.setId("2WiYi1");
@@ -92,7 +94,7 @@ public class ExampleRunTest extends TestUtils{
         //doNothing().when(ethServ).updateCase(any(), false);
 
         //monServ.startScheduledMonitoring();
-        monServ.startMonitoring(LocalDateTime.of(2021, 2, 4, 12, 00, 00), true);
+        monServ.startMonitoring(runDate, true);
 
         verify(ethServ, times(1)).updateCase(any());
 
