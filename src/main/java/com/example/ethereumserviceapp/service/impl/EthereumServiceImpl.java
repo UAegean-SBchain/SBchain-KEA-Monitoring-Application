@@ -23,6 +23,7 @@ import com.example.ethereumserviceapp.model.CasePayment;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.utils.ByteConverters;
 import com.example.ethereumserviceapp.utils.ContractBuilder;
+import com.example.ethereumserviceapp.utils.DateUtils;
 import com.example.ethereumserviceapp.utils.RandomIdGenerator;
 
 import org.springframework.stereotype.Service;
@@ -152,7 +153,12 @@ public class EthereumServiceImpl implements EthereumService {
         if (match.isPresent()) {
             byte[] byteUuid = ByteConverters.stringToBytes16(match.get()).getValue();
             try {
-                return Optional.of(ContractBuilder.buildCaseFromTuple(this.getContract().getCase(byteUuid).send()));
+                Optional<Case> theCase = Optional.of(ContractBuilder.buildCaseFromTuple(this.getContract().getCase(byteUuid).send()));
+
+                if(theCase.isPresent()){
+                    ContractBuilder.linkPaymentToCase(this.getContract().getPayment(byteUuid).send(), theCase.get());
+                }
+                return theCase;
             } catch (Exception ex) {
                 log.error(ex.getMessage());
             }
@@ -198,33 +204,40 @@ public class EthereumServiceImpl implements EthereumService {
     }
 
     @Override
-    public void updateCase(Case monitoredCase, Boolean sync) {
-        log.info("updateCase : synchronize transaction :{}", sync);
+    public void updateCase(Case monitoredCase) {
+        //log.info("updateCase : synchronize transaction :{}", sync);
         if (this.checkIfCaseExists(monitoredCase.getUuid())) {
             try {
 
                 log.info("updating case with uuid {} State {}", monitoredCase.getUuid(), monitoredCase.getState().getValue());
                 LocalDateTime time = monitoredCase.getDate();
+
                 ZonedDateTime zdt = time.atZone(ZoneId.of("America/Los_Angeles"));
                 long millis = zdt.toInstant().toEpochMilli();
+                long rjctMillis = monitoredCase.getRejectionDate().equals("")? 0L : DateUtils.historyDateStringToLDT(monitoredCase.getRejectionDate()).atZone(ZoneId.of("America/Los_Angeles")).toInstant().toEpochMilli();
+                
                 byte[] uuid = ByteConverters.stringToBytes16(monitoredCase.getUuid()).getValue();
                 String functionCall = this.getContract()
                         .updateCase(uuid,
-                                BigInteger.valueOf(millis), BigInteger.valueOf(monitoredCase.getState().getValue()), (monitoredCase.getOffset().multiply(BigDecimal.valueOf(100)).toBigInteger()) )
+                                BigInteger.valueOf(millis), BigInteger.valueOf(monitoredCase.getState().getValue()),
+                                 (monitoredCase.getDailyValue().multiply(BigDecimal.valueOf(100)).toBigInteger()),
+                                 (monitoredCase.getDailySum().multiply(BigDecimal.valueOf(100)).toBigInteger()), 
+                                 (monitoredCase.getOffset().multiply(BigDecimal.valueOf(100)).toBigInteger()),
+                                  BigInteger.valueOf(rjctMillis) )
                         .encodeFunctionCall();
                 String txHash = this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
                         contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
 
-                if(sync){
-                    TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(
-                        web3, 
-                        TransactionManager.DEFAULT_POLLING_FREQUENCY, 
-                        TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
-                    TransactionReceipt txReceipt = receiptProcessor.waitForTransactionReceipt(txHash);
-                }
+                // if(sync){
+                //     TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(
+                //         web3, 
+                //         TransactionManager.DEFAULT_POLLING_FREQUENCY, 
+                //         TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+                //     TransactionReceipt txReceipt = receiptProcessor.waitForTransactionReceipt(txHash);
+                // }
 
-            } catch (TransactionException e){
-                log.error(e.getMessage());
+            // } catch (TransactionException e){
+            //     log.error(e.getMessage());
             } catch (IOException ex) {
                 log.error(ex.getMessage());
             }

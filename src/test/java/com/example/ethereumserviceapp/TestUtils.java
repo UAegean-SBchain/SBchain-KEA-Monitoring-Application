@@ -1,6 +1,7 @@
 package com.example.ethereumserviceapp;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -18,16 +19,24 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TestUtils {
 
-    public Case generateMockCase(String uuid, State state, Boolean allRejected, Boolean isOld){
+    public Case generateMockCase(String uuid, State state, Boolean allRejected, Boolean isOld, String asyncRejectedDate){
         
         Case monitoredCase = new Case();
         monitoredCase.setUuid(uuid);
         monitoredCase.setDate(LocalDateTime.now().withDayOfMonth(1));
         monitoredCase.setState(state);
         LinkedHashMap<LocalDateTime, State> history = new LinkedHashMap<>();
+        LinkedHashMap<LocalDateTime, BigDecimal> dailyValue = new LinkedHashMap<>();
         Integer daysOfCurrentPayment = monthDays(LocalDateTime.now().minusMonths(1));
         Integer daysOfMinus2 = monthDays(LocalDateTime.now().minusMonths(2));
         Integer daysOfMinus3 = monthDays(LocalDateTime.now().minusMonths(3));
+        LocalDateTime currentDate = LocalDateTime.now();
+
+        if(asyncRejectedDate != null && !"".equals(asyncRejectedDate)){
+            monitoredCase.setRejectionDate(asyncRejectedDate);
+        } else {
+            monitoredCase.setRejectionDate("");
+        }
 
         if(isOld){
             history.put(LocalDateTime.now().minusMonths(6).minusDays(1), State.ACCEPTED);
@@ -61,12 +70,20 @@ public class TestUtils {
         } else {
             for(int i=1; i<=daysOfMinus3; i++){
                 history.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(i), State.ACCEPTED);
+                dailyValue.put(LocalDateTime.now().minusMonths(3).withDayOfMonth(i), BigDecimal.valueOf(15));
             }
             for(int i=1; i<=daysOfMinus2; i++){
                 history.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(i), State.ACCEPTED);
+                dailyValue.put(LocalDateTime.now().minusMonths(2).withDayOfMonth(i), BigDecimal.valueOf(15));
             }
             for(int i=1; i<=daysOfCurrentPayment; i++){
                 history.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), State.ACCEPTED);
+                dailyValue.put(LocalDateTime.now().minusMonths(1).withDayOfMonth(i), BigDecimal.valueOf(15));
+            }
+            for(int i=1; i<currentDate.getDayOfMonth(); i++){
+                history.put(currentDate.withDayOfMonth(i), State.ACCEPTED);
+                dailyValue.put(currentDate.withDayOfMonth(i), BigDecimal.valueOf(15));
+
             }
         }
         
@@ -115,7 +132,7 @@ public class TestUtils {
         ssiApp.setTaxisAfm("123456");
         //ssiApp.setSalariesR("0.5");
         ssiApp.setPensionsR("650");
-        ssiApp.setTaxisDateOfBirth("05/05/1953");
+        ssiApp.setTaxisDateOfBirth(DateUtils.dateToString(LocalDate.of(1953, 5, 5)));
         ssiApp.setMeterNumber("123456789");
         ssiApp.setIban("iban123456");
 
@@ -129,27 +146,27 @@ public class TestUtils {
         member1.setAfm("123456");
         member1.setName("Jimmy");
         member1.setSurname("Page");
-        member1.setDateOfBirth("05/05/1953");
+        member1.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1953, 5, 5)));
         HouseholdMember member2 = new HouseholdMember();
         member2.setAfm("678901");
         member2.setName("Richie");
         member2.setSurname("Blackmore");
-        member2.setDateOfBirth("12/08/1960");
+        member2.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1960, 8, 12)));
         HouseholdMember member3 = new HouseholdMember();
         member3.setAfm("164582");
         member3.setName("James");
         member3.setSurname("Hetfield");
-        member3.setDateOfBirth("19/09/2002");
+        member3.setDateOfBirth(DateUtils.dateToString(LocalDate.now().minusYears(18).minusMonths(2).withDayOfMonth(19)));
         HouseholdMember member4 = new HouseholdMember();
         member4.setAfm("789456");
         member4.setName("Rory");
         member4.setSurname("Gallagher");
-        member4.setDateOfBirth("24/10/1970");
+        member4.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1970, 10, 24)));
         HouseholdMember member5 = new HouseholdMember();
         member5.setAfm("456789");
         member5.setName("Jimmy");
         member5.setSurname("Hendrix");
-        member5.setDateOfBirth("14/05/1956");
+        member5.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1956, 5, 14)));
         List<HouseholdMember> household = new ArrayList<>();
         household.add(member1);
         household.add(member2);
@@ -185,7 +202,7 @@ public class TestUtils {
         LinkedHashMap<String, String> otherBenHistory = new LinkedHashMap<>();
         otherBenHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1)), "150");
         //otherBenHistory.put(LocalDateTime.of(2020, 6, 15, 1, 1, 1), "550");
-        otherBenHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(2).withDayOfMonth(7)), "120");
+        otherBenHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(15)), "120");
         ssiApp.setOtherBenefitsRHistory(otherBenHistory);
         ssiApp.setLuxury("false");
         ssiApp.setTotalIncome("10");
@@ -195,7 +212,7 @@ public class TestUtils {
         ssiApp.setTaxisAfm("678901");
         //ssiApp.setSalariesR("2000");
         ssiApp.setPensionsR("700");
-        ssiApp.setTaxisDateOfBirth("12/08/1960");
+        ssiApp.setTaxisDateOfBirth(DateUtils.dateToString(LocalDate.of(1960, 8, 12)));
 
         LinkedHashMap<String, String> pensionHistory = new LinkedHashMap<>();
         pensionHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1)), "600");
@@ -206,27 +223,27 @@ public class TestUtils {
         member1.setAfm("123456");
         member1.setName("Jimmy");
         member1.setSurname("Page");
-        member1.setDateOfBirth("05/05/1953");
+        member1.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1953, 5, 5)));
         HouseholdMember member2 = new HouseholdMember();
         member2.setAfm("678901");
         member2.setName("Richie");
         member2.setSurname("Blackmore");
-        member2.setDateOfBirth("12/08/1960");
+        member2.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1960, 8, 12)));
         HouseholdMember member3 = new HouseholdMember();
         member3.setAfm("164582");
         member3.setName("James");
         member3.setSurname("Hetfield");
-        member3.setDateOfBirth("19/09/2002");
+        member3.setDateOfBirth(DateUtils.dateToString(LocalDate.now().minusYears(18).minusMonths(2).withDayOfMonth(19)));
         HouseholdMember member4 = new HouseholdMember();
         member4.setAfm("789456");
         member4.setName("Rory");
         member4.setSurname("Gallagher");
-        member4.setDateOfBirth("24/10/1970");
+        member4.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1970, 10, 24)));
         HouseholdMember member5 = new HouseholdMember();
         member5.setAfm("456789");
         member5.setName("Jimmy");
         member5.setSurname("Hendrix");
-        member5.setDateOfBirth("14/05/1956");
+        member5.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1956, 5, 14)));
         List<HouseholdMember> household = new ArrayList<>();
         household.add(member1);
         household.add(member2);
@@ -272,7 +289,7 @@ public class TestUtils {
         ssiApp.setTaxisAfm("164582");
         //ssiApp.setSalariesR("2000");
         ssiApp.setPensionsR("0");
-        ssiApp.setTaxisDateOfBirth("19/09/2002");
+        ssiApp.setTaxisDateOfBirth(DateUtils.dateToString(LocalDate.now().minusYears(18).minusMonths(2).withDayOfMonth(19)));
 
         LinkedHashMap<String, String> pensionHistory = new LinkedHashMap<>();
         pensionHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1)), "0");
@@ -282,27 +299,27 @@ public class TestUtils {
         member1.setAfm("123456");
         member1.setName("Jimmy");
         member1.setSurname("Page");
-        member1.setDateOfBirth("05/05/1953");
+        member1.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1953, 5, 5)));
         HouseholdMember member2 = new HouseholdMember();
         member2.setAfm("678901");
         member2.setName("Richie");
         member2.setSurname("Blackmore");
-        member2.setDateOfBirth("12/08/1960");
+        member2.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1960, 8, 12)));
         HouseholdMember member3 = new HouseholdMember();
         member3.setAfm("164582");
         member3.setName("James");
         member3.setSurname("Hetfield");
-        member3.setDateOfBirth("19/09/2002");
+        member3.setDateOfBirth(DateUtils.dateToString(LocalDate.now().minusYears(18).minusMonths(2).withDayOfMonth(19)));
         HouseholdMember member4 = new HouseholdMember();
         member4.setAfm("789456");
         member4.setName("Rory");
         member4.setSurname("Gallagher");
-        member4.setDateOfBirth("24/10/1970");
+        member4.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1970, 10, 24)));
         HouseholdMember member5 = new HouseholdMember();
         member5.setAfm("456789");
         member5.setName("Jimmy");
         member5.setSurname("Hendrix");
-        member5.setDateOfBirth("14/05/1956");
+        member5.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1956, 5, 14)));
         List<HouseholdMember> household = new ArrayList<>();
         household.add(member1);
         household.add(member2);
@@ -347,7 +364,7 @@ public class TestUtils {
         ssiApp.setTaxisAfm("789456");
         //ssiApp.setSalariesR("2000");
         ssiApp.setPensionsR("200");
-        ssiApp.setTaxisDateOfBirth("24/10/1970");
+        ssiApp.setTaxisDateOfBirth(DateUtils.dateToString(LocalDate.of(1970, 10, 24)));
 
         LinkedHashMap<String, String> pensionHistory = new LinkedHashMap<>();
         pensionHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1)), "200");
@@ -357,27 +374,27 @@ public class TestUtils {
         member1.setAfm("123456");
         member1.setName("Jimmy");
         member1.setSurname("Page");
-        member1.setDateOfBirth("05/05/1953");
+        member1.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1953, 5, 5)));
         HouseholdMember member2 = new HouseholdMember();
         member2.setAfm("678901");
         member2.setName("Richie");
         member2.setSurname("Blackmore");
-        member2.setDateOfBirth("12/08/1960");
+        member2.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1960, 8, 12)));
         HouseholdMember member3 = new HouseholdMember();
         member3.setAfm("164582");
         member3.setName("James");
         member3.setSurname("Hetfield");
-        member3.setDateOfBirth("19/09/2002");
+        member3.setDateOfBirth(DateUtils.dateToString(LocalDate.now().minusYears(18).minusMonths(2).withDayOfMonth(19)));
         HouseholdMember member4 = new HouseholdMember();
         member4.setAfm("789456");
         member4.setName("Rory");
         member4.setSurname("Gallagher");
-        member4.setDateOfBirth("24/10/1970");
+        member4.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1970, 10, 24)));
         HouseholdMember member5 = new HouseholdMember();
         member5.setAfm("456789");
         member5.setName("Jimmy");
         member5.setSurname("Hendrix");
-        member5.setDateOfBirth("14/05/1956");
+        member5.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1956, 5, 14)));
         List<HouseholdMember> household = new ArrayList<>();
         household.add(member1);
         household.add(member2);
@@ -422,7 +439,7 @@ public class TestUtils {
         ssiApp.setTaxisAfm("456789");
         //ssiApp.setSalariesR("2000");
         ssiApp.setPensionsR("100");
-        ssiApp.setTaxisDateOfBirth("14/05/1956");
+        ssiApp.setTaxisDateOfBirth(DateUtils.dateToString(LocalDate.of(1956, 5, 14)));
 
         LinkedHashMap<String, String> pensionHistory = new LinkedHashMap<>();
         pensionHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1)), "100");
@@ -432,27 +449,27 @@ public class TestUtils {
         member1.setAfm("123456");
         member1.setName("Jimmy");
         member1.setSurname("Page");
-        member1.setDateOfBirth("05/05/1953");
+        member1.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1953, 5, 5)));
         HouseholdMember member2 = new HouseholdMember();
         member2.setAfm("678901");
         member2.setName("Richie");
         member2.setSurname("Blackmore");
-        member2.setDateOfBirth("12/08/1960");
+        member2.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1960, 8, 12)));
         HouseholdMember member3 = new HouseholdMember();
         member3.setAfm("164582");
         member3.setName("James");
         member3.setSurname("Hetfield");
-        member3.setDateOfBirth("19/09/2002");
+        member3.setDateOfBirth(DateUtils.dateToString(LocalDate.now().minusYears(18).minusMonths(2).withDayOfMonth(19)));
         HouseholdMember member4 = new HouseholdMember();
         member4.setAfm("789456");
         member4.setName("Rory");
         member4.setSurname("Gallagher");
-        member4.setDateOfBirth("24/10/1970");
+        member4.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1970, 10, 24)));
         HouseholdMember member5 = new HouseholdMember();
         member5.setAfm("456789");
         member5.setName("Jimmy");
         member5.setSurname("Hendrix");
-        member5.setDateOfBirth("14/05/1956");
+        member5.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1956, 5, 14)));
         List<HouseholdMember> household = new ArrayList<>();
         household.add(member1);
         household.add(member2);
@@ -501,9 +518,10 @@ public class TestUtils {
         ssiApp.setTaxisAfm("123456");
         //ssiApp.setSalariesR("0.5");
         ssiApp.setPensionsR("500");
-        ssiApp.setTaxisDateOfBirth("05/05/1953");
+        ssiApp.setTaxisDateOfBirth(DateUtils.dateToString(LocalDate.of(1953, 5, 5)));
         ssiApp.setMeterNumber("123456789");
         ssiApp.setIban("iban123456");
+        ssiApp.setTime(LocalDate.now().minusMonths(3));
 
         LinkedHashMap<String , String> pensionHistory = new LinkedHashMap<>();
         pensionHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1)), "500");
@@ -513,17 +531,17 @@ public class TestUtils {
         member1.setAfm("123456");
         member1.setName("Jimmy");
         member1.setSurname("Page");
-        member1.setDateOfBirth("05/05/1953");
+        member1.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1953, 5, 5)));
         HouseholdMember member2 = new HouseholdMember();
         member2.setAfm("678901");
         member2.setName("Richie");
         member2.setSurname("Blackmore");
-        member2.setDateOfBirth("12/08/1960");
+        member2.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1960, 9, 12)));
         HouseholdMember member3 = new HouseholdMember();
         member3.setAfm("164582");
         member3.setName("James");
         member3.setSurname("Hetfield");
-        member3.setDateOfBirth("19/03/2007");
+        member3.setDateOfBirth(DateUtils.dateToString(LocalDate.now().minusYears(18).minusMonths(2).withDayOfMonth(19)));
         List<HouseholdMember> household = new ArrayList<>();
         household.add(member1);
         household.add(member2);
@@ -555,7 +573,8 @@ public class TestUtils {
         ssiApp.setTaxisAfm("678901");
         //ssiApp.setSalariesR("2000");
         ssiApp.setPensionsR("700");
-        ssiApp.setTaxisDateOfBirth("12/08/1960");
+        ssiApp.setTaxisDateOfBirth(DateUtils.dateToString(LocalDate.of(1960, 9, 12)));
+        ssiApp.setTime(LocalDate.now().minusMonths(3));
 
         LinkedHashMap<String, String> pensionHistory = new LinkedHashMap<>();
         pensionHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1)), "700");
@@ -565,17 +584,17 @@ public class TestUtils {
         member1.setAfm("123456");
         member1.setName("Jimmy");
         member1.setSurname("Page");
-        member1.setDateOfBirth("05/05/1953");
+        member1.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1953, 5, 5)));
         HouseholdMember member2 = new HouseholdMember();
         member2.setAfm("678901");
         member2.setName("Richie");
         member2.setSurname("Blackmore");
-        member2.setDateOfBirth("12/08/1960");
+        member2.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1960, 9, 12)));
         HouseholdMember member3 = new HouseholdMember();
         member3.setAfm("164582");
         member3.setName("James");
         member3.setSurname("Hetfield");
-        member3.setDateOfBirth("19/03/2007");
+        member3.setDateOfBirth(DateUtils.dateToString(LocalDate.now().minusYears(18).minusMonths(2).withDayOfMonth(19)));
         List<HouseholdMember> household = new ArrayList<>();
         household.add(member1);
         household.add(member2);
@@ -606,7 +625,8 @@ public class TestUtils {
         ssiApp.setTaxisAfm("164582");
         //ssiApp.setSalariesR("2000");
         ssiApp.setPensionsR("0");
-        ssiApp.setTaxisDateOfBirth("19/03/2007");
+        ssiApp.setTaxisDateOfBirth(DateUtils.dateToString(LocalDate.now().minusYears(18).minusMonths(2).withDayOfMonth(19)));
+        ssiApp.setTime(LocalDate.now().minusMonths(3));
 
         LinkedHashMap<String, String> pensionHistory = new LinkedHashMap<>();
         pensionHistory.put(DateUtils.dateToString(LocalDateTime.now().minusMonths(3).withDayOfMonth(1)), "0");
@@ -616,17 +636,17 @@ public class TestUtils {
         member1.setAfm("123456");
         member1.setName("Jimmy");
         member1.setSurname("Page");
-        member1.setDateOfBirth("05/05/1953");
+        member1.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1953, 5, 5)));
         HouseholdMember member2 = new HouseholdMember();
         member2.setAfm("678901");
         member2.setName("Richie");
         member2.setSurname("Blackmore");
-        member2.setDateOfBirth("12/08/1960");
+        member2.setDateOfBirth(DateUtils.dateToString(LocalDate.of(1960, 9, 12)));
         HouseholdMember member3 = new HouseholdMember();
         member3.setAfm("164582");
         member3.setName("James");
         member3.setSurname("Hetfield");
-        member3.setDateOfBirth("19/03/2007");
+        member3.setDateOfBirth(DateUtils.dateToString(LocalDate.now().minusYears(18).minusMonths(2).withDayOfMonth(19)));
         List<HouseholdMember> household = new ArrayList<>();
         household.add(member1);
         household.add(member2);
