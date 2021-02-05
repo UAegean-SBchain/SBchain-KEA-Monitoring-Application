@@ -17,7 +17,7 @@ public interface MonitorService {
 
     public void startScheduledMonitoring();
 
-    public void startMonitoring(LocalDateTime currentDate, Boolean sync);
+    public void startMonitoring(LocalDateTime currentDate, Boolean isTest, double pValue, Boolean makeMockChecks);
 
     public Boolean checkIndividualCredentials(SsiApplication ssiApp);
 

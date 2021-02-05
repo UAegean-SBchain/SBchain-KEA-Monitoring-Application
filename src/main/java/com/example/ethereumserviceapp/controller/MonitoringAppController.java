@@ -98,7 +98,7 @@ public class MonitoringAppController {
 
     @PostMapping("/monitorCases")
     protected ModelAndView runMonitoringOnCase(@ModelAttribute MonitorCmdHelper monitorCmdHelper, ModelMap model, HttpServletRequest request){
-        helpService.runMonitoring(monitorCmdHelper.getStartDate(), monitorCmdHelper.getNumDays());
+        helpService.runMonitoring(monitorCmdHelper.getStartDate(), monitorCmdHelper.getNumDays(), Double.valueOf(monitorCmdHelper.getPValue()));
         model.addAttribute("monitorCmdHelper", monitorCmdHelper);
 
         return listCaseUuids(monitorCmdHelper, model, request);

@@ -98,7 +98,7 @@ public class ExampleRunTest extends TestUtils{
         //doNothing().when(ethServ).updateCase(any(), false);
 
         //monServ.startScheduledMonitoring();
-        monServ.startMonitoring(runDate, true);
+        monServ.startMonitoring(runDate, true, 0, false);
 
         verify(ethServ, times(1)).updateCase(any());
 

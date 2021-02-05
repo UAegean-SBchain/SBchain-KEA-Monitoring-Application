@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Function;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,6 +30,7 @@ import com.example.ethereumserviceapp.model.CasePayment;
 import com.example.ethereumserviceapp.model.CredsAndExp;
 import com.example.ethereumserviceapp.model.HouseholdMember;
 import com.example.ethereumserviceapp.model.State;
+import com.example.ethereumserviceapp.model.UpdateMockResult;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.service.MockServices;
@@ -71,7 +73,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     @Scheduled(cron = "0 0 12 * * ?")
     public void startScheduledMonitoring() {
-        startMonitoring(LocalDateTime.now(), false);
+        startMonitoring(LocalDateTime.now(), false, 0, false);
     }
 
     // parameters:
@@ -81,10 +83,17 @@ public class MonitorServiceImpl implements MonitorService {
     // blockchaing, false(default) make asynchronous transactions with the
     // blockchain
     @Override
-    public void startMonitoring(LocalDateTime dateNow, Boolean isTest) {
+    public void startMonitoring(LocalDateTime dateNow, Boolean isTest, double pValue, Boolean makeMockChecks) {
         LocalDateTime currentDate = dateNow == null ? LocalDateTime.now() : dateNow;
         List<String> uuids = this.ethServ.getAllCaseUUID();
+        
+        // count for random changes to applications for test/economy purposes
+        Integer count = 0;
+
         uuids.stream().forEach(uuid -> {
+
+            //if there are 2 or more changes already been made this day then stop the mock checks
+            Boolean mockChecks = makeMockChecks && count <2;
 
             Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
             if (!theCase.isPresent()) {
@@ -146,8 +155,9 @@ public class MonitorServiceImpl implements MonitorService {
                     .collect(Collectors.toSet());
             List<SsiApplication> householdApps = mongoServ.findByTaxisAfmIn(householdAfms);
 
-            // make external API calls that may update certain values in DB
-            if (!externalChecksAndUpdate(monitoredCase, householdApps, ssiApp)) {
+            // make external API calls that may update certain values in DB 
+            //Case monitoredCase, double pValue, Boolean makeMockCheck, List<SsiApplication> householdApps, SsiApplication principalApp, Integer count, LocalDate currentDate
+            if (!externalChecksAndUpdate(monitoredCase, pValue, mockChecks, householdApps, ssiApp, count, currentDate.toLocalDate())) {
                 updateCase(monitoredCase, State.REJECTED, ssiApp, currentDate, isTest, uuid, null);
             }
             // check if credentials are valid and not expired
@@ -515,24 +525,74 @@ public class MonitorServiceImpl implements MonitorService {
         }
     }
 
-    private void financialsCheck(Case monitoredCase, SsiApplication ssiApp){
+    //update financial values and histories
+    private void financialsCheck(SsiApplication principalApp, double pValue, Boolean makeMockCheck, List<SsiApplication> householdApps, Integer count, LocalDate currentDate){
         //mock check
-        if(monitoredCase.equals("")){
-            //update financial values and histories
+        Boolean changed = false;
+        LinkedHashMap<String, String> financialHistoryMap = new LinkedHashMap<>();
+
+        Optional<UpdateMockResult> othrBenefits = mockServ.getUpdatedOtherBenefitValue(currentDate, currentDate, pValue, principalApp, makeMockCheck && count < 2, householdApps);
+        if(othrBenefits.isPresent()){
+            changed = true;
+            count++;
+            principalApp.setOtherBenefitsR(String.valueOf(othrBenefits.get().getValue()));
+            //LinkedHashMap<String, String> otherBenefitsHistory = principalApp.getOtherBenefitsRHistory();
+            //otherBenefitsHistory.put(DateUtils.dateToString(othrBenefits.get().getDate()), String.valueOf(othrBenefits.get().getValue()));
+            //principalApp.setOtherBenefitsRHistory(otherBenefitsHistory);
+            financialHistoryMap = principalApp.getOtherBenefitsRHistory();
+            financialHistoryMap.put(DateUtils.dateToString(othrBenefits.get().getDate()), String.valueOf(othrBenefits.get().getValue()));
+            principalApp.setOtherBenefitsRHistory(financialHistoryMap);
             
         }
+
+        Optional<UpdateMockResult> uneploymentBenefit = mockServ.getUpdatedOAEDBenefitValue(currentDate, currentDate, pValue, principalApp, makeMockCheck && count < 2, householdApps);
+        if(uneploymentBenefit.isPresent()){
+            changed = true;
+            count++;
+            principalApp.setUnemploymentBenefitR(String.valueOf(uneploymentBenefit.get().getValue()));
+            // LinkedHashMap<String, String> unemploymentBenefitssHistory = principalApp.getUnemploymentBenefitRHistory();
+            // unemploymentBenefitssHistory.put(DateUtils.dateToString(uneploymentBenefit.get().getDate()), String.valueOf(uneploymentBenefit.get().getValue()));
+            // principalApp.setUnemploymentBenefitRHistory(unemploymentBenefitssHistory);
+            financialHistoryMap = principalApp.getOtherBenefitsRHistory();
+            financialHistoryMap.put(DateUtils.dateToString(othrBenefits.get().getDate()), String.valueOf(othrBenefits.get().getValue()));
+            principalApp.setOtherBenefitsRHistory(financialHistoryMap);
+        }
+
+        Optional<UpdateMockResult> salary = mockServ.getUpdateSalariesData(currentDate, currentDate, pValue, principalApp, makeMockCheck && count < 2, householdApps);
+        if(uneploymentBenefit.isPresent()){
+            changed = true;
+            count++;
+            principalApp.setSalariesR(String.valueOf(salary.get().getValue()));
+            // LinkedHashMap<String, String> salariesHistory = principalApp.getSalariesRHistory();
+            // salariesHistory.put(DateUtils.dateToString(salary.get().getDate()), String.valueOf(salary.get().getValue()));
+            // principalApp.setSalariesRHistory(salariesHistory);
+            financialHistoryMap = principalApp.getOtherBenefitsRHistory();
+            financialHistoryMap.put(DateUtils.dateToString(othrBenefits.get().getDate()), String.valueOf(othrBenefits.get().getValue()));
+            principalApp.setOtherBenefitsRHistory(financialHistoryMap);
+        }
+
+        if(changed){
+            mongoServ.updateSsiApp(principalApp);
+        }
+       
     }
 
-    private Boolean externalChecksAndUpdate(Case monitoredCase, List<SsiApplication> householdApps, SsiApplication principalApp){
+    // external api calls 
+    private Boolean externalChecksAndUpdate(Case monitoredCase, double pValue, Boolean makeMockCheck, List<SsiApplication> householdApps, SsiApplication principalApp, Integer count, LocalDate currentDate){
 
         List<LocalDate> rejectionDates = new ArrayList<>();
         //validate each household application credentials
+
+        financialsCheck(principalApp, pValue, makeMockCheck, householdApps, count, currentDate);
+
+
+        //change to call mock services
         for(SsiApplication app:householdApps){
             oaedRegistrationCheck(monitoredCase, app, rejectionDates);
             houseBenefitCheck(monitoredCase, app, rejectionDates);
             luxuryLivingCheck(monitoredCase, app, rejectionDates);
             amkaCheck(monitoredCase, app, rejectionDates);
-            financialsCheck(monitoredCase, app);
+            //financialsCheck(monitoredCase, app);
         }
         handleDeceasedMember(principalApp);
 

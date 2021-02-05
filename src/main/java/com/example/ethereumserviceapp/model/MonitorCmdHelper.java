@@ -13,4 +13,5 @@ public class MonitorCmdHelper {
     
     private String startDate;
     private String numDays;
+    private String pValue;
 }

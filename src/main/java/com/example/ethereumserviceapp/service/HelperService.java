@@ -39,7 +39,7 @@ public class HelperService {
         }
     }
 
-    public void runMonitoring(String startDate, String numDays){
+    public void runMonitoring(String startDate, String numDays, double pValue){
         
         String startDateFixed = startDate.replace("T", " ");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
@@ -47,7 +47,7 @@ public class HelperService {
         LocalDateTime endDate = currentDate.plusDays(Long.valueOf(numDays));
 
         while(currentDate.compareTo(endDate) <=0){
-            monitorService.startMonitoring(currentDate, false);
+            monitorService.startMonitoring(currentDate, false, pValue, true);
                 if(currentDate.getDayOfMonth() == 1){
                     paymentService.startPayment(currentDate, false);
                 }
