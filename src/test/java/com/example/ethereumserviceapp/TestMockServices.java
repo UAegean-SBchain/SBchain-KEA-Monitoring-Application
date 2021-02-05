@@ -8,6 +8,7 @@ import com.example.ethereumserviceapp.utils.CsvUtils;
 import org.junit.Test;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,11 +19,20 @@ public class TestMockServices {
     public void testOtheBenefits() {
         MockServices ms = new MockServicesImpl();
         LocalDate today = LocalDate.now();
-        final List<SsiApplication> houshold = CsvUtils.generateMockData(200);
+        final List<SsiApplication> allApps = CsvUtils.generateMockData(200);
         int num = 0;
-        for (SsiApplication app : houshold) {
+        for (SsiApplication app : allApps) {
             LocalDate start = app.getTime();
-            if (ms.getUpdatedOtherBenefitValue(start,today,0.066666667,app, true, houshold).isPresent())
+
+            List<SsiApplication> householdApps =
+                    new ArrayList<>();
+            for (SsiApplication innerApp : allApps) {
+                if (innerApp.getHouseholdPrincipal().getAfm().equals(app.getHouseholdPrincipal().getAfm())) {
+                    householdApps.add(innerApp);
+                }
+            }
+
+            if (ms.getUpdatedOtherBenefitValue(start,today,0.066666667,app, true, householdApps).isPresent())
                 num++;
         }
         System.out.println("UPDATED:: " + num);
@@ -33,14 +43,24 @@ public class TestMockServices {
     public void testDeaths() {
         MockServices ms = new MockServicesImpl();
         LocalDate today = LocalDate.now();
-        final List<SsiApplication> household = CsvUtils.generateMockData(200);
+        final List<SsiApplication> allApps = CsvUtils.generateMockData(200);
         int num = 0;
-        for (SsiApplication app : household) {
-            Optional<BooleanMockResult> res = ms.getDeaths(app.getTime(),today,0.066666667,app, true, household);
+        for (SsiApplication app : allApps) {
+            int perHousehold = 0;
+            List<SsiApplication> householdApps =
+                    new ArrayList<>();
+            for (SsiApplication innerApp : allApps) {
+                if (innerApp.getHouseholdPrincipal().getAfm().equals(app.getHouseholdPrincipal().getAfm())) {
+                    householdApps.add(innerApp);
+                }
+            }
+            Optional<BooleanMockResult> res = ms.getDeaths(app.getTime(),today,0.066666667,app, true, householdApps);
             if (res.isPresent()){
                 System.out.println(res.get().getData());
                 num++;
+                perHousehold++;
             }
+            System.out.println("per household " + perHousehold);
         }
         System.out.println("UPDATED:: " + num);
     }
@@ -49,10 +69,17 @@ public class TestMockServices {
     public void testOAED() {
         MockServices ms = new MockServicesImpl();
         LocalDate today = LocalDate.now();
-        final List<SsiApplication> household = CsvUtils.generateMockData(200);
+        final List<SsiApplication> allApps = CsvUtils.generateMockData(200);
         int num = 0;
-        for (SsiApplication app : household) {
-            Optional<BooleanMockResult> res = ms.getOAEDRegistration(app.getTime(),today,0.066666667,app, true, household);
+        for (SsiApplication app : allApps) {
+            List<SsiApplication> householdApps =
+                    new ArrayList<>();
+            for (SsiApplication innerApp : allApps) {
+                if (innerApp.getHouseholdPrincipal().getAfm().equals(app.getHouseholdPrincipal().getAfm())) {
+                    householdApps.add(innerApp);
+                }
+            }
+            Optional<BooleanMockResult> res = ms.getOAEDRegistration(app.getTime(),today,0.066666667,app, true, householdApps);
             if (res.isPresent() && !res.isEmpty()){
                 System.out.println(res.get().getData());
                 num++;

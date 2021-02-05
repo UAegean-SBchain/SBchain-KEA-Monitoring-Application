@@ -15,5 +15,6 @@ public class BooleanMockResult {
     private LocalDate date;
     private boolean value;
     private String data;
+    private String uuid;
 
 }
