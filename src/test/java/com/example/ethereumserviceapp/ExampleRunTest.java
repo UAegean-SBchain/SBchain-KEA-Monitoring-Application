@@ -106,16 +106,20 @@ public class ExampleRunTest extends TestUtils{
 
     private SsiApplication generateExampleSsiApp1(){
         SsiApplication ssiApp = new SsiApplication();
-        ssiApp.setOtherBenefitsR("700");
+        ssiApp.setOtherBenefitsR("0");
         LinkedHashMap<String, String> otherBenHistory = new LinkedHashMap<>();
-        otherBenHistory.put(DateUtils.dateToString(LocalDateTime.of(2020, 12, 15, 00, 00, 00)), "500");
-        otherBenHistory.put(DateUtils.dateToString(LocalDateTime.of(2021, 1, 17, 00, 00, 00)), "700");
+        otherBenHistory.put(DateUtils.dateToString(LocalDateTime.of(2020, 12, 15, 00, 00, 00)), "480");
+        otherBenHistory.put(DateUtils.dateToString(LocalDateTime.of(2021, 1, 10, 00, 00, 00)), "0");
         ssiApp.setOtherBenefitsRHistory(otherBenHistory);
         ssiApp.setUnemploymentBenefitR("0");
         LinkedHashMap<String , String> unmplBnftHistory = new LinkedHashMap<>();
-        unmplBnftHistory.put(DateUtils.dateToString(LocalDateTime.of(2020, 12, 15, 00, 00, 00)), "480");
-        unmplBnftHistory.put(DateUtils.dateToString(LocalDateTime.of(2021, 1, 10, 00, 00, 00)), "0");
+        unmplBnftHistory.put(DateUtils.dateToString(LocalDateTime.of(2020, 12, 15, 00, 00, 00)), "0");
         ssiApp.setUnemploymentBenefitRHistory(unmplBnftHistory);
+        ssiApp.setFreelanceR("700");
+        LinkedHashMap<String , String> freelanceHistory = new LinkedHashMap<>();
+        freelanceHistory.put(DateUtils.dateToString(LocalDateTime.of(2020, 12, 15, 00, 00, 00)), "500");
+        freelanceHistory.put(DateUtils.dateToString(LocalDateTime.of(2021, 1, 17, 00, 00, 00)), "700");
+        ssiApp.setFreelanceRHistory(freelanceHistory);
         ssiApp.setErgomeR("0");
         ssiApp.setDepositsA("50");
         LinkedHashMap<String , String> depositsHistory = new LinkedHashMap<>();
@@ -127,8 +131,8 @@ public class ExampleRunTest extends TestUtils{
         ssiApp.setLuxury("false");
         ssiApp.setTotalIncome("1030");
         ssiApp.setHospitalized("false");
-        ssiApp.setUnemployed("true");
-        ssiApp.setEmploymentStatus("unemployed");
+        ssiApp.setUnemployed("false");
+        ssiApp.setEmploymentStatus("employed");
         ssiApp.setTaxisAfm("123456");
         //ssiApp.setSalariesR("0.5");
         ssiApp.setPensionsR("0");
