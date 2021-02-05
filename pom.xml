@@ -143,7 +143,22 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.9</version>
-        </dependency>
+		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/org.apache.poi/poi -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>5.0.0</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>5.0.0</version>
+		</dependency>
+
     </dependencies>
 
 	<build>
@@ -173,7 +188,41 @@
 				  </execution>
 				</executions>
 			  </plugin>
-            <plugin>
+
+			<plugin>
+				<groupId>org.web3j</groupId>
+				<artifactId>web3j-maven-plugin</artifactId>
+				<version>4.5.11</version>
+				<configuration>
+					<packageName>com.example.ethereumserviceapp.contract</packageName>
+					<sourceDestination>src/main/java/generated</sourceDestination>
+					<nativeJavaType>true</nativeJavaType>
+					<outputFormat>java,bin</outputFormat>
+					<soliditySourceFiles>
+						<directory>src/main/resources</directory>
+						<includes>
+							<include>**/*.sol</include>
+						</includes>
+					</soliditySourceFiles>
+					<outputDirectory>
+						<java>src/java/generated</java>
+						<bin>src/bin/generated</bin>
+						<abi>src/abi/generated</abi>
+					</outputDirectory>
+					<contract>
+						<includes>
+							<include>greeter</include>
+						</includes>
+						<excludes>
+							<exclude>mortal</exclude>
+						</excludes>
+					</contract>
+					<pathPrefixes>
+						<pathPrefix>dep=../dependencies</pathPrefix>
+					</pathPrefixes>
+				</configuration>
+			</plugin>
+			<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
@@ -182,6 +231,7 @@
                 </configuration>
             </plugin>
         </plugins>
+            
 	</build>
 
 </project>
