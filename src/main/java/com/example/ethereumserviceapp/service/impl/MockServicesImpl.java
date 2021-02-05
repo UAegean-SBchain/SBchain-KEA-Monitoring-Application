@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -27,7 +28,7 @@ public class MockServicesImpl implements MockServices {
 
     private final Random random = new Random();
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private final static LocalDate today = LocalDate.now();
+
 
 
     private BigDecimal getTotalIncome(SsiApplication ssiApp) {
@@ -52,19 +53,23 @@ public class MockServicesImpl implements MockServices {
 
     }
 
-
+    //TODO clean up ssiApps to only denote the household applications (they will be passed externally to the method)
     @Override
-    public Optional<UpdateMockResult> getUpdatedOtherBenefitValue(SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+    public Optional<UpdateMockResult> getUpdatedOtherBenefitValue(LocalDate dateOfSubmission, LocalDate today, double pValue,
+                                                                  SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
         if (shouldTry) {
-            if (SatisticUtils.shouldChangeValue()) {
+            if (SatisticUtils.shouldChangeValue(pValue)) {
                 log.info("update value for otherBenefit !");
-                double newOtherBenefits = 0;
+                double newOtherBenefits;
                 // calculate threshold
                 double otherBenefits = ssiApp.getOtherBenefitsR() != null ? Double.parseDouble(ssiApp.getOtherBenefitsR()) : 0;
                 List<SsiApplication> householdApps =
-                        ssiApps.stream().filter(innerΑpp -> {
-                            return innerΑpp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm());
-                        }).collect(Collectors.toList());
+                        new ArrayList<>();
+                for (SsiApplication innerApp : ssiApps) {
+                    if (innerApp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())) {
+                        householdApps.add(innerApp);
+                    }
+                }
                 // all the applications of the household
                 double threshold = threshold(ssiApp);
                 SsiApplication aggregatedHouseholdValuesApp = EthAppUtils.aggregateHouseholdValues(householdApps);
@@ -79,15 +84,13 @@ public class MockServicesImpl implements MockServices {
                     newOtherBenefits = random.nextInt((margin+ 500) - (int)otherBenefits) + otherBenefits;
                 } else {
                     log.info("DECREASING:: value");
-                    int percentage = random.nextInt(100 - 0) + 0;
+                    int percentage = random.nextInt(100);
                     double amount = (otherBenefits * percentage) / 100;
                     newOtherBenefits = otherBenefits - amount;
                 }
 
-                LocalDate dateOfSubmission = ssiApp.getTime();
                 int year = dateOfSubmission.getYear();
                 int month = dateOfSubmission.getMonthValue();
-                int day = dateOfSubmission.getDayOfMonth();
                 String updateMonth = String.format("%02d", random.nextInt(today.getMonthValue() - month + 1) + month - 1);
 
                 String updateDay = String.format("%02d", random.nextInt(28 - 1) + 1);
@@ -110,17 +113,15 @@ public class MockServicesImpl implements MockServices {
     }
 
     @Override
-    public Optional<UpdateMockResult> getUpdatedERGOMValue(SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+    public Optional<UpdateMockResult> getUpdatedERGOMValue(LocalDate dateOfSubmission,LocalDate today,double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
         if (shouldTry) {
-            if (SatisticUtils.shouldChangeValue()) {
+            if (SatisticUtils.shouldChangeValue(pValue)) {
                 log.info("update value for otherBenefit !");
-                double newErgom = 0;
+                double newErgom;
                 // calculate threshold
                 double ergom = ssiApp.getErgomeR() != null ? Double.parseDouble(ssiApp.getErgomeR()) : 0;
                 List<SsiApplication> householdApps =
-                        ssiApps.stream().filter(innerΑpp -> {
-                            return innerΑpp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm());
-                        }).collect(Collectors.toList());
+                        ssiApps.stream().filter(innerApp -> innerApp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())).collect(Collectors.toList());
                 // all the applications of the household
                 double threshold = threshold(ssiApp);
                 SsiApplication aggregatedHouseholdValuesApp = EthAppUtils.aggregateHouseholdValues(householdApps);
@@ -135,15 +136,14 @@ public class MockServicesImpl implements MockServices {
                     newErgom = random.nextInt((margin+ 500) - (int)ergom) + ergom;
                 } else {
                     log.info("DECREASING:: value");
-                    int percentage = random.nextInt(100 - 0) + 0;
+                    int percentage = random.nextInt(100);
                     double amount = (ergom * percentage) / 100;
                     newErgom = ergom - amount;
                 }
 
-                LocalDate dateOfSubmission = ssiApp.getTime();
+
                 int year = dateOfSubmission.getYear();
                 int month = dateOfSubmission.getMonthValue();
-                int day = dateOfSubmission.getDayOfMonth();
                 String updateMonth = String.format("%02d", random.nextInt(today.getMonthValue() - month + 1) + month - 1);
 
                 String updateDay = String.format("%02d", random.nextInt(28 - 1) + 1);
@@ -168,17 +168,15 @@ public class MockServicesImpl implements MockServices {
 
 
     @Override
-    public Optional<UpdateMockResult> getUpdatedOAEDBenefitValue(SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+    public Optional<UpdateMockResult> getUpdatedOAEDBenefitValue(LocalDate dateOfSubmission,LocalDate today, double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
         if (shouldTry) {
-            if (SatisticUtils.shouldChangeValue()) {
+            if (SatisticUtils.shouldChangeValue(pValue)) {
                 log.info("update value for otherBenefit !");
-                double newOaedBenefit = 0;
+                double newOaedBenefit;
                 // calculate threshold
                 double oaedBenefit = ssiApp.getOtherBenefitsR() != null ? Double.parseDouble(ssiApp.getOtherBenefitsR()) : 0;
                 List<SsiApplication> householdApps =
-                        ssiApps.stream().filter(innerΑpp -> {
-                            return innerΑpp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm());
-                        }).collect(Collectors.toList());
+                        ssiApps.stream().filter(innerApp -> innerApp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())).collect(Collectors.toList());
                 // all the applications of the household
                 double threshold = threshold(ssiApp);
                 SsiApplication aggregatedHouseholdValuesApp = EthAppUtils.aggregateHouseholdValues(householdApps);
@@ -193,15 +191,14 @@ public class MockServicesImpl implements MockServices {
                     newOaedBenefit = random.nextInt((margin+ 500) - (int)oaedBenefit) + oaedBenefit;
                 } else {
                     log.info("DECREASING:: value");
-                    int percentage = random.nextInt(100 - 0) + 0;
+                    int percentage = random.nextInt(100);
                     double amount = (oaedBenefit * percentage) / 100;
                     newOaedBenefit = oaedBenefit - amount;
                 }
 
-                LocalDate dateOfSubmission = ssiApp.getTime();
+
                 int year = dateOfSubmission.getYear();
                 int month = dateOfSubmission.getMonthValue();
-                int day = dateOfSubmission.getDayOfMonth();
                 String updateMonth = String.format("%02d", random.nextInt(today.getMonthValue() - month + 1) + month - 1);
 
                 String updateDay = String.format("%02d", random.nextInt(28 - 1) + 1);
@@ -225,16 +222,16 @@ public class MockServicesImpl implements MockServices {
 
 
     @Override
-    public Optional<UpdateMockResult> getUpdateSalariesData(SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+    public Optional<UpdateMockResult> getUpdateSalariesData(LocalDate dateOfSubmission,LocalDate today, double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
         if (shouldTry) {
-            if (SatisticUtils.shouldChangeValue()) {
+            if (SatisticUtils.shouldChangeValue(pValue)) {
                 log.info("update value for otherBenefit !");
                 double newSalaries = 0;
                 // calculate threshold
                 double salariesR = ssiApp.getSalariesR() != null ? Double.parseDouble(ssiApp.getSalariesR()) : 0;
                 List<SsiApplication> householdApps =
-                        ssiApps.stream().filter(innerΑpp -> {
-                            return innerΑpp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm());
+                        ssiApps.stream().filter(innerApp -> {
+                            return innerApp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm());
                         }).collect(Collectors.toList());
                 // all the applications of the household
                 double threshold = threshold(ssiApp);
@@ -255,7 +252,7 @@ public class MockServicesImpl implements MockServices {
                     newSalaries = salariesR - amount;
                 }
 
-                LocalDate dateOfSubmission = ssiApp.getTime();
+
                 int year = dateOfSubmission.getYear();
                 int month = dateOfSubmission.getMonthValue();
                 int day = dateOfSubmission.getDayOfMonth();
@@ -279,16 +276,16 @@ public class MockServicesImpl implements MockServices {
     }
 
     @Override
-    public Optional<UpdateMockResult> getUpdatedPension(SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+    public Optional<UpdateMockResult> getUpdatedPension(LocalDate dateOfSubmission,LocalDate today,double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
         if (shouldTry) {
-            if (SatisticUtils.shouldChangeValue()) {
+            if (SatisticUtils.shouldChangeValue(pValue)) {
                 log.info("update value for otherBenefit !");
                 double newPensions = 0;
                 // calculate threshold
                 double pensionsR = ssiApp.getPensionsR() != null ? Double.parseDouble(ssiApp.getPensionsR()) : 0;
                 List<SsiApplication> householdApps =
-                        ssiApps.stream().filter(innerΑpp -> {
-                            return innerΑpp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm());
+                        ssiApps.stream().filter(innerApp -> {
+                            return innerApp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm());
                         }).collect(Collectors.toList());
                 // all the applications of the household
                 double threshold = threshold(ssiApp);
@@ -309,7 +306,7 @@ public class MockServicesImpl implements MockServices {
                     newPensions = pensionsR - amount;
                 }
 
-                LocalDate dateOfSubmission = ssiApp.getTime();
+
                 int year = dateOfSubmission.getYear();
                 int month = dateOfSubmission.getMonthValue();
                 int day = dateOfSubmission.getDayOfMonth();
@@ -334,16 +331,16 @@ public class MockServicesImpl implements MockServices {
 
 
     @Override
-    public Optional<UpdateMockResult> getUpdatedFreelance(SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+    public Optional<UpdateMockResult> getUpdatedFreelance(LocalDate dateOfSubmission,LocalDate today,double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
         if (shouldTry) {
-            if (SatisticUtils.shouldChangeValue()) {
+            if (SatisticUtils.shouldChangeValue(pValue)) {
                 log.info("update value for otherBenefit !");
                 double newFreelanceR = 0;
                 // calculate threshold
                 double freelanceR = ssiApp.getFreelanceR() != null ? Double.parseDouble(ssiApp.getFreelanceR()) : 0;
                 List<SsiApplication> householdApps =
-                        ssiApps.stream().filter(innerΑpp -> {
-                            return innerΑpp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm());
+                        ssiApps.stream().filter(innerApp -> {
+                            return innerApp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm());
                         }).collect(Collectors.toList());
                 // all the applications of the household
                 double threshold = threshold(ssiApp);
@@ -364,7 +361,7 @@ public class MockServicesImpl implements MockServices {
                     newFreelanceR = freelanceR - amount;
                 }
 
-                LocalDate dateOfSubmission = ssiApp.getTime();
+
                 int year = dateOfSubmission.getYear();
                 int month = dateOfSubmission.getMonthValue();
                 int day = dateOfSubmission.getDayOfMonth();
@@ -389,17 +386,17 @@ public class MockServicesImpl implements MockServices {
 
 
     @Override
-    public Optional<UpdateMockResult> getUpdatedDepoists(SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+    public Optional<UpdateMockResult> getUpdatedDepoists(LocalDate dateOfSubmission,LocalDate today,double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
         //financial data :
         if (shouldTry) {
-            if (SatisticUtils.shouldChangeValue()) {
+            if (SatisticUtils.shouldChangeValue(pValue)) {
                 log.info("update value for otherBenefit !");
                 double newDeposits = 0;
                 // calculate threshold
                 double depositsR = ssiApp.getDepositsA() != null ? Double.parseDouble(ssiApp.getDepositsA()) : 0;
                 List<SsiApplication> householdApps =
-                        ssiApps.stream().filter(innerΑpp -> {
-                            return innerΑpp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm());
+                        ssiApps.stream().filter(innerApp -> {
+                            return innerApp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm());
                         }).collect(Collectors.toList());
                 // all the applications of the household
                 double threshold = threshold(ssiApp);
@@ -420,10 +417,9 @@ public class MockServicesImpl implements MockServices {
                     newDeposits = depositsR - amount;
                 }
 
-                LocalDate dateOfSubmission = ssiApp.getTime();
+
                 int year = dateOfSubmission.getYear();
                 int month = dateOfSubmission.getMonthValue();
-                int day = dateOfSubmission.getDayOfMonth();
                 String updateMonth = String.format("%02d", random.nextInt(today.getMonthValue() - month + 1) + month - 1);
 
                 String updateDay = String.format("%02d", random.nextInt(28 - 1) + 1);
@@ -445,18 +441,15 @@ public class MockServicesImpl implements MockServices {
 
 
     @Override
-    public Optional<BooleanMockResult> getDeaths(SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
-        //financial data :
+    public Optional<BooleanMockResult> getDeaths(LocalDate dateOfSubmission,LocalDate today,double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
         if (shouldTry) {
-            if (SatisticUtils.shouldChangeValue()) {
-                Optional<HouseholdMember> deceased = ssiApp.getHouseholdComposition().stream().filter( person ->{
-                    return !person.getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm());
-                }).findFirst();
+            if (SatisticUtils.shouldChangeValue(pValue)) {
+                Optional<HouseholdMember> deceased = ssiApp.getHouseholdComposition().stream().
+                        filter( person -> !person.getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())).findFirst();
 
-                LocalDate dateOfSubmission = ssiApp.getTime();
+
                 int year = dateOfSubmission.getYear();
                 int month = dateOfSubmission.getMonthValue();
-                int day = dateOfSubmission.getDayOfMonth();
                 String updateMonth = String.format("%02d", random.nextInt(today.getMonthValue() - month + 1) + month - 1);
 
                 String updateDay = String.format("%02d", random.nextInt(28 - 1) + 1);
@@ -475,20 +468,17 @@ public class MockServicesImpl implements MockServices {
         return Optional.empty();
     }
 
-
-    public Optional<BooleanMockResult> getOAEDRegistration(SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+    @Override
+    public Optional<BooleanMockResult> getOAEDRegistration(LocalDate dateOfSubmission,LocalDate today,double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
         if (shouldTry) {
-            if (SatisticUtils.shouldChangeValue()) {
+            if (SatisticUtils.shouldChangeValue(pValue)) {
                 final LocalDate referenceDate = LocalDate.now();
-                Optional<HouseholdMember> adultMember = ssiApp.getHouseholdComposition().stream().filter( person ->{
-                    return !person.getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm()) &&
-                            (EthAppUtils.calculateAge(LocalDate.parse(person.getDateOfBirth(), formatter), referenceDate) >= 18);
-                }).findFirst();
+                Optional<HouseholdMember> adultMember = ssiApp.getHouseholdComposition().stream().filter( person -> !person.getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm()) &&
+                        (EthAppUtils.calculateAge(LocalDate.parse(person.getDateOfBirth(), formatter), referenceDate) >= 18)).findFirst();
 
-                LocalDate dateOfSubmission = ssiApp.getTime();
+
                 int year = dateOfSubmission.getYear();
                 int month = dateOfSubmission.getMonthValue();
-                int day = dateOfSubmission.getDayOfMonth();
                 String updateMonth = String.format("%02d", random.nextInt(today.getMonthValue() - month + 1) + month - 1);
 
                 String updateDay = String.format("%02d", random.nextInt(28 - 1) + 1);
@@ -507,6 +497,30 @@ public class MockServicesImpl implements MockServices {
         return Optional.empty();
     }
 
+    @Override
+    public Optional<BooleanMockResult> getLuxury(LocalDate dateOfSubmission,LocalDate today, double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+        if (shouldTry) {
+            if (SatisticUtils.shouldChangeValue(pValue)) {
+                int year = dateOfSubmission.getYear();
+                int month = dateOfSubmission.getMonthValue();
+                String updateMonth = String.format("%02d", random.nextInt(today.getMonthValue() - month + 1) + month - 1);
+
+                String updateDay = String.format("%02d", random.nextInt(28 - 1) + 1);
+                if (updateMonth.equals("00")) {
+                    updateMonth = "12";
+                    year -= 1;
+                }
+                LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                BooleanMockResult result = new BooleanMockResult();
+                result.setDate(updateDate);
+                result.setValue(true);
+                result.setData(null);
+                return Optional.of(result);
+            }
+        }
+        return Optional.empty();
+    }
+
 
 
 
@@ -518,9 +532,9 @@ public class MockServicesImpl implements MockServices {
     private static double threshold(SsiApplication ssiApp) {
         List<HouseholdMember> household = ssiApp.getHouseholdComposition();
         final LocalDate referenceDate = LocalDate.now();
-        Long adults = household.stream().filter(h -> EthAppUtils.calculateAge(LocalDate.parse(h.getDateOfBirth(), formatter), referenceDate) >= 18).count();
-        Integer adultCount = adults.intValue();
-        Integer minorCount = household.size() - adultCount;
+        long adults = household.stream().filter(h -> EthAppUtils.calculateAge(LocalDate.parse(h.getDateOfBirth(), formatter), referenceDate) >= 18).count();
+        int adultCount = (int) adults;
+        int minorCount = household.size() - adultCount;
         // remove one adult because the first one has a fixed payment value of 200
         if (adultCount == 0 && minorCount > 0) {
             adultCount = minorCount - 1;
@@ -528,7 +542,7 @@ public class MockServicesImpl implements MockServices {
             minorCount--;
         } else if ((adultCount == 1 && minorCount == 0) || adultCount >= 2) {
             adultCount--;
-        } else if (adultCount == 1 && !ssiApp.getParenthood().equals("single")) {
+        } else if (adultCount == 1 && ssiApp.getParenthood() != null && !ssiApp.getParenthood().equals("single")) {
             adultCount = adultCount + minorCount - 1;
         }
 //        log.info("adult count :{}, minor count :{}", adultCount, minorCount);

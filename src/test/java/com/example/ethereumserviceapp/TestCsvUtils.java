@@ -124,7 +124,7 @@ public class TestCsvUtils {
     }
 
     @Test
-    public void testMakeHouseholdAppCSV() {
+    public void testMakeHouseholdAppCSV() throws FileNotFoundException {
         List<SsiApplication> houshold = CsvUtils.generateMockData(200);
         CsvUtils.writeToCSV(houshold);
 
@@ -151,10 +151,10 @@ public class TestCsvUtils {
                 }
 
         );
-
-// aggregate all the financial values of the household to one new application for verification
-
-
     }
+
+
+
+
 
 }
