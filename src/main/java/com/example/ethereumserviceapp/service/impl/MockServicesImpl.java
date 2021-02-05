@@ -53,23 +53,16 @@ public class MockServicesImpl implements MockServices {
 
     }
 
-    //TODO clean up ssiApps to only denote the household applications (they will be passed externally to the method)
     @Override
     public Optional<UpdateMockResult> getUpdatedOtherBenefitValue(LocalDate dateOfSubmission, LocalDate today, double pValue,
-                                                                  SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+                                                                  SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> householdApps) {
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
                 log.info("update value for otherBenefit !");
                 double newOtherBenefits;
                 // calculate threshold
                 double otherBenefits = ssiApp.getOtherBenefitsR() != null ? Double.parseDouble(ssiApp.getOtherBenefitsR()) : 0;
-                List<SsiApplication> householdApps =
-                        new ArrayList<>();
-                for (SsiApplication innerApp : ssiApps) {
-                    if (innerApp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())) {
-                        householdApps.add(innerApp);
-                    }
-                }
+
                 // all the applications of the household
                 double threshold = threshold(ssiApp);
                 SsiApplication aggregatedHouseholdValuesApp = EthAppUtils.aggregateHouseholdValues(householdApps);
@@ -113,16 +106,15 @@ public class MockServicesImpl implements MockServices {
     }
 
     @Override
-    public Optional<UpdateMockResult> getUpdatedERGOMValue(LocalDate dateOfSubmission,LocalDate today,double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+    public Optional<UpdateMockResult> getUpdatedERGOMValue(LocalDate dateOfSubmission,LocalDate today,
+                                                           double pValue,SsiApplication ssiApp, boolean shouldTry,
+                                                           List<SsiApplication> householdApps) {
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
                 log.info("update value for otherBenefit !");
                 double newErgom;
                 // calculate threshold
                 double ergom = ssiApp.getErgomeR() != null ? Double.parseDouble(ssiApp.getErgomeR()) : 0;
-                List<SsiApplication> householdApps =
-                        ssiApps.stream().filter(innerApp -> innerApp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())).collect(Collectors.toList());
-                // all the applications of the household
                 double threshold = threshold(ssiApp);
                 SsiApplication aggregatedHouseholdValuesApp = EthAppUtils.aggregateHouseholdValues(householdApps);
                 double aggregatedMonthlyIncome = getTotalIncome(aggregatedHouseholdValuesApp).doubleValue();
@@ -168,16 +160,15 @@ public class MockServicesImpl implements MockServices {
 
 
     @Override
-    public Optional<UpdateMockResult> getUpdatedOAEDBenefitValue(LocalDate dateOfSubmission,LocalDate today, double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+    public Optional<UpdateMockResult> getUpdatedOAEDBenefitValue(LocalDate dateOfSubmission,LocalDate today,
+                                                                 double pValue,SsiApplication ssiApp, boolean shouldTry,
+                                                                 List<SsiApplication> householdApps) {
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
                 log.info("update value for otherBenefit !");
                 double newOaedBenefit;
                 // calculate threshold
                 double oaedBenefit = ssiApp.getOtherBenefitsR() != null ? Double.parseDouble(ssiApp.getOtherBenefitsR()) : 0;
-                List<SsiApplication> householdApps =
-                        ssiApps.stream().filter(innerApp -> innerApp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())).collect(Collectors.toList());
-                // all the applications of the household
                 double threshold = threshold(ssiApp);
                 SsiApplication aggregatedHouseholdValuesApp = EthAppUtils.aggregateHouseholdValues(householdApps);
                 double aggregatedMonthlyIncome = getTotalIncome(aggregatedHouseholdValuesApp).doubleValue();
@@ -222,18 +213,15 @@ public class MockServicesImpl implements MockServices {
 
 
     @Override
-    public Optional<UpdateMockResult> getUpdateSalariesData(LocalDate dateOfSubmission,LocalDate today, double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+    public Optional<UpdateMockResult> getUpdateSalariesData(LocalDate dateOfSubmission,LocalDate today,
+                                                            double pValue,SsiApplication ssiApp,
+                                                            boolean shouldTry, List<SsiApplication> householdApps) {
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
                 log.info("update value for otherBenefit !");
                 double newSalaries = 0;
                 // calculate threshold
                 double salariesR = ssiApp.getSalariesR() != null ? Double.parseDouble(ssiApp.getSalariesR()) : 0;
-                List<SsiApplication> householdApps =
-                        ssiApps.stream().filter(innerApp -> {
-                            return innerApp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm());
-                        }).collect(Collectors.toList());
-                // all the applications of the household
                 double threshold = threshold(ssiApp);
                 SsiApplication aggregatedHouseholdValuesApp = EthAppUtils.aggregateHouseholdValues(householdApps);
                 double aggregatedMonthlyIncome = getTotalIncome(aggregatedHouseholdValuesApp).doubleValue();
@@ -276,18 +264,15 @@ public class MockServicesImpl implements MockServices {
     }
 
     @Override
-    public Optional<UpdateMockResult> getUpdatedPension(LocalDate dateOfSubmission,LocalDate today,double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+    public Optional<UpdateMockResult> getUpdatedPension(LocalDate dateOfSubmission,LocalDate today,
+                                                        double pValue,SsiApplication ssiApp,
+                                                        boolean shouldTry, List<SsiApplication> householdApps) {
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
                 log.info("update value for otherBenefit !");
                 double newPensions = 0;
                 // calculate threshold
                 double pensionsR = ssiApp.getPensionsR() != null ? Double.parseDouble(ssiApp.getPensionsR()) : 0;
-                List<SsiApplication> householdApps =
-                        ssiApps.stream().filter(innerApp -> {
-                            return innerApp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm());
-                        }).collect(Collectors.toList());
-                // all the applications of the household
                 double threshold = threshold(ssiApp);
                 SsiApplication aggregatedHouseholdValuesApp = EthAppUtils.aggregateHouseholdValues(householdApps);
                 double aggregatedMonthlyIncome = getTotalIncome(aggregatedHouseholdValuesApp).doubleValue();
@@ -331,18 +316,15 @@ public class MockServicesImpl implements MockServices {
 
 
     @Override
-    public Optional<UpdateMockResult> getUpdatedFreelance(LocalDate dateOfSubmission,LocalDate today,double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+    public Optional<UpdateMockResult> getUpdatedFreelance(LocalDate dateOfSubmission,LocalDate today,
+                                                          double pValue,SsiApplication ssiApp, boolean shouldTry,
+                                                          List<SsiApplication> householdApps) {
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
                 log.info("update value for otherBenefit !");
                 double newFreelanceR = 0;
                 // calculate threshold
                 double freelanceR = ssiApp.getFreelanceR() != null ? Double.parseDouble(ssiApp.getFreelanceR()) : 0;
-                List<SsiApplication> householdApps =
-                        ssiApps.stream().filter(innerApp -> {
-                            return innerApp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm());
-                        }).collect(Collectors.toList());
-                // all the applications of the household
                 double threshold = threshold(ssiApp);
                 SsiApplication aggregatedHouseholdValuesApp = EthAppUtils.aggregateHouseholdValues(householdApps);
                 double aggregatedMonthlyIncome = getTotalIncome(aggregatedHouseholdValuesApp).doubleValue();
@@ -386,7 +368,9 @@ public class MockServicesImpl implements MockServices {
 
 
     @Override
-    public Optional<UpdateMockResult> getUpdatedDepoists(LocalDate dateOfSubmission,LocalDate today,double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+    public Optional<UpdateMockResult> getUpdatedDepoists(LocalDate dateOfSubmission,LocalDate today,
+                                                         double pValue,SsiApplication ssiApp, boolean shouldTry,
+                                                         List<SsiApplication> householdApps) {
         //financial data :
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
@@ -394,11 +378,6 @@ public class MockServicesImpl implements MockServices {
                 double newDeposits = 0;
                 // calculate threshold
                 double depositsR = ssiApp.getDepositsA() != null ? Double.parseDouble(ssiApp.getDepositsA()) : 0;
-                List<SsiApplication> householdApps =
-                        ssiApps.stream().filter(innerApp -> {
-                            return innerApp.getHouseholdPrincipal().getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm());
-                        }).collect(Collectors.toList());
-                // all the applications of the household
                 double threshold = threshold(ssiApp);
                 SsiApplication aggregatedHouseholdValuesApp = EthAppUtils.aggregateHouseholdValues(householdApps);
                 double aggregatedMonthlyIncome = getTotalIncome(aggregatedHouseholdValuesApp).doubleValue();
@@ -441,7 +420,8 @@ public class MockServicesImpl implements MockServices {
 
 
     @Override
-    public Optional<BooleanMockResult> getDeaths(LocalDate dateOfSubmission,LocalDate today,double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+    public Optional<BooleanMockResult> getDeaths(LocalDate dateOfSubmission,LocalDate today,double pValue,SsiApplication ssiApp,
+                                                 boolean shouldTry, List<SsiApplication> householdApps) {
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
                 Optional<HouseholdMember> deceased = ssiApp.getHouseholdComposition().stream().
@@ -469,7 +449,8 @@ public class MockServicesImpl implements MockServices {
     }
 
     @Override
-    public Optional<BooleanMockResult> getOAEDRegistration(LocalDate dateOfSubmission,LocalDate today,double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+    public Optional<BooleanMockResult> getOAEDRegistration(LocalDate dateOfSubmission,LocalDate today,double pValue,
+                                                           SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> householdApps) {
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
                 final LocalDate referenceDate = LocalDate.now();
@@ -498,7 +479,8 @@ public class MockServicesImpl implements MockServices {
     }
 
     @Override
-    public Optional<BooleanMockResult> getLuxury(LocalDate dateOfSubmission,LocalDate today, double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps) {
+    public Optional<BooleanMockResult> getLuxury(LocalDate dateOfSubmission,LocalDate today, double pValue,
+                                                 SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> householdApps) {
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
                 int year = dateOfSubmission.getYear();

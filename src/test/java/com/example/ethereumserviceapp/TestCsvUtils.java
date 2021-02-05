@@ -37,7 +37,6 @@ public class TestCsvUtils {
             InputStream is = new FileInputStream(initialFile);
             CsvUtils.csvToSsiApplication(is);
         } catch (Exception e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

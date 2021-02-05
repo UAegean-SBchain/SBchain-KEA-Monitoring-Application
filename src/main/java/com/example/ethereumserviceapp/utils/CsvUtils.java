@@ -286,9 +286,6 @@ public class CsvUtils {
 
 //        System.out.println(householdAppList.toString());
 
-        //TODO add correct initial amount allocation
-        // amounts are calculated for 6months period, but in the application the amounts for 12 months are submitted
-        // (200 E for adults, 100E for adults, 50E for children) *12
         int maxAmount = (200 + (int) additionalAdults * 100 + (principalApp.getHouseholdComposition().size() - (int) additionalAdults) * 50) * 6;
         int leftOverAmount = addFinancialDataToSsiApp(principalApp, maxAmount);
         for (SsiApplication app : householdAppList) {// for all non principal applications
@@ -303,7 +300,7 @@ public class CsvUtils {
     public static SsiApplication makeRandomApplicant() {
         SsiApplication randomSsiApp = new SsiApplication();
         randomSsiApp.setId(String.format("%09d", new Random().nextInt(10000)));
-        randomSsiApp.setUuid(String.format("%09d", new Random().nextInt(10000)));
+        randomSsiApp.setUuid(RandomIdGenerator.GetBase36(16));
         //ssiApp.setCredentialIds(transformCrendentialIds(csvRecord.get("credentialIds")));
         randomSsiApp.setSsn(String.format("%09d", new Random().nextInt(10000)));
         randomSsiApp.setTaxisAfm(getRandomNumberByLength(9));
@@ -312,7 +309,7 @@ public class CsvUtils {
         try {
             name = getRandomFirstName();
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            log.info(e.getMessage());
         }
         randomSsiApp.setTaxisFamilyName(surname[1]);
         randomSsiApp.setTaxisFirstName(name[1]);
@@ -321,13 +318,13 @@ public class CsvUtils {
         try {
             fatherName = getRandomFirstName();
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            log.info(e.getMessage());
         }
         String[] motherName = new String[0];
         try {
             motherName = getRandomFirstNameFemale();
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            log.info(e.getMessage());
         }
         randomSsiApp.setTaxisFathersName(fatherName[1]);
         randomSsiApp.setTaxisMothersName(motherName[1]);
@@ -483,7 +480,7 @@ public class CsvUtils {
                     GREEK_FIRST_NAMES_MALE.add(line);
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                log.info(e.getMessage());
             }
         }
         int index = new Random().nextInt(GREEK_FIRST_NAMES_MALE.size() - 1);
@@ -501,7 +498,7 @@ public class CsvUtils {
                     GREEK_FIRST_NAMES_FEMALE.add(line);
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                log.info(e.getMessage());
             }
         }
         int index = new Random().nextInt(GREEK_FIRST_NAMES_FEMALE.size() - 1);
@@ -519,7 +516,7 @@ public class CsvUtils {
             try {
                 inputStream = new FileInputStream("surnames_gr.txt");
             } catch (FileNotFoundException e) {
-                e.printStackTrace();
+                log.info(e.getMessage());
             }
             try {
                 assert inputStream != null;
@@ -531,7 +528,7 @@ public class CsvUtils {
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                log.info(e.getMessage());
             }
         }
         int index = new Random().nextInt(GREEK_LAST_NAMES.size() - 1);
@@ -676,7 +673,6 @@ public class CsvUtils {
             appList.get(i).setTaxisGender("female");
             appList.get(i).setGender("female");
             appList.get(i).setTaxisFirstName(getRandomFirstNameFemale()[0]);
-            //TODO get female names form list
         }
         int marriedSize = (sampleSize * 70) / 100;
         for (int i = 0; i < marriedSize; i++) {

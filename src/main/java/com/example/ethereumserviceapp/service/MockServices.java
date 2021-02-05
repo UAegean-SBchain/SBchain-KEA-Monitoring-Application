@@ -16,7 +16,7 @@ public interface MockServices {
      * @param ssiApp             , the current applicaiton being checked if the value will update
      * @param shouldTry,boolean, denotes if the check should be made or not (if there is already a chance in this run
      *                           the check should be ignored)
-     * @param ssiApps,           all the applications submitted to the syste
+     * @param ssiApps,           the household applications, related to the ssiApp parameter
      * @return 0 if no change should be made, else a change is made
      */
     public Optional<UpdateMockResult> getUpdatedOtherBenefitValue(LocalDate changeLowDate,LocalDate changeUpperDate,
