@@ -4,10 +4,8 @@ import java.io.*;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -20,35 +18,35 @@ import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 import org.thymeleaf.util.StringUtils;
 
 @Slf4j
 public class CsvUtils {
-    public static String TYPE = "text/csv";
-    static String[] HEADERs = {"_id/$oid",	"uuid",	"ssn",	"taxisAfm",	"taxisFamilyName",
-            "taxisFirstName",	"taxisFathersName",	"taxisMothersName",	"taxisFamilyNameLatin",	"taxisFirstNameLatin",	"taxisFathersNameLatin",	"taxisMothersNameLatin",
-            "taxisAmka",	"taxisDateOfBirth",	"taxisGender",	"nationality",	"maritalStatus",	"hospitalized",	"hospitalizedSpecific",
-            "monk",	"luxury",	"street",	"streetNumber",	"po",	"prefecture",	"ownership",	"supplyType",	"meterNumber",
-            "participateFead",	"selectProvider",	"gender",	"disabilityStatus",	"levelOfEducation",	"employmentStatus",	"unemployed",	"employed",
-            "oaedId",	"oaedDate",	"email",	"mobilePhone",	"landline",	"iban",	"streetNumber_1",	"prefecture_2",	"municipality",	"parenthood",	"custody",
-            "additionalAdults",	"salariesR",	"pensionsR",	"farmingR",	"freelanceR",	"rentIncomeR",	"unemploymentBenefitR",	"otherBenefitsR",	"ekasR",
-            "otherIncomeR",	"ergomeR",	"depositInterestA",	"depositsA",	"domesticRealEstateA",	"foreignRealEstateA",	"vehicleValueA",	"investmentsA",
-            "totalIncome",	"savedInDb",	"status",	"submittedMunicipality",	"time",	"householdPrincipal",	"householdComposition",	"householdCompositionHistory",
+    //    public static String TYPE = "text/csv";
+    static String[] HEADERs = {"_id/$oid", "uuid", "ssn", "taxisAfm", "taxisFamilyName",
+            "taxisFirstName", "taxisFathersName", "taxisMothersName", "taxisFamilyNameLatin", "taxisFirstNameLatin", "taxisFathersNameLatin", "taxisMothersNameLatin",
+            "taxisAmka", "taxisDateOfBirth", "taxisGender", "nationality", "maritalStatus", "hospitalized", "hospitalizedSpecific",
+            "monk", "luxury", "street", "streetNumber", "po", "prefecture", "ownership", "supplyType", "meterNumber",
+            "participateFead", "selectProvider", "gender", "disabilityStatus", "levelOfEducation", "employmentStatus", "unemployed", "employed",
+            "oaedId", "oaedDate", "email", "mobilePhone", "landline", "iban", "streetNumber_1", "prefecture_2", "municipality", "parenthood", "custody",
+            "additionalAdults", "salariesR", "pensionsR", "farmingR", "freelanceR", "rentIncomeR", "unemploymentBenefitR", "otherBenefitsR", "ekasR",
+            "otherIncomeR", "ergomeR", "depositInterestA", "depositsA", "domesticRealEstateA", "foreignRealEstateA", "vehicleValueA", "investmentsA",
+            "totalIncome", "savedInDb", "status", "submittedMunicipality", "time", "householdPrincipal", "householdComposition", "householdCompositionHistory",
 
-            "salariesRHistory",	"pensionsRHistory",	"farmingRHistory",	"freelanceRHistory",	"otherBenefitsRHistory",	"depositsAHistory",	"domesticRealEstateAHistory",
-            "foreignRealEstateAHistory",	"monthlyGuarantee",	"totalIncome_3",	"monthlyIncome",	"monthlyAid",	"savedInDb_4",	"status_5"};
+            "salariesRHistory", "pensionsRHistory", "farmingRHistory", "freelanceRHistory", "otherBenefitsRHistory", "depositsAHistory", "domesticRealEstateAHistory",
+            "foreignRealEstateAHistory", "monthlyGuarantee", "totalIncome_3", "monthlyIncome", "monthlyAid", "savedInDb_4", "status_5"};
 
 
-
-    private final static List<String> GREEK_FIRST_NAMES = new ArrayList<>();
+    private final static List<String> GREEK_FIRST_NAMES_MALE = new ArrayList<>();
+    private final static List<String> GREEK_FIRST_NAMES_FEMALE = new ArrayList<>();
     private final static List<String> GREEK_LAST_NAMES = new ArrayList<>();
 
-    public static boolean hasCSVFormat(MultipartFile file) {
-        return TYPE.equals(file.getContentType());
-    }
+//    public static boolean hasCSVFormat(MultipartFile file) {
+//        final boolean equals = TYPE.equals(file.getContentType());
+//        return equals;
+//    }
 
     // transforms csv to JPA entity
     public static List<SsiApplication> csvToSsiApplication(InputStream is) {
@@ -56,7 +54,7 @@ public class CsvUtils {
              CSVParser csvParser = new CSVParser(fileReader,
                      CSVFormat.DEFAULT.withFirstRecordAsHeader().withIgnoreHeaderCase().withTrim())) {
 
-            List<SsiApplication> ssiAppList = new ArrayList<SsiApplication>();
+            List<SsiApplication> ssiAppList = new ArrayList<>();
 
             Iterable<CSVRecord> csvRecords = csvParser.getRecords();
 
@@ -143,7 +141,7 @@ public class CsvUtils {
                 ssiApp.setTotalIncome(csvRecord.get("totalIncome"));
                 ssiApp.setMonthlyIncome(csvRecord.get("monthlyIncome"));
                 ssiApp.setMonthlyAid(csvRecord.get("monthlyAid"));
-                ssiApp.setSavedInDb(Boolean.valueOf(csvRecord.get("savedInDb")));
+                ssiApp.setSavedInDb(Boolean.parseBoolean(csvRecord.get("savedInDb")));
                 ssiApp.setStatus(csvRecord.get("status"));
                 ssiApp.setSubmittedMunicipality(csvRecord.get("submittedMunicipality"));
                 ssiApp.setTime(LocalDate.parse(csvRecord.get("time"), formatter));
@@ -175,17 +173,17 @@ public class CsvUtils {
 
     private static LinkedHashMap<String, List<HouseholdMember>> transformHhHistory(String history) {
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
         LinkedHashMap<String, List<HouseholdMember>> hhHistory = new LinkedHashMap<>();
-        try{
+        try {
             String[] hhs = history.split("-");
             for (String s : hhs) {
                 String[] hh = s.split("_");
                 List<HouseholdMember> householdEntry = transformHousehold(hh[1]);
 //                hhHistory.put(LocalDateTime.parse(hh[0], formatter), householdEntry);
-                hhHistory.put( hh[0] , householdEntry);
+                hhHistory.put(hh[0], householdEntry);
             }
-        }catch(IndexOutOfBoundsException e){
+        } catch (IndexOutOfBoundsException e) {
             log.error(e.getMessage());
         }
 
@@ -194,33 +192,33 @@ public class CsvUtils {
 
     private static LinkedHashMap<String, String> transformHistoryField(String history) {
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
         LinkedHashMap<String, String> histField = new LinkedHashMap<>();
         if (!"".equals(history)) {
             String[] histArray = history.split("\\|");
             for (String s : histArray) {
                 String[] historyEntry = s.split("_");
-                histField.put( historyEntry[0] , historyEntry[1]);
+                histField.put(historyEntry[0], historyEntry[1]);
             }
         }
         return histField;
     }
 
-    private static List<String> transformCrendentialIds(String credentials) {
-        return Arrays.asList(credentials.split("\\|"));
-    }
+//    private static List<String> transformCrendentialIds(String credentials) {
+//        return Arrays.asList(credentials.split("\\|"));
+//    }
 
-    private static Map<String, String> transformMailAddress(String address) {
-        Map<String, String> mailAddresses = new HashMap<>();
-
-        String[] mailAddress = address.split("\\|");
-        for (String s : mailAddress) {
-            String[] addressEntry = s.split(":");
-            mailAddresses.put(addressEntry[0], addressEntry[1]);
-        }
-
-        return mailAddresses;
-    }
+//    private static Map<String, String> transformMailAddress(String address) {
+//        Map<String, String> mailAddresses = new HashMap<>();
+//
+//        String[] mailAddress = address.split("\\|");
+//        for (String s : mailAddress) {
+//            String[] addressEntry = s.split(":");
+//            mailAddresses.put(addressEntry[0], addressEntry[1]);
+//        }
+//
+//        return mailAddresses;
+//    }
 
     public static List<SsiApplication> generateMockData(int size) {
         List<SsiApplication> finalHouseholdApp = generateMockHouseholdApplications();
@@ -326,7 +324,7 @@ public class CsvUtils {
         }
         String[] motherName = new String[0];
         try {
-            motherName = getRandomFirstName();
+            motherName = getRandomFirstNameFemale();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -339,13 +337,13 @@ public class CsvUtils {
         randomSsiApp.setTaxisDateOfBirth(getAdultDateOfBirth());
 //        }
         // taxisFamilyNameLatin
-        randomSsiApp.setTaxisFamilyNameLatin(surname[0]);
+        randomSsiApp.setTaxisFamilyNameLatin(translitarate(surname[0]));
         //taxisFirstNameLatin
-        randomSsiApp.setTaxisFirstNameLatin(name[0]);
+        randomSsiApp.setTaxisFirstNameLatin(translitarate(name[0]));
         //taxisFathersNameLatin
-        randomSsiApp.setTaxisFathersNameLatin(fatherName[0]);
+        randomSsiApp.setTaxisFathersNameLatin(translitarate(fatherName[0]));
         //taxisMothersNameLatin
-        randomSsiApp.setTaxisMothersNameLatin(motherName[0]);
+        randomSsiApp.setTaxisMothersNameLatin(translitarate(motherName[0]));
         //taxisAmka
         randomSsiApp.setTaxisAmka(getRandomNumberByLength(11));
         //taxisGender
@@ -443,34 +441,27 @@ public class CsvUtils {
     public static String makeHouseHoldString(List<HouseholdMember> householdAppList) {
         StringJoiner strJoiner = new StringJoiner(
                 "|", "", "");
-        householdAppList.stream().map(app -> {
-            return makeMemberToHouseholdString(app);
-        }).forEach(memberStr -> {
-            strJoiner.add(memberStr);
-        });
+        householdAppList.stream().map(CsvUtils::makeMemberToHouseholdString).forEach(strJoiner::add);
         return strJoiner.toString();
     }
 
-    public static String makeMemberToHouseholdString(SsiApplication member) {
-        //for 2 members: name;surname;afm;date|name;surname;afm;date
-        StringBuilder sb = new StringBuilder();
-        sb.append(member.getTaxisFirstName()).append(";")
-                .append(member.getTaxisFamilyName()).append(";")
-                .append(member.getTaxisAfm()).append(";")
-                .append(StringUtils.isEmpty(member.getTaxisDateOfBirth()) ? "" : member.getTaxisDateOfBirth()).append(";")
-        ;
-        return sb.toString();
-    }
+//    public static String makeMemberToHouseholdString(SsiApplication member) {
+//        //for 2 members: name;surname;afm;date|name;surname;afm;date
+//        StringBuilder sb = new StringBuilder();
+//        sb.append(member.getTaxisFirstName()).append(";")
+//                .append(member.getTaxisFamilyName()).append(";")
+//                .append(member.getTaxisAfm()).append(";")
+//                .append(StringUtils.isEmpty(member.getTaxisDateOfBirth()) ? "" : member.getTaxisDateOfBirth()).append(";")
+//        ;
+//        return sb.toString();
+//    }
 
     public static String makeMemberToHouseholdString(HouseholdMember member) {
         //for 2 members: name;surname;afm;date|name;surname;afm;date
-        StringBuilder sb = new StringBuilder();
-        sb.append(member.getName()).append(";")
-                .append(member.getSurname()).append(";")
-                .append(member.getAfm()).append(";")
-                .append(StringUtils.isEmpty(member.getDateOfBirth()) ? "" : member.getDateOfBirth()).append(";")
-        ;
-        return sb.toString();
+        return member.getName() + ";" +
+                member.getSurname() + ";" +
+                member.getAfm() + ";" +
+                (StringUtils.isEmpty(member.getDateOfBirth()) ? "" : member.getDateOfBirth()) + ";";
     }
 
 
@@ -481,49 +472,69 @@ public class CsvUtils {
 //        String[] names = {"John", "Jack", "Joey"};
 //        String[] namesGR = {"Γιάννης", "Ιάκωβος", "Χάρης"};
 
-        if (GREEK_FIRST_NAMES.size() == 0) {
-            ClassLoader classLoader = CsvUtils.class.getClassLoader();
+        if (GREEK_FIRST_NAMES_MALE.size() == 0) {
+//            ClassLoader classLoader = CsvUtils.class.getClassLoader();
             InputStream inputStream = new FileInputStream("male_names_gr.txt");// classLoader.getResourceAsStream("male_names_gr.txt");
             try (BufferedReader br
                          = new BufferedReader(new InputStreamReader(inputStream))) {
                 String line;
                 while ((line = br.readLine()) != null) {
-                    GREEK_FIRST_NAMES.add(line);
+                    GREEK_FIRST_NAMES_MALE.add(line);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        int index = new Random().nextInt(GREEK_FIRST_NAMES.size() - 1);
-        String[] result = {GREEK_FIRST_NAMES.get(index), GREEK_FIRST_NAMES.get(index)};
-        return result;
+        int index = new Random().nextInt(GREEK_FIRST_NAMES_MALE.size() - 1);
+        return new String[]{GREEK_FIRST_NAMES_MALE.get(index), GREEK_FIRST_NAMES_MALE.get(index)};
     }
+
+
+    public static String[] getRandomFirstNameFemale() throws FileNotFoundException {
+        if (GREEK_FIRST_NAMES_FEMALE.size() == 0) {
+            InputStream inputStream = new FileInputStream("female_names_gr.txt");// classLoader.getResourceAsStream("male_names_gr.txt");
+            try (BufferedReader br
+                         = new BufferedReader(new InputStreamReader(inputStream))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    GREEK_FIRST_NAMES_FEMALE.add(line);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        int index = new Random().nextInt(GREEK_FIRST_NAMES_FEMALE.size() - 1);
+        return new String[]{GREEK_FIRST_NAMES_FEMALE.get(index), GREEK_FIRST_NAMES_FEMALE.get(index)};
+    }
+
 
     /**
      * @return string[] with two elements first is the Latin name and the second is the Greekname
      */
     public static String[] getRandomSurName() {
         if (GREEK_LAST_NAMES.size() == 0) {
-            ClassLoader classLoader = CsvUtils.class.getClassLoader();
+//            ClassLoader classLoader = CsvUtils.class.getClassLoader();
             InputStream inputStream = null;// classLoader.getResourceAsStream("male_names_gr.txt");
             try {
                 inputStream = new FileInputStream("surnames_gr.txt");
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
-            try (BufferedReader br
-                         = new BufferedReader(new InputStreamReader(inputStream))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    GREEK_LAST_NAMES.add(line);
+            try {
+                assert inputStream != null;
+                try (BufferedReader br
+                             = new BufferedReader(new InputStreamReader(inputStream))) {
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        GREEK_LAST_NAMES.add(line);
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
         int index = new Random().nextInt(GREEK_LAST_NAMES.size() - 1);
-        String[] result = {GREEK_LAST_NAMES.get(index), GREEK_LAST_NAMES.get(index)};
-        return result;
+        return new String[]{GREEK_LAST_NAMES.get(index), GREEK_LAST_NAMES.get(index)};
     }
 
     public static String getAdultDateOfBirth() {
@@ -542,34 +553,30 @@ public class CsvUtils {
         return day + "/" + month + "/" + year;
     }
 
-    public static boolean isMinor() {
-        Random random = new Random();
-        return random.nextInt(2) == 0;
-    }
 
     public static String getGender() {
         Random random = new Random();
-        return random.nextInt(1) == 0 ? "male" : "female";
+        return random.nextInt(2) == 0 ? "male" : "female";
     }
 
     public static String getNationality() {
         Random random = new Random();
-        return random.nextInt(1) == 0 ? "Ελληνική" : "Άλλο";
+        return random.nextInt(2) == 0 ? "Ελληνική" : "Άλλο";
     }
 
     public static String getIsMarried() {
         Random random = new Random();
-        return random.nextInt(1) == 0 ? "married" : "notmarried";
+        return random.nextInt(2) == 0 ? "married" : "notmarried";
     }
 
-    public static String getEmploymentStatus() {
-        Random random = new Random();
-        return random.nextInt(1) == 0 ? "employed" : "unemployed";
-    }
+//    public static String getEmploymentStatus() {
+//        Random random = new Random();
+//        return random.nextInt(2) == 0 ? "employed" : "unemployed";
+//    }
 
     public static String booleanString() {
         Random random = new Random();
-        return random.nextInt(1) == 0 ? "TRUE" : "FALSE";
+        return random.nextInt(2) == 0 ? "TRUE" : "FALSE";
     }
 
     public static String getRandomStreet() {
@@ -578,19 +585,6 @@ public class CsvUtils {
         return names[index];
     }
 
-
-    public static String getRandomMunicipality() {
-        String[] names = {"ΑΘΗΝΩΝ", "ΖΩΓΡΑΦΟΥ", "ΒΥΡΩΝΑΣ", "ΚΑΙΣΑΡΙΑΝΗΣ"};
-        int index = new Random().nextInt(names.length - 1);
-        return names[index];
-    }
-
-
-    public static String getRandomPrefecture() {
-        String[] names = {"ΑΤΤΙΚΗ", "ΚΕΦΑΛΛΗΝΙΑΣ", "ΕΥΒΟΙΑΣ"};
-        int index = new Random().nextInt(names.length - 1);
-        return names[index];
-    }
 
     public static String getRandomOwnership() {
         String[] names = {"own", "rent", "free", "guest", "homeless"};
@@ -627,12 +621,12 @@ public class CsvUtils {
         Random random = new Random();
         int nextAmount = random.nextInt(maxAmount);
         application.setSalariesR(String.valueOf(nextAmount));
-        maxAmount = maxAmount - nextAmount * 0.8 <= 0 ? 0 : maxAmount -  (int)(nextAmount * 0.8);
+        maxAmount = maxAmount - nextAmount * 0.8 <= 0 ? 0 : maxAmount - (int) (nextAmount * 0.8);
         nextAmount = random.nextInt(maxAmount);
         application.setPensionsR("0");
         application.setFarmingR(String.valueOf(0));
         application.setFreelanceR(String.valueOf(nextAmount));
-        maxAmount = maxAmount - nextAmount <= 0 ? 0 : maxAmount - nextAmount;
+        maxAmount = Math.max(maxAmount - nextAmount, 0);
         nextAmount = random.nextInt(maxAmount);
         //rentIncomeR
         application.setRentIncomeR(String.valueOf(0));
@@ -640,7 +634,7 @@ public class CsvUtils {
         application.setOtherBenefitsR(String.valueOf(0));
         application.setEkasR(String.valueOf(0));
         application.setOtherIncomeR(String.valueOf(nextAmount));
-        maxAmount = maxAmount - nextAmount <= 0 ? 0 : maxAmount - nextAmount;
+        maxAmount = Math.max(maxAmount - nextAmount, 0);
         nextAmount = random.nextInt(maxAmount);
         application.setErgomeR(String.valueOf(0));
         application.setDepositInterestA(String.valueOf(0));
@@ -651,26 +645,26 @@ public class CsvUtils {
         application.setVehicleValueA(String.valueOf(0));
         application.setInvestmentsA(String.valueOf(0));
         //totalIncome
-        Double total =   Double.parseDouble(application.getEkasR() == null ? "0.0" : application.getEkasR());
-        Double.parseDouble(application.getDepositsA() == null ? "0.0" : application.getDepositsA());
-        Double.parseDouble(application.getDepositInterestA() == null ? "0.0" : application.getDepositInterestA());
-        Double.parseDouble(application.getDomesticRealEstateA() == null ? "0.0" : application.getDomesticRealEstateA());
-        Double.parseDouble(application.getErgomeR() == null ? "0.0" : application.getErgomeR());
-        Double.parseDouble(application.getFarmingR() == null ? "0.0" : application.getFarmingR());
-        Double.parseDouble(application.getForeignRealEstateA() == null ? "0.0" : application.getForeignRealEstateA());
-        Double.parseDouble(application.getFreelanceR() == null ? "0.0" : application.getFreelanceR());
-        Double.parseDouble(application.getFreelanceR() == null ? "0.0" : application.getFreelanceR());
-        Double.parseDouble(application.getInvestmentsA() == null ? "0.0" : application.getInvestmentsA());
-        Double.parseDouble(application.getOtherBenefitsR() == null ? "0.0" : application.getOtherBenefitsR());
-        Double.parseDouble(application.getOtherIncomeR() == null ? "0.0" : application.getOtherIncomeR());
-        Double.parseDouble(application.getRentIncomeR() == null ? "0.0" : application.getRentIncomeR());
-        Double.parseDouble(application.getSalariesR() == null ? "0.0" : application.getSalariesR());
+        double total = Double.parseDouble(application.getEkasR() == null ? "0.0" : application.getEkasR()) +
+                Double.parseDouble(application.getDepositsA() == null ? "0.0" : application.getDepositsA()) +
+                Double.parseDouble(application.getDepositInterestA() == null ? "0.0" : application.getDepositInterestA()) +
+                Double.parseDouble(application.getDomesticRealEstateA() == null ? "0.0" : application.getDomesticRealEstateA()) +
+                Double.parseDouble(application.getErgomeR() == null ? "0.0" : application.getErgomeR()) +
+                Double.parseDouble(application.getFarmingR() == null ? "0.0" : application.getFarmingR()) +
+                Double.parseDouble(application.getForeignRealEstateA() == null ? "0.0" : application.getForeignRealEstateA()) +
+                Double.parseDouble(application.getFreelanceR() == null ? "0.0" : application.getFreelanceR()) +
+                Double.parseDouble(application.getFreelanceR() == null ? "0.0" : application.getFreelanceR()) +
+                Double.parseDouble(application.getInvestmentsA() == null ? "0.0" : application.getInvestmentsA()) +
+                Double.parseDouble(application.getOtherBenefitsR() == null ? "0.0" : application.getOtherBenefitsR()) +
+                Double.parseDouble(application.getOtherIncomeR() == null ? "0.0" : application.getOtherIncomeR()) +
+                Double.parseDouble(application.getRentIncomeR() == null ? "0.0" : application.getRentIncomeR()) +
+                Double.parseDouble(application.getSalariesR() == null ? "0.0" : application.getSalariesR());
 
-        application.setTotalIncome(total.toString());
+        application.setTotalIncome(Double.toString(total));
         return maxAmount;
     }
 
-    public static List<SsiApplication> makePercentages(List<SsiApplication> appList) {
+    public static List<SsiApplication> makePercentages(List<SsiApplication> appList) throws FileNotFoundException {
         int sampleSize = appList.size();
         int euCitizens = (sampleSize * 5) / 100;
         for (int i = 0; i < euCitizens; i++) {
@@ -680,6 +674,7 @@ public class CsvUtils {
         for (int i = 0; i < womenSize; i++) {
             appList.get(i).setTaxisGender("female");
             appList.get(i).setGender("female");
+            appList.get(i).setTaxisFirstName(getRandomFirstNameFemale()[0]);
             //TODO get female names form list
         }
         int marriedSize = (sampleSize * 70) / 100;
@@ -693,34 +688,34 @@ public class CsvUtils {
         int childrenAdded = 0;
         int unemployedAdded = 0;
         int parenthoodAdded = 0;
-        for (int i = 0; i < appList.size(); i++) {
+        for (SsiApplication application : appList) {
             if (childrenAdded < childrenPercent) {
-                if (!appList.get(i).getHouseholdPrincipal().getAfm().equals(appList.get(i).getTaxisAfm())) {
-                    appList.get(i).setTaxisDateOfBirth(getMinorDateOfBirth());
-                    appList.get(i).setMaritalStatus("nonMarried");
-                    appList.get(i).setEmployed("FALSE");
-                    appList.get(i).setUnemployed("TRUE");
-                    appList.get(i).setEmploymentStatus("unemployed");
-                    appList.get(i).setParenthood("FALSE");
-                    appList.get(i).setCustody("FALSE");
-                    appList.get(i).setOaedDate("");
-                    appList.get(i).setOaedId("");
+                if (!application.getHouseholdPrincipal().getAfm().equals(application.getTaxisAfm())) {
+                    application.setTaxisDateOfBirth(getMinorDateOfBirth());
+                    application.setMaritalStatus("nonMarried");
+                    application.setEmployed("FALSE");
+                    application.setUnemployed("TRUE");
+                    application.setEmploymentStatus("unemployed");
+                    application.setParenthood("FALSE");
+                    application.setCustody("FALSE");
+                    application.setOaedDate("");
+                    application.setOaedId("");
                     childrenAdded++;
                 }
             }
-            if (isAdult(appList.get(i).getTaxisDateOfBirth())) {
+            if (isAdult(application.getTaxisDateOfBirth())) {
                 if (unemployedAdded < unemployedPercent) {
-                    appList.get(i).setUnemployed("TRUE");
-                    appList.get(i).setEmployed("FALSE");
-                    appList.get(i).setEmploymentStatus("unemployed");
-                    appList.get(i).setOaedId(getRandomNumberByLength(10));
-                    appList.get(i).setOaedDate(getRandomDateIn2020());
+                    application.setUnemployed("TRUE");
+                    application.setEmployed("FALSE");
+                    application.setEmploymentStatus("unemployed");
+                    application.setOaedId(getRandomNumberByLength(10));
+                    application.setOaedDate(getRandomDateIn2020());
                     unemployedAdded++;
                 }
                 if (parenthoodAdded < parenthoodPercent) {
                     parenthoodAdded++;
-                    appList.get(i).setParenthood("TRUE");
-                    appList.get(i).setCustody("TRUE");
+                    application.setParenthood("TRUE");
+                    application.setCustody("TRUE");
                 }
             }
         }
@@ -729,7 +724,7 @@ public class CsvUtils {
     }
 
 
-    public static void writeToCSV(List<SsiApplication> appList) {
+    public static void writeToCSV(List<SsiApplication> appList) throws FileNotFoundException {
         appList = makePercentages(appList);
         final String CSV_SEPARATOR = ",";
         try {
@@ -746,7 +741,7 @@ public class CsvUtils {
 
                 oneLine.append(app.getUuid()).append(CSV_SEPARATOR);
                 //ssn
-                oneLine.append("").append(CSV_SEPARATOR);
+                oneLine.append(CSV_SEPARATOR);
                 //uuid
                 //taxisAfm
                 oneLine.append(app.getTaxisAfm()).append(CSV_SEPARATOR);
@@ -924,9 +919,52 @@ public class CsvUtils {
             }
             bw.flush();
             bw.close();
-        } catch (UnsupportedEncodingException e) {
-        } catch (FileNotFoundException e) {
         } catch (IOException e) {
+            log.info(e.getMessage());
         }
     }
+
+    private static String translitarate(String name){
+        char[] nameLetters = name.toUpperCase().toCharArray();
+        StringBuilder res = new StringBuilder();
+        for(char letter:nameLetters ){
+            res.append(greekToLatin(letter));
+        }
+        return res.toString();
+    }
+
+    private static String greekToLatin(char c){
+
+        switch (c){
+            case 'Α': return "A";
+            case 'Β': return String.valueOf('B');
+            case 'Γ': return String.valueOf('C');
+            case 'Δ': return String.valueOf('D');
+            case 'Ε': return String.valueOf('E');
+            case 'Ζ': return String.valueOf('Z');
+            case 'Η':
+            case 'Ι':
+                return String.valueOf('I');
+            case 'Θ': return "TH";
+            case 'Κ': return String.valueOf('K');
+            case 'Λ': return String.valueOf('L');
+            case 'Μ': return String.valueOf('M');
+            case 'Ν': return String.valueOf('N');
+            case 'Ξ': return String.valueOf('X');
+            case 'Ο': return String.valueOf('O');
+            case 'Π': return String.valueOf('P');
+            case 'Ρ': return String.valueOf('R');
+            case 'Σ': return String.valueOf('S');
+            case 'Τ': return String.valueOf('T');
+            case 'Υ': return String.valueOf('Y');
+            case 'Φ': return String.valueOf('F');
+            case 'Χ': return "CH";
+            case 'Ψ': return "PS";
+            case 'Ω': return "O";
+            default: return String.valueOf(c);
+        }
+
+    }
+
+
 }

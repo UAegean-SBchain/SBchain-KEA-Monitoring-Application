@@ -4,6 +4,7 @@ import com.example.ethereumserviceapp.model.BooleanMockResult;
 import com.example.ethereumserviceapp.model.UpdateMockResult;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,17 +19,18 @@ public interface MockServices {
      * @param ssiApps,           all the applications submitted to the syste
      * @return 0 if no change should be made, else a change is made
      */
-    public Optional<UpdateMockResult> getUpdatedOtherBenefitValue(SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
+    public Optional<UpdateMockResult> getUpdatedOtherBenefitValue(LocalDate changeLowDate,LocalDate changeUpperDate,double pValue, SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
 
-    public Optional<UpdateMockResult> getUpdatedERGOMValue(SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
+    public Optional<UpdateMockResult> getUpdatedERGOMValue(LocalDate changeLowDate,LocalDate changeUpperDate,double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
 
-    public Optional<UpdateMockResult> getUpdatedOAEDBenefitValue(SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
+    public Optional<UpdateMockResult> getUpdatedOAEDBenefitValue(LocalDate changeLowDate,LocalDate changeUpperDate, double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
 
-    public Optional<UpdateMockResult> getUpdateSalariesData(SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
-    public Optional<UpdateMockResult> getUpdatedPension(SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
-    public Optional<UpdateMockResult> getUpdatedFreelance(SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
-    public Optional<UpdateMockResult> getUpdatedDepoists(SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
+    public Optional<UpdateMockResult> getUpdateSalariesData(LocalDate changeLowDate,LocalDate changeUpperDate, double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
+    public Optional<UpdateMockResult> getUpdatedPension(LocalDate changeLowDate, LocalDate changeUpperDate, double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
+    public Optional<UpdateMockResult> getUpdatedFreelance(LocalDate changeLowDate, LocalDate changeUpperDate, double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
+    public Optional<UpdateMockResult> getUpdatedDepoists(LocalDate changeLowDate, LocalDate today,double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
 
-    public Optional<BooleanMockResult> getDeaths(SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
-    public Optional<BooleanMockResult> getOAEDRegistration(SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
+    public Optional<BooleanMockResult> getDeaths(LocalDate changeLowDate,LocalDate changeUpperDate,  double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
+    public Optional<BooleanMockResult> getOAEDRegistration(LocalDate changeLowDate, LocalDate changeUpperDate, double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
+    public Optional<BooleanMockResult> getLuxury(LocalDate changeLowDate, LocalDate changeUpperDate, double pValue,SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> ssiApps);
 }
