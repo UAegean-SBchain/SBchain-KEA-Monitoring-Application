@@ -43,6 +43,8 @@ public class CsvUtils {
     private final static List<String> GREEK_FIRST_NAMES_FEMALE = new ArrayList<>();
     private final static List<String> GREEK_LAST_NAMES = new ArrayList<>();
 
+    private final static DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
 //    public static boolean hasCSVFormat(MultipartFile file) {
 //        final boolean equals = TYPE.equals(file.getContentType());
 //        return equals;
@@ -58,7 +60,6 @@ public class CsvUtils {
 
             Iterable<CSVRecord> csvRecords = csvParser.getRecords();
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
             for (CSVRecord csvRecord : csvRecords) {
                 SsiApplication ssiApp = new SsiApplication();
@@ -144,7 +145,7 @@ public class CsvUtils {
                 ssiApp.setSavedInDb(Boolean.parseBoolean(csvRecord.get("savedInDb")));
                 ssiApp.setStatus(csvRecord.get("status"));
                 ssiApp.setSubmittedMunicipality(csvRecord.get("submittedMunicipality"));
-                ssiApp.setTime(LocalDate.parse(csvRecord.get("time"), formatter));
+                ssiApp.setTime(LocalDate.parse(csvRecord.get("time"), DATE_FORMATTER));
 
                 ssiAppList.add(ssiApp);
             }
@@ -174,14 +175,12 @@ public class CsvUtils {
 
     private static LinkedHashMap<String, List<HouseholdMember>> transformHhHistory(String history) {
 
-//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
         LinkedHashMap<String, List<HouseholdMember>> hhHistory = new LinkedHashMap<>();
         try {
             String[] hhs = history.split("-");
             for (String s : hhs) {
                 String[] hh = s.split("_");
                 List<HouseholdMember> householdEntry = transformHousehold(hh[1]);
-//                hhHistory.put(LocalDateTime.parse(hh[0], formatter), householdEntry);
                 hhHistory.put(hh[0], householdEntry);
             }
         } catch (IndexOutOfBoundsException e) {
@@ -193,7 +192,6 @@ public class CsvUtils {
 
     private static LinkedHashMap<String, String> transformHistoryField(String history) {
 
-//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
         LinkedHashMap<String, String> histField = new LinkedHashMap<>();
         if (!"".equals(history)) {
             String[] histArray = history.split("\\|");
@@ -276,10 +274,10 @@ public class CsvUtils {
         principalApp.setHouseholdComposition(householdMemberList);
         householdAppList.forEach(memberApp -> memberApp.setHouseholdComposition(householdMemberList));
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
         LocalDate now = LocalDate.now();
         long additionalAdults = principalApp.getHouseholdComposition().stream().filter(member -> {
-            LocalDate dateTime = LocalDate.parse(member.getDateOfBirth(), formatter);
+            LocalDate dateTime = LocalDate.parse(member.getDateOfBirth(), DATE_FORMATTER);
             return ChronoUnit.YEARS.between(dateTime, now) >= 18;
         }).count();
         principalApp.setAdditionalAdults(String.valueOf(additionalAdults));
@@ -609,9 +607,8 @@ public class CsvUtils {
 
 
     public static boolean isAdult(String dateOfBirth) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         LocalDate now = LocalDate.now();
-        LocalDate dateTime = LocalDate.parse(dateOfBirth, formatter);
+        LocalDate dateTime = LocalDate.parse(dateOfBirth, DATE_FORMATTER);
         return ChronoUnit.YEARS.between(dateTime, now) >= 18;
     }
 
@@ -872,9 +869,8 @@ public class CsvUtils {
                 //            "submittedMunicipality",
                 oneLine.append("Dimos Paianias").append(CSV_SEPARATOR);
                 //            "time",
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                 LocalDate now = LocalDate.now();
-                oneLine.append(now.format(formatter)).append(CSV_SEPARATOR);
+                oneLine.append(now.format(DATE_FORMATTER)).append(CSV_SEPARATOR);
                 //            "householdPrincipal",
                 oneLine.append(makeMemberToHouseholdString(app.getHouseholdPrincipal())).append(CSV_SEPARATOR);
                 //            "householdComposition",

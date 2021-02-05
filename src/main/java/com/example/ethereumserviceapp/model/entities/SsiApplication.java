@@ -120,6 +120,7 @@ public class SsiApplication {
     private LinkedHashMap<String, String> domesticRealEstateAHistory;
     private LinkedHashMap<String, String> foreignRealEstateAHistory;
     private LinkedHashMap<String, String> unemploymentBenefitRHistory;
+    private LinkedHashMap<String, String> ergomRHistory;
 
     //household composition
     private HouseholdMember householdPrincipal;
