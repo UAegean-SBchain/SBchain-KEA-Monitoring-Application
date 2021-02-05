@@ -31,27 +31,6 @@ public class MockServicesImpl implements MockServices {
 
 
 
-    private BigDecimal getTotalIncome(SsiApplication ssiApp) {
-        BigDecimal salaries = new BigDecimal(ssiApp.getSalariesR() == null ? "0" : ssiApp.getSalariesR()).subtract(new BigDecimal(ssiApp.getSalariesR() == null ? "0" : ssiApp.getSalariesR()).multiply(BigDecimal.valueOf(0.2)));
-        BigDecimal pensions = new BigDecimal(ssiApp.getPensionsR() == null ? "0" : ssiApp.getPensionsR());
-        BigDecimal farming = new BigDecimal(ssiApp.getFarmingR() == null ? "0" : ssiApp.getFarmingR());
-        BigDecimal freelance = new BigDecimal(ssiApp.getFreelanceR() == null ? "0" : ssiApp.getFreelanceR());
-        BigDecimal otherBnfts = new BigDecimal(ssiApp.getOtherBenefitsR() == null ? "0" : ssiApp.getOtherBenefitsR());
-        BigDecimal deposits = new BigDecimal(ssiApp.getDepositsA() == null ? "0" : ssiApp.getDepositsA());
-        BigDecimal domesticRe = new BigDecimal(ssiApp.getDomesticRealEstateA() == null ? "0" : ssiApp.getDomesticRealEstateA());
-        BigDecimal foreignRe = new BigDecimal(ssiApp.getForeignRealEstateA() == null ? "0" : ssiApp.getForeignRealEstateA());
-
-        return (salaries.add(
-                pensions).add(
-                farming).add(
-                freelance).add(
-                otherBnfts).add(
-                deposits).add(
-                domesticRe).add(
-                foreignRe)
-        ).divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
-
-    }
 
     @Override
     public Optional<UpdateMockResult> getUpdatedOtherBenefitValue(LocalDate dateOfSubmission, LocalDate today, double pValue,
@@ -95,6 +74,7 @@ public class MockServicesImpl implements MockServices {
                 UpdateMockResult result = new UpdateMockResult();
                 result.setDate(updateDate);
                 result.setValue(newOtherBenefits);
+                result.setUuid(ssiApp.getUuid());
                 log.info("threshod is {}, monthly aggregated income is {}, oriignal otherbenefit is {}", threshold, aggregatedMonthlyIncome, otherBenefits);
                 log.info("updating value from {} to {}", otherBenefits, newOtherBenefits);
                 return Optional.of(result);
@@ -147,6 +127,7 @@ public class MockServicesImpl implements MockServices {
                 UpdateMockResult result = new UpdateMockResult();
                 result.setDate(updateDate);
                 result.setValue(newErgom);
+                result.setUuid(ssiApp.getUuid());
                 log.info("threshod is {}, monthly aggregated income is {}, original ergom is {}", threshold, aggregatedMonthlyIncome, ergom);
                 log.info("updating value from {} to {}", ergom, newErgom);
                 return Optional.of(result);
@@ -201,6 +182,7 @@ public class MockServicesImpl implements MockServices {
                 UpdateMockResult result = new UpdateMockResult();
                 result.setDate(updateDate);
                 result.setValue(newOaedBenefit);
+                result.setUuid(ssiApp.getUuid());
                 log.info("threshod is {}, monthly aggregated income is {}, original oaedBenefit is {}", threshold, aggregatedMonthlyIncome, oaedBenefit);
                 log.info("updating value from {} to {}", oaedBenefit, newOaedBenefit);
                 return Optional.of(result);
@@ -255,6 +237,7 @@ public class MockServicesImpl implements MockServices {
                 UpdateMockResult result = new UpdateMockResult();
                 result.setDate(updateDate);
                 result.setValue(newSalaries);
+                result.setUuid(ssiApp.getUuid());
                 log.info("threshod is {}, monthly aggregated income is {}, original Salaries is {}", threshold, aggregatedMonthlyIncome, salariesR);
                 log.info("updating value from {} to {}", salariesR, newSalaries);
                 return Optional.of(result);
@@ -306,6 +289,7 @@ public class MockServicesImpl implements MockServices {
                 UpdateMockResult result = new UpdateMockResult();
                 result.setDate(updateDate);
                 result.setValue(newPensions);
+                result.setUuid(ssiApp.getUuid());
                 log.info("threshod is {}, monthly aggregated income is {}, original Pensions is {}", threshold, aggregatedMonthlyIncome, pensionsR);
                 log.info("updating value from {} to {}", pensionsR, newPensions);
                 return Optional.of(result);
@@ -358,6 +342,7 @@ public class MockServicesImpl implements MockServices {
                 UpdateMockResult result = new UpdateMockResult();
                 result.setDate(updateDate);
                 result.setValue(newFreelanceR);
+                result.setUuid(ssiApp.getUuid());
                 log.info("threshod is {}, monthly aggregated income is {}, original Pensions is {}", threshold, aggregatedMonthlyIncome, freelanceR);
                 log.info("updating value from {} to {}", freelanceR, newFreelanceR);
                 return Optional.of(result);
@@ -410,6 +395,7 @@ public class MockServicesImpl implements MockServices {
                 UpdateMockResult result = new UpdateMockResult();
                 result.setDate(updateDate);
                 result.setValue(newDeposits);
+                result.setUuid(ssiApp.getUuid());
                 log.info("threshod is {}, monthly aggregated income is {}, original Pensions is {}", threshold, aggregatedMonthlyIncome, depositsR);
                 log.info("updating value from {} to {}", depositsR, newDeposits);
                 return Optional.of(result);
@@ -442,6 +428,7 @@ public class MockServicesImpl implements MockServices {
                 result.setDate(updateDate);
                 result.setValue(true);
                 result.setData(deceased.toString());
+                result.setUuid(ssiApp.getUuid());
                 return Optional.of(result);
             }
         }
@@ -472,6 +459,7 @@ public class MockServicesImpl implements MockServices {
                 result.setDate(updateDate);
                 result.setValue(true);
                 result.setData(adultMember.toString());
+                result.setUuid(ssiApp.getUuid());
                 return Optional.of(result);
             }
         }
@@ -497,6 +485,7 @@ public class MockServicesImpl implements MockServices {
                 result.setDate(updateDate);
                 result.setValue(true);
                 result.setData(null);
+                result.setUuid(ssiApp.getUuid());
                 return Optional.of(result);
             }
         }
@@ -532,5 +521,29 @@ public class MockServicesImpl implements MockServices {
                 .add((BigDecimal.valueOf(adultCount).multiply(BigDecimal.valueOf(100))
                         .add(BigDecimal.valueOf(minorCount).multiply(BigDecimal.valueOf(50)))))).doubleValue();
     }
+
+
+    private BigDecimal getTotalIncome(SsiApplication ssiApp) {
+        BigDecimal salaries = new BigDecimal(ssiApp.getSalariesR() == null ? "0" : ssiApp.getSalariesR()).subtract(new BigDecimal(ssiApp.getSalariesR() == null ? "0" : ssiApp.getSalariesR()).multiply(BigDecimal.valueOf(0.2)));
+        BigDecimal pensions = new BigDecimal(ssiApp.getPensionsR() == null ? "0" : ssiApp.getPensionsR());
+        BigDecimal farming = new BigDecimal(ssiApp.getFarmingR() == null ? "0" : ssiApp.getFarmingR());
+        BigDecimal freelance = new BigDecimal(ssiApp.getFreelanceR() == null ? "0" : ssiApp.getFreelanceR());
+        BigDecimal otherBnfts = new BigDecimal(ssiApp.getOtherBenefitsR() == null ? "0" : ssiApp.getOtherBenefitsR());
+        BigDecimal deposits = new BigDecimal(ssiApp.getDepositsA() == null ? "0" : ssiApp.getDepositsA());
+        BigDecimal domesticRe = new BigDecimal(ssiApp.getDomesticRealEstateA() == null ? "0" : ssiApp.getDomesticRealEstateA());
+        BigDecimal foreignRe = new BigDecimal(ssiApp.getForeignRealEstateA() == null ? "0" : ssiApp.getForeignRealEstateA());
+
+        return (salaries.add(
+                pensions).add(
+                farming).add(
+                freelance).add(
+                otherBnfts).add(
+                deposits).add(
+                domesticRe).add(
+                foreignRe)
+        ).divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
+
+    }
+
 
 }

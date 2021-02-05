@@ -14,5 +14,6 @@ import java.time.LocalDate;
 public class UpdateMockResult {
     private LocalDate date;
     private Double value;
+    private String uuid;
 
 }
