@@ -718,7 +718,8 @@ public class MonitorServiceImpl implements MonitorService {
         String updatedCaseUUID = oaedRegistrationResult.get().getUuid();
         if (oaedRegistrationResult.isPresent() && count < 2) {
             count++;
-            //TODO Reject application on the blockchain
+            rejectOrSuspendCases(updatedCaseUUID,State.REJECTED,
+                    householdApps,oaedRegistrationResult.get().getDate().atStartOfDay(),false);
         }
         return count;
     }
@@ -733,7 +734,8 @@ public class MonitorServiceImpl implements MonitorService {
         String updatedCaseUUID = luxuryCheckResult.get().getUuid();
         if (luxuryCheckResult.isPresent() && count < 2) {
             count++;
-            //TODO Reject application on the blockchain
+            rejectOrSuspendCases(updatedCaseUUID,State.REJECTED,
+                    householdApps,luxuryCheckResult.get().getDate().atStartOfDay(),false);
         }
         return count;
     }
