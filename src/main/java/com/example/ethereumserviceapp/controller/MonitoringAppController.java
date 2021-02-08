@@ -57,6 +57,7 @@ public class MonitoringAppController {
     protected ModelAndView getCase(@RequestParam(value = "uuid", required = true) String uuid, ModelMap model, HttpServletRequest request){
 
         Optional<Case> ethCase = ethService.getCaseByUUID(uuid);
+        log.info("111111111111111111111 case :{}", ethCase);
         model.addAttribute("ethCase", ethCase.isPresent()? ethCase.get() : "");
 
         Optional<SsiApplication> ssiApp = mongoServ.findByUuid(uuid);

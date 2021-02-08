@@ -122,7 +122,8 @@ public class MonitorServiceImpl implements MonitorService {
             // if this is not a principal case update state as non principal and continue to
             // the next case
             if (!ssiApp.getTaxisAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())) {
-                updateCase(monitoredCase, State.NONPRINCIPAL, null, currentDate, isTest, uuid, null);
+                log.info("case non principal");
+                updateCase(monitoredCase, State.NONPRINCIPAL, ssiApp, currentDate, isTest, uuid, null);
                 return;
             }
 
@@ -146,6 +147,7 @@ public class MonitorServiceImpl implements MonitorService {
             }
             // if the payment has failed for 3 consecutive months delete the case
             if (checkForFailedPayments(monitoredCase)) {
+                log.info("payment failed for 3 concsecutive months");
                 mongoServ.deleteByUuid(uuid);
                 ethServ.deleteCaseByUuid(uuid);
                 return;
@@ -157,11 +159,16 @@ public class MonitorServiceImpl implements MonitorService {
 
             // make external API calls that may update certain values in DB 
             //Case monitoredCase, double pValue, Boolean makeMockCheck, List<SsiApplication> householdApps, SsiApplication principalApp, Integer count, LocalDate currentDate
-            if (!externalChecksAndUpdate(monitoredCase, pValue, mockChecks, householdApps, ssiApp, count, currentDate.toLocalDate())) {
-                updateCase(monitoredCase, State.REJECTED, ssiApp, currentDate, isTest, uuid, null);
-            }
+            externalChecksAndUpdate(monitoredCase, pValue, mockChecks, householdApps, ssiApp, count, currentDate.toLocalDate());
+
+            // if (!externalChecksAndUpdate(monitoredCase, pValue, mockChecks, householdApps, ssiApp, count, currentDate.toLocalDate())) {
+            //     updateCase(monitoredCase, State.REJECTED, ssiApp, currentDate, isTest, uuid, null);
+            // }
+
+
             // check if credentials are valid and not expired
             if (!credentialsOk(uuid, householdApps, currentDate, isTest)) {
+                log.info("credential fail");
                 return;
             }
             LocalDateTime firstAcceptedDate = LocalDateTime.of(ssiApp.getTime(), LocalTime.of(00, 00, 00));
@@ -194,11 +201,14 @@ public class MonitorServiceImpl implements MonitorService {
                     && !MonitorUtils.isCaseOlderThanSixMonths(firstAcceptedDate, currentDate)) {
                 // if there is a missing application in the household suspend the case
                 if (!checkHouseholdApplications(monitoredCase, ssiApp, householdApps, currentDate.toLocalDate())) {
+                    log.info("household apps not all present, case suspended");
                     rejectOrSuspendCases(uuid, State.SUSPENDED, householdApps, currentDate, isTest);
                     return;
                 }
+                log.info("case accepted");
                 updateCase(monitoredCase, State.ACCEPTED, ssiApp, currentDate, isTest, uuid, aggregatedSsiApp);
             } else {
+                log.info("validation failed, case rejected");
                 rejectOrSuspendCases(uuid, State.REJECTED, householdApps, currentDate, isTest);
             }
             // }
@@ -207,6 +217,8 @@ public class MonitorServiceImpl implements MonitorService {
 
     private void rejectOrSuspendCases(String uuid, State state, List<SsiApplication> householdApps,
             LocalDateTime currentDate, Boolean isTest) {
+    
+        log.info("reject or suspend case with uuid :{} and state :{}", uuid, state);
         for (SsiApplication hhSsiApp : householdApps) {
             Optional<Case> theCase = this.ethServ.getCaseByUUID(hhSsiApp.getUuid());
             updateCase(theCase.isPresent() ? theCase.get() : new Case(), state, hhSsiApp, currentDate, isTest, uuid,
@@ -216,6 +228,7 @@ public class MonitorServiceImpl implements MonitorService {
 
     private void updateCase(Case monitoredCase, State state, SsiApplication ssiApp, LocalDateTime currentDate,
             Boolean isTest, String uuid, SsiApplication aggregatedSsiApp) {
+                log.info("update case with uuid :{} and state :{}", uuid, state);
         // Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
         if (!(monitoredCase.getUuid() == null || "".equals(monitoredCase.getUuid()))) {
             // synchronize transaction for test data only if the state changes
@@ -229,7 +242,7 @@ public class MonitorServiceImpl implements MonitorService {
                         .findByTaxisAfmIn(EthAppUtils.fetchAllHouseholdAfms(ssiApp));
                 // BigDecimal offsetBefore = theCase.get().getOffset();
                 if(!monitoredCase.getState().equals(State.NONPRINCIPAL)){
-                    MonitorUtils.calculateOffset(monitoredCase, ssiApp, allHouseholdApps);
+                    //MonitorUtils.calculateOffset(monitoredCase, ssiApp, allHouseholdApps);
                 }
 
                 monitoredCase.setState(state);
@@ -367,10 +380,16 @@ public class MonitorServiceImpl implements MonitorService {
         // }
 
         //check if there are more than one principal members
-        if(mongoServ.findByHouseholdPrincipalIn(household).size()>1){
+        Long principalCount = householdApps.stream().filter(h -> h.getHouseholdPrincipal().getAfm().equals(h.getTaxisAfm())).count();
+        log.info("principal count :{}", principalCount);
+        if(principalCount > 1){
             log.info("rejected - more than one principal in household");
             return false;
         }
+        // if(mongoServ.findByHouseholdPrincipalIn(household).size()>1){
+        //     log.info("rejected - more than one principal in household");
+        //     return false;
+        // }
 
         for(HouseholdMember member:household){
             List<SsiApplication> householdDuplicates = mongoServ.findByHouseholdComposition(member);

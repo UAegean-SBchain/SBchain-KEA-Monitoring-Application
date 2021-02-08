@@ -27,6 +27,7 @@ public class Case {
     private List<CasePayment> paymentHistory;
     private BigDecimal offset;
     private String rejectionDate;
+    private RejectionCode rejectionCode;
     // helper value does not get saved in BC
     private BigDecimal dailyValue;
     private BigDecimal dailySum;
