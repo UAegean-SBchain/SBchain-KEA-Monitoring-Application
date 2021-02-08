@@ -481,16 +481,7 @@ public class MonitorServiceImpl implements MonitorService {
         }
     }
 
-    //mock oaed registration check
-    private void oaedRegistrationCheck(Case monitoredCase, SsiApplication ssiApp, List<LocalDate> rejectionDates) {
-        // mock check
-        if (monitoredCase.equals("")) {
-            LocalDate actualUpdateDate = LocalDate.now(); // mock date, this should return the actual date of the altered credential
-            ssiApp.setUnemployed("false");
-            mongoServ.updateSsiApp(ssiApp);
-            rejectionDates.add(actualUpdateDate);
-        }
-    }
+
 
     //mock housing subsidy check
     private void houseBenefitCheck(Case monitoredCase, SsiApplication ssiApp, List<LocalDate> rejectionDates) {
@@ -528,7 +519,9 @@ public class MonitorServiceImpl implements MonitorService {
      */
     private int financialsCheck(SsiApplication principalApp,
                                 double pValue, Boolean makeMockCheck,
-                                List<SsiApplication> householdApps, Integer count, LocalDate currentDate) {
+                                List<SsiApplication> householdApps, Integer count, LocalDate currentDate,  List<LocalDate> rejectionDates) {
+        //TODO Reject application on the blockchain
+
         //mock check
         Boolean changed = false;
         LinkedHashMap<String, String> financialHistoryMap;
@@ -677,10 +670,9 @@ public class MonitorServiceImpl implements MonitorService {
 
     private int deceasedCheck(SsiApplication principalApp,
                               double pValue, Boolean makeMockCheck,
-                              List<SsiApplication> householdApps, Integer count, LocalDate currentDate) {
+                              List<SsiApplication> householdApps, Integer count, LocalDate currentDate,  List<LocalDate> rejectionDates) {
         //mock check
         LinkedHashMap<String, List<HouseholdMember>> householdCompositionHistory;
-        String updatedCaseUUID = "";
         Optional<BooleanMockResult> deceasedResult = mockServ.getDeaths(currentDate, currentDate, pValue,
                 principalApp, makeMockCheck && count < 2, householdApps);
         if (deceasedResult.isPresent() && count < 2) {
@@ -691,9 +683,42 @@ public class MonitorServiceImpl implements MonitorService {
             householdHistory.put(DateUtils.dateToString(deceasedResult.get().getDate()), newHoushold);
             principalApp.setHouseholdCompositionHistory(householdHistory);
             principalApp.setHouseholdComposition(newHoushold);
+            mongoServ.updateSsiApp(principalApp));
         }
         return count;
     }
+
+
+    //mock oaed registration check
+    private int oaedRegistrationCheck(SsiApplication principalApp,
+                                       double pValue, Boolean makeMockCheck,
+                                       List<SsiApplication> householdApps, Integer count, LocalDate currentDate,  List<LocalDate> rejectionDates) {
+        //mock check
+        Optional<BooleanMockResult> oaedRegistrationResult = mockServ.getOAEDRegistration(currentDate, currentDate, pValue,
+                principalApp, makeMockCheck && count < 2, householdApps);
+        String updatedCaseUUID = oaedRegistrationResult.get().getUuid();
+        if (oaedRegistrationResult.isPresent() && count < 2) {
+            count++;
+            //TODO Reject application on the blockchain
+        }
+        return count;
+    }
+
+    //mock oaed registration check
+    private int luxuryCheck(SsiApplication principalApp,
+                                      double pValue, Boolean makeMockCheck,
+                                      List<SsiApplication> householdApps, Integer count, LocalDate currentDate,  List<LocalDate> rejectionDates) {
+        //mock check
+        Optional<BooleanMockResult> luxuryCheckResult = mockServ.getLuxury(currentDate, currentDate, pValue,
+                principalApp, makeMockCheck && count < 2, householdApps);
+        String updatedCaseUUID = luxuryCheckResult.get().getUuid();
+        if (luxuryCheckResult.isPresent() && count < 2) {
+            count++;
+            //TODO Reject application on the blockchain
+        }
+        return count;
+    }
+
 
     // external api calls
     // calls all extrnal APIs
@@ -705,23 +730,17 @@ public class MonitorServiceImpl implements MonitorService {
         //validate each household application credentials
 
         // calls external APIs and updates DB
-        int numOfUpdateFinAPICalls = financialsCheck(principalApp, pValue, makeMockCheck, householdApps, count, currentDate);
-        if (numOfUpdateFinAPICalls < 2) {
+        int apiCallsUpdates = financialsCheck(principalApp, pValue, makeMockCheck, householdApps, count, currentDate, rejectionDates);
+        if (apiCallsUpdates < 2) {
             //handle deceased member
-            numOfUpdateFinAPICalls = deceasedCheck(principalApp,pValue,makeMockCheck,householdApps,count,currentDate);
-
+            apiCallsUpdates = deceasedCheck(principalApp, pValue, makeMockCheck, householdApps, count, currentDate, rejectionDates);
+            if (apiCallsUpdates < 2) {
+                apiCallsUpdates = oaedRegistrationCheck(principalApp, pValue, makeMockCheck, householdApps, count, currentDate, rejectionDates);
+                if(apiCallsUpdates <2){
+                    apiCallsUpdates = luxuryCheck(principalApp, pValue, makeMockCheck, householdApps, count, currentDate, rejectionDates);
+                }
+            }
         }
-
-
-        //change to call mock services
-        for (SsiApplication app : householdApps) {
-            oaedRegistrationCheck(monitoredCase, app, rejectionDates);
-            houseBenefitCheck(monitoredCase, app, rejectionDates);
-            luxuryLivingCheck(monitoredCase, app, rejectionDates);
-            amkaCheck(monitoredCase, app, rejectionDates);
-            //financialsCheck(monitoredCase, app);
-        }
-        handleDeceasedMember(principalApp);
 
         if (!rejectionDates.isEmpty()) {
             LocalDate minDate = rejectionDates.stream()
