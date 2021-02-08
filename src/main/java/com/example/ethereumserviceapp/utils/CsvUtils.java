@@ -926,7 +926,6 @@ public class CsvUtils {
                 //            "householdComposition",
                 oneLine.append(makeHouseHoldString(app.getHouseholdComposition())).append(CSV_SEPARATOR);
                 //            "householdCompositionHistory",
-                //TODO this should appear on the writing of the CSV only
                 String householdCompositionString = history_time+";"+ app.getHouseholdComposition().stream().map(hm ->
                         hm.getName()+";"+hm.getSurname()+";"+hm.getAfm()+";"+hm.getDateOfBirth()
                 ).collect(Collectors.joining("|"));
