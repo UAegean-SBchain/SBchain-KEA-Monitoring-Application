@@ -38,11 +38,15 @@
                                 <tr>
                                     <th class="innerHeader innerHeader__1" th:text="Date"></th>
                                     <th class="innerHeader innerHeader__2" th:text="State"></th>
+                                    <th class="innerHeader innerHeader__3" th:text="DailyBenefit"></th>
+                                    <th class="innerHeader innerHeader__4" th:text="DailySums"></th>
                                 </tr>
-                                <tbody th:if="${ethCase.history}" >
-                                    <tr th:each="hist, counter : ${ethCase.history}">
-                                        <td th:text="${hist.key}"></td>
-                                        <td th:text="${hist.value}"></td>
+                                <tbody th:if="${ethCase.caseHistory}" >
+                                    <tr th:each="hist, counter : ${ethCase.caseHistory}">
+                                        <td th:text="${hist.date}"></td>
+                                        <td th:text="${hist.state}"></td>
+                                        <td th:text="${hist.dailyBenefit}"></td>
+                                        <td th:text="${hist.dailySum}"></td>
                                     </tr>
                                 </tbody>
                             </thead>

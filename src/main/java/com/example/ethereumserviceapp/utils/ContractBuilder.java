@@ -18,10 +18,12 @@ import java.util.List;
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.CaseHistory;
 import com.example.ethereumserviceapp.model.CasePayment;
+import com.example.ethereumserviceapp.model.RejectionCode;
 import com.example.ethereumserviceapp.model.State;
 
+import org.web3j.tuples.generated.Tuple3;
 import org.web3j.tuples.generated.Tuple4;
-import org.web3j.tuples.generated.Tuple9;
+import org.web3j.tuples.generated.Tuple8;
 import org.web3j.utils.Numeric;
 
 /**
@@ -30,12 +32,13 @@ import org.web3j.utils.Numeric;
  */
 public class ContractBuilder {
 
-    public static Case buildCaseFromTuple(Tuple9<byte[], BigInteger, List<BigInteger>, List<BigInteger>,
-            List<BigInteger>, List<BigInteger>, BigInteger, BigInteger, BigInteger> theCase) {
+    public static Case buildCaseFromTuple(Tuple8<byte[], BigInteger, List<BigInteger>, List<BigInteger>,
+            List<BigInteger>, List<BigInteger>, BigInteger, BigInteger> theCase) {
         Case transformedCase = new Case();
         //List<CasePayment> paymentHistory = new ArrayList<>();
         LinkedHashMap<LocalDateTime, State> history = new LinkedHashMap<>();
         LinkedHashMap<LocalDateTime, BigDecimal> dailyBenefit = new LinkedHashMap<>();
+        List<CaseHistory> caseHistory = new ArrayList<>();
         transformedCase.setUuid(ByteConverters.hexToASCII(Numeric.toHexStringNoPrefix((byte[]) theCase.component1())));
         transformedCase.setDate(Instant.ofEpochMilli(theCase.component2().longValue()).atZone(ZoneId.systemDefault()).toLocalDateTime());
         transformedCase.setState(State.values()[theCase.component7().intValue()]);
@@ -46,13 +49,15 @@ public class ContractBuilder {
             // dailyBenefit.put(Instant.ofEpochMilli(theCase.component3().get(i).longValue()).atZone(ZoneId.systemDefault()).toLocalDateTime(), new BigDecimal(theCase.component5().get(i)).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
             // transformedCase.setDailyBenefit(dailyBenefit);
             CaseHistory transformedHistory = new CaseHistory();
-            if(theCase.component4().get(i).intValue() != 0){
+            if(theCase.component3().get(i).intValue() != 0){
                 transformedHistory.setDate(Instant.ofEpochMilli(theCase.component3().get(i).longValue()).atZone(ZoneId.systemDefault()).toLocalDateTime());
                 transformedHistory.setState(State.values()[theCase.component4().get(i).intValue()]);
                 transformedHistory.setDailyBenefit(new BigDecimal(theCase.component5().get(i)).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
                 transformedHistory.setDailySum(new BigDecimal(theCase.component6().get(i)).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
+                caseHistory.add(transformedHistory);
             }
         }
+        transformedCase.setCaseHistory(caseHistory);
 
         // for(int i=0; i<theCase.component6().size(); i++){
         //     CasePayment transformedPayment = new CasePayment();
@@ -66,11 +71,7 @@ public class ContractBuilder {
         // }
         //transformedCase.setPaymentHistory(paymentHistory);
         transformedCase.setOffset(new BigDecimal(theCase.component8()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
-        if(theCase.component9().longValue() == 0){
-            transformedCase.setRejectionDate("");
-        }else{
-            transformedCase.setRejectionDate(DateUtils.dateToString(Instant.ofEpochMilli(theCase.component9().longValue()).atZone(ZoneId.systemDefault()).toLocalDateTime()));
-        }
+        
         return transformedCase;
     }
 
@@ -89,6 +90,17 @@ public class ContractBuilder {
             }
         }
         theCase.setPaymentHistory(paymentHistory);
+    }
+
+    public static void linkRejectionToCase(Tuple3<byte[], BigInteger, BigInteger> theRejection , Case theCase){
+
+        if(theRejection.component2().longValue() == 0){
+            theCase.setRejectionDate("");
+        }else{
+            theCase.setRejectionDate(DateUtils.dateToString(Instant.ofEpochMilli(theRejection.component2().longValue()).atZone(ZoneId.systemDefault()).toLocalDateTime()));
+        }
+
+        theCase.setRejectionCode(RejectionCode.values()[theRejection.component3().intValue()]);
     }
 
 }

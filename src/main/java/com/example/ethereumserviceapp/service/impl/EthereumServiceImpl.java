@@ -20,6 +20,7 @@ import com.example.ethereumserviceapp.contract.CaseMonitor;
 import com.example.ethereumserviceapp.contract.VcRevocationRegistry;
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.CasePayment;
+import com.example.ethereumserviceapp.model.RejectionCode;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.utils.ByteConverters;
 import com.example.ethereumserviceapp.utils.ContractBuilder;
@@ -76,7 +77,7 @@ public class EthereumServiceImpl implements EthereumService {
         Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, derivationPath);
         // Load the wallet for the derived key
         this.credentials = Credentials.create(derivedKeyPair);
-        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0xFa5B6432308d45B54A1CE1373513Fab77166436f" // old besu contract "0x345cA3e014Aaf5dcA488057592ee47305D9B3e10" // old ropsten contract 0x3027b1e481C3478E85f9adD58d239eD9742AB418
+        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x1858cCeC051049Fa1269E958da2d33bCA27c6Db8" // old besu contract "0xFa5B6432308d45B54A1CE1373513Fab77166436f" // old ropsten contract 0x3027b1e481C3478E85f9adD58d239eD9742AB418
                 : System.getenv("CONTRACT_ADDRESS");
         this.REVOCATION_CONTRACT_ADDRESS = System.getenv("REVOCATION_CONTRACT_ADDRESS") == null
                 ? "0x9534d226e56826Cc4C01912Eb388b121Bb0683b5"
@@ -157,6 +158,7 @@ public class EthereumServiceImpl implements EthereumService {
 
                 if(theCase.isPresent()){
                     ContractBuilder.linkPaymentToCase(this.getContract().getPayment(byteUuid).send(), theCase.get());
+                    ContractBuilder.linkRejectionToCase(this.getContract().getRejection(byteUuid).send(), theCase.get());
                 }
                 return theCase;
             } catch (Exception ex) {
@@ -214,7 +216,6 @@ public class EthereumServiceImpl implements EthereumService {
 
                 ZonedDateTime zdt = time.atZone(ZoneId.of("America/Los_Angeles"));
                 long millis = zdt.toInstant().toEpochMilli();
-                long rjctMillis = monitoredCase.getRejectionDate().equals("")? 0L : DateUtils.historyDateStringToLDT(monitoredCase.getRejectionDate()).atZone(ZoneId.of("America/Los_Angeles")).toInstant().toEpochMilli();
                 
                 byte[] uuid = ByteConverters.stringToBytes16(monitoredCase.getUuid()).getValue();
                 String functionCall = this.getContract()
@@ -222,11 +223,22 @@ public class EthereumServiceImpl implements EthereumService {
                                 BigInteger.valueOf(millis), BigInteger.valueOf(monitoredCase.getState().getValue()),
                                  (monitoredCase.getDailyValue() != null? monitoredCase.getDailyValue().multiply(BigDecimal.valueOf(100)).toBigInteger() : BigInteger.valueOf(0)),
                                  (monitoredCase.getDailySum() != null? monitoredCase.getDailySum().multiply(BigDecimal.valueOf(100)).toBigInteger() : BigInteger.valueOf(0)), 
-                                 (monitoredCase.getOffset() != null? monitoredCase.getOffset().multiply(BigDecimal.valueOf(100)).toBigInteger() : BigInteger.valueOf(0)),
-                                  BigInteger.valueOf(rjctMillis) )
+                                 (monitoredCase.getOffset() != null? monitoredCase.getOffset().multiply(BigDecimal.valueOf(100)).toBigInteger() : BigInteger.valueOf(0))/*,
+                                  BigInteger.valueOf(rjctMillis)*/ )
                         .encodeFunctionCall();
                 String txHash = this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
                         contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
+
+                // if there is a rejection then update rejection struct
+                if(!monitoredCase.getRejectionCode().equals(RejectionCode.REJECTION0)){
+                    long rjctMillis = monitoredCase.getRejectionDate().equals("")? 0L : DateUtils.historyDateStringToLDT(monitoredCase.getRejectionDate()).atZone(ZoneId.of("America/Los_Angeles")).toInstant().toEpochMilli();
+                
+                    String rejectionCall = this.getContract().updateRejection(uuid, BigInteger.valueOf(monitoredCase.getRejectionCode().getValue())
+                    , BigInteger.valueOf(rjctMillis)).encodeFunctionCall();
+
+                    this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
+                        contract.getContractAddress(), rejectionCall, BigInteger.ZERO).getTransactionHash();
+                }
 
                 // if(sync){
                 //     TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(
