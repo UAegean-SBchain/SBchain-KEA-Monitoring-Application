@@ -539,8 +539,6 @@ public class MonitorServiceImpl implements MonitorService {
     private int financialsCheck(SsiApplication principalApp,
                                 double pValue, Boolean makeMockCheck,
                                 List<SsiApplication> householdApps, Integer count, LocalDate currentDate,  List<LocalDate> rejectionDates) {
-        //TODO Reject application on the blockchain
-
         //mock check
         Boolean changed = false;
         LinkedHashMap<String, String> financialHistoryMap;
@@ -683,6 +681,10 @@ public class MonitorServiceImpl implements MonitorService {
         if (changed) {
             mongoServ.updateSsiApp(principalApp);
         }
+        //if the financial checks fails now the application should be rejected
+
+
+
         return count;
     }
 
