@@ -6,6 +6,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -42,6 +43,9 @@ public class CsvUtils {
     private final static List<String> GREEK_FIRST_NAMES_MALE = new ArrayList<>();
     private final static List<String> GREEK_FIRST_NAMES_FEMALE = new ArrayList<>();
     private final static List<String> GREEK_LAST_NAMES = new ArrayList<>();
+//    private final static DateTimeFormatter ddMMYYYFormater_SLASH = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private final static DateTimeFormatter yyyyMMddFormater_DASH = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final static DateTimeFormatter yyyyMMddhhmmssFormater_DASH = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss");
 
 //    public static boolean hasCSVFormat(MultipartFile file) {
 //        final boolean equals = TYPE.equals(file.getContentType());
@@ -205,21 +209,7 @@ public class CsvUtils {
         return histField;
     }
 
-//    private static List<String> transformCrendentialIds(String credentials) {
-//        return Arrays.asList(credentials.split("\\|"));
-//    }
 
-//    private static Map<String, String> transformMailAddress(String address) {
-//        Map<String, String> mailAddresses = new HashMap<>();
-//
-//        String[] mailAddress = address.split("\\|");
-//        for (String s : mailAddress) {
-//            String[] addressEntry = s.split(":");
-//            mailAddresses.put(addressEntry[0], addressEntry[1]);
-//        }
-//
-//        return mailAddresses;
-//    }
 
     public static List<SsiApplication> generateMockData(int size) {
         List<SsiApplication> finalHouseholdApp = generateMockHouseholdApplications();
@@ -273,13 +263,22 @@ public class CsvUtils {
 
         // generate houshold entries for principal and additional memebrs
 
-        principalApp.setHouseholdComposition(householdMemberList);
-        householdAppList.forEach(memberApp -> memberApp.setHouseholdComposition(householdMemberList));
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        LocalDate now = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
+        String history_time =now.format(yyyyMMddhhmmssFormater_DASH);
+        LinkedHashMap<String,List<HouseholdMember>> compositionHistory = new LinkedHashMap<>();
+        compositionHistory.put(history_time,householdMemberList);
+        principalApp.setHouseholdComposition(householdMemberList);
+        principalApp.setHouseholdCompositionHistory(compositionHistory);
+
+        householdAppList.forEach(memberApp -> {
+            memberApp.setHouseholdComposition(householdMemberList);
+            memberApp.setHouseholdCompositionHistory(compositionHistory);
+        });
+
+//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM/yyyy");
         long additionalAdults = principalApp.getHouseholdComposition().stream().filter(member -> {
-            LocalDate dateTime = LocalDate.parse(member.getDateOfBirth(), formatter);
+            LocalDate dateTime = LocalDate.parse(member.getDateOfBirth(), yyyyMMddFormater_DASH);
             return ChronoUnit.YEARS.between(dateTime, now) >= 18;
         }).count();
         principalApp.setAdditionalAdults(String.valueOf(additionalAdults));
@@ -540,7 +539,7 @@ public class CsvUtils {
         String month = String.format("%02d", random.nextInt(12 - 1) + 1);
         String day = String.format("%02d", random.nextInt(30 - 1) + 1);
         String year = String.format("%04d", random.nextInt(2002 - 1920) + 1920);
-        return day + "/" + month + "/" + year;
+        return year + "-" + month + "-" + day;
     }
 
     public static String getMinorDateOfBirth() {
@@ -548,7 +547,7 @@ public class CsvUtils {
         String month = String.format("%02d", random.nextInt(12 - 1) + 1);
         String day = String.format("%02d", random.nextInt(30 - 1) + 1);
         String year = String.format("%04d", random.nextInt(2021 - 2004) + 2004);
-        return day + "/" + month + "/" + year;
+        return year + "-" + month + "-" + day;
     }
 
 
@@ -609,9 +608,9 @@ public class CsvUtils {
 
 
     public static boolean isAdult(String dateOfBirth) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         LocalDate now = LocalDate.now();
-        LocalDate dateTime = LocalDate.parse(dateOfBirth, formatter);
+        LocalDate dateTime = LocalDate.parse(dateOfBirth, yyyyMMddFormater_DASH);
         return ChronoUnit.YEARS.between(dateTime, now) >= 18;
     }
 
@@ -619,17 +618,49 @@ public class CsvUtils {
         Random random = new Random();
         int nextAmount = random.nextInt(maxAmount);
         application.setSalariesR(String.valueOf(nextAmount));
+        LocalDateTime now = LocalDateTime.now();
+        String history_time =now.format(yyyyMMddhhmmssFormater_DASH);
+        LinkedHashMap<String,String> salHistory = new LinkedHashMap<>();
+        salHistory.put(history_time,String.valueOf(nextAmount));
+        application.setSalariesRHistory(salHistory);
+
+
+
         maxAmount = maxAmount - nextAmount * 0.8 <= 0 ? 0 : maxAmount - (int) (nextAmount * 0.8);
         nextAmount = random.nextInt(maxAmount);
         application.setPensionsR("0");
+        history_time =now.format(yyyyMMddhhmmssFormater_DASH);
+        LinkedHashMap<String,String> penHistory = new LinkedHashMap<>();
+        penHistory.put(history_time,"0");
+        application.setPensionsRHistory(penHistory);
+
+
         application.setFarmingR(String.valueOf(0));
+        history_time =now.format(yyyyMMddhhmmssFormater_DASH);
+        LinkedHashMap<String,String> farmHistory = new LinkedHashMap<>();
+        farmHistory.put(history_time,"0");
+        application.setFarmingRHistory(farmHistory);
+        //--
         application.setFreelanceR(String.valueOf(nextAmount));
+        history_time =now.format(yyyyMMddhhmmssFormater_DASH);
+        LinkedHashMap<String,String> freelanceHistory = new LinkedHashMap<>();
+        freelanceHistory.put(history_time,String.valueOf(nextAmount));
+        application.setFreelanceRHistory(freelanceHistory);
+        //--
         maxAmount = Math.max(maxAmount - nextAmount, 0);
         nextAmount = random.nextInt(maxAmount);
+
+
         //rentIncomeR
         application.setRentIncomeR(String.valueOf(0));
         application.setUnemploymentBenefitR(String.valueOf(0));
         application.setOtherBenefitsR(String.valueOf(0));
+        //
+        history_time =now.format(yyyyMMddhhmmssFormater_DASH);
+        LinkedHashMap<String,String> otherBenHistory = new LinkedHashMap<>();
+        otherBenHistory.put(history_time,String.valueOf(nextAmount));
+        application.setOtherBenefitsRHistory(otherBenHistory);
+        //
         application.setEkasR(String.valueOf(0));
         application.setOtherIncomeR(String.valueOf(nextAmount));
         maxAmount = Math.max(maxAmount - nextAmount, 0);
@@ -638,8 +669,23 @@ public class CsvUtils {
         application.setDepositInterestA(String.valueOf(0));
         //depositsA
         application.setDepositsA(String.valueOf(nextAmount));
+        history_time =now.format(yyyyMMddhhmmssFormater_DASH);
+        LinkedHashMap<String,String> depHistory = new LinkedHashMap<>();
+        depHistory.put(history_time,String.valueOf(nextAmount));
+        application.setDepositsAHistory(depHistory);
+        //
         application.setDomesticRealEstateA(String.valueOf(0));
+        history_time =now.format(yyyyMMddhhmmssFormater_DASH);
+        LinkedHashMap<String,String> domRealHistory = new LinkedHashMap<>();
+        domRealHistory.put(history_time,"0");
+        application.setDomesticRealEstateAHistory(domRealHistory);
+        //
         application.setForeignRealEstateA(String.valueOf(0));
+        history_time =now.format(yyyyMMddhhmmssFormater_DASH);
+        LinkedHashMap<String,String> forRealHistory = new LinkedHashMap<>();
+        forRealHistory.put(history_time,"0");
+        application.setForeignRealEstateAHistory(forRealHistory);
+        //
         application.setVehicleValueA(String.valueOf(0));
         application.setInvestmentsA(String.valueOf(0));
         //totalIncome
@@ -733,6 +779,9 @@ public class CsvUtils {
             bw.write(oneLine.toString());
             bw.newLine();
             for (SsiApplication app : appList) {
+                LocalDateTime now = LocalDateTime.now();
+                String history_time =now.format(yyyyMMddhhmmssFormater_DASH);
+
                 oneLine = new StringBuffer();
                 oneLine.append(UUID.randomUUID().toString()).append(CSV_SEPARATOR);
 
@@ -872,31 +921,42 @@ public class CsvUtils {
                 //            "submittedMunicipality",
                 oneLine.append("Dimos Paianias").append(CSV_SEPARATOR);
                 //            "time",
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-                LocalDate now = LocalDate.now();
-                oneLine.append(now.format(formatter)).append(CSV_SEPARATOR);
+//                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                oneLine.append(now.format(yyyyMMddhhmmssFormater_DASH)).append(CSV_SEPARATOR);
                 //            "householdPrincipal",
                 oneLine.append(makeMemberToHouseholdString(app.getHouseholdPrincipal())).append(CSV_SEPARATOR);
                 //            "householdComposition",
                 oneLine.append(makeHouseHoldString(app.getHouseholdComposition())).append(CSV_SEPARATOR);
                 //            "householdCompositionHistory",
-                oneLine.append(" ").append(CSV_SEPARATOR);
+                String householdCompositionString = history_time+";"+ app.getHouseholdComposition().stream().map(hm ->
+                        hm.getName()+";"+hm.getSurname()+";"+hm.getAfm()+";"+hm.getDateOfBirth()
+                ).collect(Collectors.joining("|"));
+                oneLine.append(householdCompositionString).append(CSV_SEPARATOR);
+
                 //            "salariesRHistory",
-                oneLine.append(" ").append(CSV_SEPARATOR);
+                String salariesHistoryString =app.getSalariesRHistory().entrySet().stream().map(sh-> sh.getKey() +"_" + sh.getValue()).collect(Collectors.joining("|"));
+                oneLine.append(salariesHistoryString).append(CSV_SEPARATOR);
                 //            "pensionsRHistory",
-                oneLine.append(" ").append(CSV_SEPARATOR);
+                String penHis =app.getPensionsRHistory().entrySet().stream().map(sh-> sh.getKey() +"_" + sh.getValue()).collect(Collectors.joining("|"));
+                oneLine.append(penHis).append(CSV_SEPARATOR);
                 //            "farmingRHistory",
-                oneLine.append(" ").append(CSV_SEPARATOR);
+                String farmHis =app.getFarmingRHistory().entrySet().stream().map(sh-> sh.getKey() +"_" + sh.getValue()).collect(Collectors.joining("|"));
+                oneLine.append(farmHis).append(CSV_SEPARATOR);
                 //            "freelanceRHistory",
-                oneLine.append(" ").append(CSV_SEPARATOR);
+                String freeHis =app.getFreelanceRHistory().entrySet().stream().map(sh-> sh.getKey() +"_" + sh.getValue()).collect(Collectors.joining("|"));
+                oneLine.append(freeHis).append(CSV_SEPARATOR);
                 //            "otherBenefitsRHistory",
-                oneLine.append(" ").append(CSV_SEPARATOR);
+                String otherHis =app.getOtherBenefitsRHistory().entrySet().stream().map(sh-> sh.getKey() +"_" + sh.getValue()).collect(Collectors.joining("|"));
+                oneLine.append(otherHis).append(CSV_SEPARATOR);
                 //            "depositsAHistory",
-                oneLine.append(" ").append(CSV_SEPARATOR);
+                String dephis =app.getDepositsAHistory().entrySet().stream().map(sh-> sh.getKey() +"_" + sh.getValue()).collect(Collectors.joining("|"));
+                oneLine.append(dephis).append(CSV_SEPARATOR);
                 //            "domesticRealEstateAHistory",
-                oneLine.append(" ").append(CSV_SEPARATOR);
+                String domHis =app.getDomesticRealEstateAHistory().entrySet().stream().map(sh-> sh.getKey() +"_" + sh.getValue()).collect(Collectors.joining("|"));
+                oneLine.append(domHis).append(CSV_SEPARATOR);
                 //            "foreignRealEstateAHistory",
-                oneLine.append(" ").append(CSV_SEPARATOR);
+                String forHis =app.getForeignRealEstateAHistory().entrySet().stream().map(sh-> sh.getKey() +"_" + sh.getValue()).collect(Collectors.joining("|"));
+                oneLine.append(forHis).append(CSV_SEPARATOR);
                 //            "monthlyGuarantee",
                 oneLine.append(" ").append(CSV_SEPARATOR);
                 //            "totalIncome_3",

@@ -30,8 +30,6 @@ public class MockServicesImpl implements MockServices {
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
 
-
-
     @Override
     public Optional<UpdateMockResult> getUpdatedOtherBenefitValue(LocalDate dateOfSubmission, LocalDate today, double pValue,
                                                                   SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> householdApps) {
@@ -53,7 +51,7 @@ public class MockServicesImpl implements MockServices {
                     int margin = (int) (threshold - aggregatedMonthlyIncome);
                     log.info("the margin is {}, increasing value by a max of this  + 500", margin);
                     //random.nextInt(max - min) + min;
-                    newOtherBenefits = random.nextInt((margin+ 500) - (int)otherBenefits) + otherBenefits;
+                    newOtherBenefits = random.nextInt((margin + 500) - (int) otherBenefits) + otherBenefits;
                 } else {
                     log.info("DECREASING:: value");
                     int percentage = random.nextInt(100);
@@ -86,8 +84,8 @@ public class MockServicesImpl implements MockServices {
     }
 
     @Override
-    public Optional<UpdateMockResult> getUpdatedERGOMValue(LocalDate dateOfSubmission,LocalDate today,
-                                                           double pValue,SsiApplication ssiApp, boolean shouldTry,
+    public Optional<UpdateMockResult> getUpdatedERGOMValue(LocalDate dateOfSubmission, LocalDate today,
+                                                           double pValue, SsiApplication ssiApp, boolean shouldTry,
                                                            List<SsiApplication> householdApps) {
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
@@ -105,7 +103,7 @@ public class MockServicesImpl implements MockServices {
                     int margin = (int) (threshold - aggregatedMonthlyIncome);
                     log.info("the margin is {}, increasing value by a max of this  + 500", margin);
                     //random.nextInt(max - min) + min;
-                    newErgom = random.nextInt((margin+ 500) - (int)ergom) + ergom;
+                    newErgom = random.nextInt((margin + 500) - (int) ergom) + ergom;
                 } else {
                     log.info("DECREASING:: value");
                     int percentage = random.nextInt(100);
@@ -139,10 +137,9 @@ public class MockServicesImpl implements MockServices {
     }
 
 
-
     @Override
-    public Optional<UpdateMockResult> getUpdatedOAEDBenefitValue(LocalDate dateOfSubmission,LocalDate today,
-                                                                 double pValue,SsiApplication ssiApp, boolean shouldTry,
+    public Optional<UpdateMockResult> getUpdatedOAEDBenefitValue(LocalDate dateOfSubmission, LocalDate today,
+                                                                 double pValue, SsiApplication ssiApp, boolean shouldTry,
                                                                  List<SsiApplication> householdApps) {
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
@@ -160,7 +157,7 @@ public class MockServicesImpl implements MockServices {
                     int margin = (int) (threshold - aggregatedMonthlyIncome);
                     log.info("the margin is {}, increasing value by a max of this  + 500", margin);
                     //random.nextInt(max - min) + min;
-                    newOaedBenefit = random.nextInt((margin+ 500) - (int)oaedBenefit) + oaedBenefit;
+                    newOaedBenefit = random.nextInt((margin + 500) - (int) oaedBenefit) + oaedBenefit;
                 } else {
                     log.info("DECREASING:: value");
                     int percentage = random.nextInt(100);
@@ -195,8 +192,8 @@ public class MockServicesImpl implements MockServices {
 
 
     @Override
-    public Optional<UpdateMockResult> getUpdateSalariesData(LocalDate dateOfSubmission,LocalDate today,
-                                                            double pValue,SsiApplication ssiApp,
+    public Optional<UpdateMockResult> getUpdateSalariesData(LocalDate dateOfSubmission, LocalDate today,
+                                                            double pValue, SsiApplication ssiApp,
                                                             boolean shouldTry, List<SsiApplication> householdApps) {
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
@@ -214,7 +211,7 @@ public class MockServicesImpl implements MockServices {
                     int margin = (int) (threshold - aggregatedMonthlyIncome);
                     log.info("the margin is {}, increasing value by a max of this  + 500", margin);
                     //random.nextInt(max - min) + min;
-                    newSalaries = random.nextInt((margin+ 500) - (int)salariesR) + salariesR;
+                    newSalaries = random.nextInt((margin + 500) - (int) salariesR) + salariesR;
                 } else {
                     log.info("DECREASING:: value");
                     int percentage = random.nextInt(100 - 0) + 0;
@@ -247,8 +244,8 @@ public class MockServicesImpl implements MockServices {
     }
 
     @Override
-    public Optional<UpdateMockResult> getUpdatedPension(LocalDate dateOfSubmission,LocalDate today,
-                                                        double pValue,SsiApplication ssiApp,
+    public Optional<UpdateMockResult> getUpdatedPension(LocalDate dateOfSubmission, LocalDate today,
+                                                        double pValue, SsiApplication ssiApp,
                                                         boolean shouldTry, List<SsiApplication> householdApps) {
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
@@ -266,7 +263,7 @@ public class MockServicesImpl implements MockServices {
                     int margin = (int) (threshold - aggregatedMonthlyIncome);
                     log.info("the margin is {}, increasing value by a max of this  + 500", margin);
                     //random.nextInt(max - min) + min;
-                    newPensions = random.nextInt((margin+ 500) - (int)pensionsR) + pensionsR;
+                    newPensions = random.nextInt((margin + 500) - (int) pensionsR) + pensionsR;
                 } else {
                     log.info("DECREASING:: value");
                     int percentage = random.nextInt(100 - 0) + 0;
@@ -300,8 +297,8 @@ public class MockServicesImpl implements MockServices {
 
 
     @Override
-    public Optional<UpdateMockResult> getUpdatedFreelance(LocalDate dateOfSubmission,LocalDate today,
-                                                          double pValue,SsiApplication ssiApp, boolean shouldTry,
+    public Optional<UpdateMockResult> getUpdatedFreelance(LocalDate dateOfSubmission, LocalDate today,
+                                                          double pValue, SsiApplication ssiApp, boolean shouldTry,
                                                           List<SsiApplication> householdApps) {
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
@@ -319,7 +316,7 @@ public class MockServicesImpl implements MockServices {
                     int margin = (int) (threshold - aggregatedMonthlyIncome);
                     log.info("the margin is {}, increasing value by a max of this  + 500", margin);
                     //random.nextInt(max - min) + min;
-                    newFreelanceR = random.nextInt((margin+ 500) - (int)freelanceR) + freelanceR;
+                    newFreelanceR = random.nextInt((margin + 500) - (int) freelanceR) + freelanceR;
                 } else {
                     log.info("DECREASING:: value");
                     int percentage = random.nextInt(100 - 0) + 0;
@@ -353,8 +350,8 @@ public class MockServicesImpl implements MockServices {
 
 
     @Override
-    public Optional<UpdateMockResult> getUpdatedDepoists(LocalDate dateOfSubmission,LocalDate today,
-                                                         double pValue,SsiApplication ssiApp, boolean shouldTry,
+    public Optional<UpdateMockResult> getUpdatedDepoists(LocalDate dateOfSubmission, LocalDate today,
+                                                         double pValue, SsiApplication ssiApp, boolean shouldTry,
                                                          List<SsiApplication> householdApps) {
         //financial data :
         if (shouldTry) {
@@ -373,7 +370,7 @@ public class MockServicesImpl implements MockServices {
                     int margin = (int) (threshold - aggregatedMonthlyIncome);
                     log.info("the margin is {}, increasing value by a max of this  + 500", margin);
                     //random.nextInt(max - min) + min;
-                    newDeposits = random.nextInt((margin+ 500) - (int)depositsR) + depositsR;
+                    newDeposits = random.nextInt((margin + 500) - (int) depositsR) + depositsR;
                 } else {
                     log.info("DECREASING:: value");
                     int percentage = random.nextInt(100 - 0) + 0;
@@ -406,42 +403,46 @@ public class MockServicesImpl implements MockServices {
 
 
     @Override
-    public Optional<BooleanMockResult> getDeaths(LocalDate dateOfSubmission,LocalDate today,double pValue,SsiApplication ssiApp,
+    public Optional<BooleanMockResult> getDeaths(LocalDate dateOfSubmission, LocalDate today, double pValue, SsiApplication ssiApp,
                                                  boolean shouldTry, List<SsiApplication> householdApps) {
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
                 Optional<HouseholdMember> deceased = ssiApp.getHouseholdComposition().stream().
-                        filter( person -> !person.getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())).findFirst();
+                        filter(person -> !person.getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())).findFirst();
+
+                if (deceased.isPresent()) {
 
 
-                int year = dateOfSubmission.getYear();
-                int month = dateOfSubmission.getMonthValue();
-                String updateMonth = String.format("%02d", random.nextInt(today.getMonthValue() - month + 1) + month - 1);
+                    int year = dateOfSubmission.getYear();
+                    int month = dateOfSubmission.getMonthValue();
+                    String updateMonth = String.format("%02d", random.nextInt(today.getMonthValue() - month + 1) + month - 1);
 
-                String updateDay = String.format("%02d", random.nextInt(28 - 1) + 1);
-                if (updateMonth.equals("00")) {
-                    updateMonth = "12";
-                    year -= 1;
+                    String updateDay = String.format("%02d", random.nextInt(28 - 1) + 1);
+                    if (updateMonth.equals("00")) {
+                        updateMonth = "12";
+                        year -= 1;
+                    }
+                    LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                    BooleanMockResult result = new BooleanMockResult();
+                    result.setDate(updateDate);
+                    result.setValue(true);
+
+                    result.setData(deceased.get().getAfm());
+                    result.setUuid(ssiApp.getUuid());
+                    return Optional.of(result);
                 }
-                LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
-                BooleanMockResult result = new BooleanMockResult();
-                result.setDate(updateDate);
-                result.setValue(true);
-                result.setData(deceased.toString());
-                result.setUuid(ssiApp.getUuid());
-                return Optional.of(result);
             }
         }
         return Optional.empty();
     }
 
     @Override
-    public Optional<BooleanMockResult> getOAEDRegistration(LocalDate dateOfSubmission,LocalDate today,double pValue,
+    public Optional<BooleanMockResult> getOAEDRegistration(LocalDate dateOfSubmission, LocalDate today, double pValue,
                                                            SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> householdApps) {
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
                 final LocalDate referenceDate = LocalDate.now();
-                Optional<HouseholdMember> adultMember = ssiApp.getHouseholdComposition().stream().filter( person -> !person.getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm()) &&
+                Optional<HouseholdMember> adultMember = ssiApp.getHouseholdComposition().stream().filter(person -> !person.getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm()) &&
                         (EthAppUtils.calculateAge(LocalDate.parse(person.getDateOfBirth(), formatter), referenceDate) >= 18)).findFirst();
 
 
@@ -467,7 +468,7 @@ public class MockServicesImpl implements MockServices {
     }
 
     @Override
-    public Optional<BooleanMockResult> getLuxury(LocalDate dateOfSubmission,LocalDate today, double pValue,
+    public Optional<BooleanMockResult> getLuxury(LocalDate dateOfSubmission, LocalDate today, double pValue,
                                                  SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> householdApps) {
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
@@ -491,13 +492,6 @@ public class MockServicesImpl implements MockServices {
         }
         return Optional.empty();
     }
-
-
-
-
-
-
-
 
 
     private static double threshold(SsiApplication ssiApp) {

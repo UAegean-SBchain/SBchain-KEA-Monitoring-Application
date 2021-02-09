@@ -60,7 +60,7 @@ public class TestMockServices {
                 num++;
                 perHousehold++;
             }
-            System.out.println("per household " + perHousehold);
+//            System.out.println("per household " + perHousehold);
         }
         System.out.println("UPDATED:: " + num);
     }
