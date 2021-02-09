@@ -144,7 +144,7 @@ public class CsvUtils {
                 ssiApp.setSavedInDb(Boolean.parseBoolean(csvRecord.get("savedInDb")));
                 ssiApp.setStatus(csvRecord.get("status"));
                 ssiApp.setSubmittedMunicipality(csvRecord.get("submittedMunicipality"));
-                ssiApp.setTime(LocalDate.parse(csvRecord.get("time"), formatter));
+                ssiApp.setTime(DateUtils.dateStringToLD(csvRecord.get("time")));
 
                 ssiAppList.add(ssiApp);
             }
@@ -177,9 +177,9 @@ public class CsvUtils {
 //        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
         LinkedHashMap<String, List<HouseholdMember>> hhHistory = new LinkedHashMap<>();
         try {
-            String[] hhs = history.split("-");
+            String[] hhs = history.split("\\+");
             for (String s : hhs) {
-                String[] hh = s.split("_");
+                String[] hh = s.split("\\_");
                 List<HouseholdMember> householdEntry = transformHousehold(hh[1]);
 //                hhHistory.put(LocalDateTime.parse(hh[0], formatter), householdEntry);
                 hhHistory.put(hh[0], householdEntry);
@@ -187,7 +187,7 @@ public class CsvUtils {
         } catch (IndexOutOfBoundsException e) {
             log.error(e.getMessage());
         }
-
+        
         return hhHistory;
     }
 

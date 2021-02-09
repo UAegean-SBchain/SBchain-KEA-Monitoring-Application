@@ -22,7 +22,7 @@ import com.example.ethereumserviceapp.model.RejectionCode;
 import com.example.ethereumserviceapp.model.State;
 
 import org.web3j.tuples.generated.Tuple3;
-import org.web3j.tuples.generated.Tuple4;
+import org.web3j.tuples.generated.Tuple5;
 import org.web3j.tuples.generated.Tuple8;
 import org.web3j.utils.Numeric;
 
@@ -75,8 +75,8 @@ public class ContractBuilder {
         return transformedCase;
     }
 
-    public static void linkPaymentToCase(Tuple4<byte[], List<BigInteger>,
-            List<BigInteger>, List<BigInteger>> thePayment, Case theCase){
+    public static void linkPaymentToCase(Tuple5<byte[], List<BigInteger>,
+            List<BigInteger>, List<BigInteger>, List<BigInteger>> thePayment, Case theCase){
 
         List<CasePayment> paymentHistory = new ArrayList<>();
 
@@ -85,7 +85,8 @@ public class ContractBuilder {
             if(thePayment.component4().get(i).intValue() != 0){
                 transformedPayment.setPaymentDate(Instant.ofEpochMilli(thePayment.component2().get(i).longValue()).atZone(ZoneId.systemDefault()).toLocalDateTime());
                 transformedPayment.setPayment(new BigDecimal(thePayment.component3().get(i)).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
-                transformedPayment.setState(State.values()[thePayment.component4().get(i).intValue()]);
+                transformedPayment.setCalculatedPayment(new BigDecimal(thePayment.component4().get(i)).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
+                transformedPayment.setState(State.values()[thePayment.component5().get(i).intValue()]);
                 paymentHistory.add(transformedPayment);
             }
         }

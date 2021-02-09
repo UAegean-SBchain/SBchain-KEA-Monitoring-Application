@@ -45,13 +45,14 @@ public class PaymentServiceImpl implements PaymentService{
 
     @Override
     public void startPayment(LocalDateTime dateNow, Boolean sync){
-        
+        log.info("payment start");
         List<String> uuids = this.ethServ.getAllCaseUUID();
         uuids.stream().forEach(uuid -> {
             // get the case from the block chain
             Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
             //if the case does not exist or is a case belonging to a non principal member, continue to the next case
             if(!theCase.isPresent() || theCase.get().getState().equals(State.NONPRINCIPAL)){
+                log.info("payment: case does not exist or case non principal");
                 return;
             }
             Case caseToBePaid = theCase.get();
@@ -61,9 +62,9 @@ public class PaymentServiceImpl implements PaymentService{
             Set<String> householdAfms = ssiApp.get().getHouseholdComposition().stream().map(s -> s.getAfm()).collect(Collectors.toSet());
             List<SsiApplication> householdApps = mongoServ.findByTaxisAfmIn(householdAfms);
             if (caseToBePaid.getState().equals(State.ACCEPTED)) {
-                if(startDate.isBefore(currentDate)){
+                //if(startDate.isBefore(currentDate)){
                     calculatePayment(caseToBePaid, ssiApp.get(), householdApps, currentDate, sync);
-                }
+                //}
             }
             //if case is rejected then check the previous month history for days during which the case was accepted
             if (caseToBePaid.getState().equals(State.REJECTED) || caseToBePaid.getState().equals(State.SUSPENDED)) {
@@ -91,42 +92,75 @@ public class PaymentServiceImpl implements PaymentService{
         BigDecimal paymentValue = MonitorUtils.calculateCurrentPayment(caseToBePaid, ssiApp, allHouseholdApps, currentDate.toLocalDate(), false).subtract(caseToBePaid.getOffset());
         log.info("payment value :{}", paymentValue);
         //Call to payment service
-        State paymentState = paymentService(paymentValue, caseToBePaid, ssiApp, householdApps);
-        addPayment(paymentValue, caseToBePaid, currentDate, paymentState, sync);
+        CasePayment casePayment = paymentService(paymentValue, caseToBePaid, ssiApp, householdApps, currentDate);
+        ethServ.addPayment(caseToBePaid, casePayment, sync);
+        log.info("new payment :{}", casePayment);
+        //addPayment(paymentValue, caseToBePaid, currentDate, paymentState, sync);
     }
 
-    private State paymentService(BigDecimal valueToBePaid, Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps){
+    // private State paymentService(BigDecimal valueToBePaid, Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps){
     
+    //     //mock Call to external service
+    //     if(!mockExternalPaymentService(valueToBePaid, caseToBePaid.getUuid()) || !EthAppUtils.areAppHouseholdAfmsTheSame(householdApps, ssiApp)){
+    //         caseToBePaid.setOffset(valueToBePaid.compareTo(BigDecimal.ZERO) < 0? valueToBePaid.negate() : valueToBePaid);
+    //         //caseToBePaid.setState(State.PAID);
+    //         return State.FAILED;
+    //     } 
+    //      //set offset as the payment value if the total value is negative and set the total value to 0
+    //     if (valueToBePaid.compareTo(BigDecimal.ZERO) < 0) {
+    //         caseToBePaid.setOffset(valueToBePaid.negate());
+    //         valueToBePaid = BigDecimal.ZERO;
+    //     } else {
+    //         caseToBePaid.setOffset(BigDecimal.ZERO);
+    //     }
+    //     return State.PAID;
+    // }
+
+    private CasePayment paymentService(BigDecimal valueToBePaid, Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDateTime currentDate){
+    
+        CasePayment casePayment = new CasePayment();
+
+        Set<String> hhAfms = ssiApp.getHouseholdComposition().stream().map(h -> h.getAfm()).collect(Collectors.toSet());
+
         //mock Call to external service
-        if(!mockExternalPaymentService(valueToBePaid, caseToBePaid.getUuid()) || !EthAppUtils.areAppHouseholdAfmsTheSame(householdApps, ssiApp)){
+        if(!mockExternalPaymentService(valueToBePaid, caseToBePaid.getUuid()) || mongoServ.findByTaxisAfmIn(hhAfms).size() != householdApps.size()){
             caseToBePaid.setOffset(valueToBePaid.compareTo(BigDecimal.ZERO) < 0? valueToBePaid.negate() : valueToBePaid);
+            casePayment.setPayment(BigDecimal.ZERO);
+            casePayment.setCalculatedPayment(valueToBePaid);
+            casePayment.setState(State.FAILED);
+            casePayment.setPaymentDate(currentDate);
             //caseToBePaid.setState(State.PAID);
-            return State.FAILED;
+            return casePayment;
         } 
          //set offset as the payment value if the total value is negative and set the total value to 0
         if (valueToBePaid.compareTo(BigDecimal.ZERO) < 0) {
             caseToBePaid.setOffset(valueToBePaid.negate());
-            valueToBePaid = BigDecimal.ZERO;
+            casePayment.setPayment(BigDecimal.ZERO);
+            casePayment.setCalculatedPayment(valueToBePaid);//
         } else {
+            casePayment.setPayment(valueToBePaid);
+            casePayment.setCalculatedPayment(valueToBePaid);
             caseToBePaid.setOffset(BigDecimal.ZERO);
         }
-        return State.PAID;
+        casePayment.setPaymentDate(currentDate);
+        casePayment.setState(State.PAID);
+        return casePayment;
     }
 
     private Boolean mockExternalPaymentService(BigDecimal valueToBePaid, String uuid){
         return true;
     }
 
-    private void addPayment(BigDecimal valueToBePaid, Case caseToBePaid, LocalDateTime currentDate, State state, Boolean sync){
-        //synchronize transactions for test data, only for failed payments so that the offset can be updated
-        // if(sync && !state.equals(State.FAILED)){
-        //     sync = false;
-        // }
-        CasePayment payment = new CasePayment();
-        payment.setPaymentDate(currentDate);
-        payment.setPayment(valueToBePaid);
-        payment.setState(state);
-        ethServ.addPayment(caseToBePaid, payment, sync);
-        log.info("new payment :{}", payment);
-    }
+    // private void addPayment(BigDecimal valueToBePaid, Case caseToBePaid, LocalDateTime currentDate, State state, Boolean sync){
+    //     //synchronize transactions for test data, only for failed payments so that the offset can be updated
+    //     // if(sync && !state.equals(State.FAILED)){
+    //     //     sync = false;
+    //     // }
+    //     CasePayment payment = new CasePayment();
+    //     payment.setPaymentDate(currentDate);
+    //     payment.setPayment(valueToBePaid);
+    //     payment.setState(state);
+    //     ethServ.addPayment(caseToBePaid, payment, sync);
+    //     log.info("new payment :{}", payment);
+    // }
 }

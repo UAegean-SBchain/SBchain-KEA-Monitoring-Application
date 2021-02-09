@@ -46,7 +46,7 @@ public class HelperService {
         LocalDateTime currentDate = LocalDateTime.parse(startDateFixed, formatter);
         LocalDateTime endDate = currentDate.plusDays(Long.valueOf(numDays));
 
-        while(currentDate.compareTo(endDate) <=0){
+        while(currentDate.compareTo(endDate) <0){
             monitorService.startMonitoring(currentDate, false, pValue, true);
                 if(currentDate.getDayOfMonth() == 1){
                     paymentService.startPayment(currentDate, false);

@@ -8,6 +8,7 @@ public class DateUtils {
 
     private final static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final static DateTimeFormatter dFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final static DateTimeFormatter testFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public static LocalDateTime historyDateStringToLDT(String dateS) {
         return LocalDateTime.parse(dateS, formatter);
@@ -18,6 +19,9 @@ public class DateUtils {
     }
 
     public static LocalDate dateStringToLD(String dateS) {
+        if(dateS.contains("/")){
+            return LocalDate.parse(dateS, testFormatter);
+        }
         return LocalDate.parse(dateS, dFormatter);
     }
 

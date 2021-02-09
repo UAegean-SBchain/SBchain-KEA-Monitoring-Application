@@ -15,12 +15,12 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Function;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -121,7 +121,7 @@ public class MonitorServiceImpl implements MonitorService {
 
             // if this is not a principal case update state as non principal and continue to
             // the next case
-            if (!ssiApp.getTaxisAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())) {
+            if (!ssiApp.getTaxisAfm().equals(ssiApp.getHouseholdPrincipal().getAfm()) && !(monitoredCase.getState().equals(State.REJECTED) || monitoredCase.getState().equals(State.SUSPENDED))) {
                 log.info("case non principal");
                 updateCase(monitoredCase, State.NONPRINCIPAL, ssiApp, currentDate, isTest, uuid, null);
                 return;
@@ -391,13 +391,21 @@ public class MonitorServiceImpl implements MonitorService {
         //     return false;
         // }
 
-        for(HouseholdMember member:household){
-            List<SsiApplication> householdDuplicates = mongoServ.findByHouseholdComposition(member);
-            if(householdDuplicates.size()>1){
-                log.info("rejected - duplicate applications in household");
+        Set<String> duplicateApps = new HashSet<>();
+        for(SsiApplication app:householdApps){
+           if(!duplicateApps.add(app.getTaxisAfm())){
+                log.info("rejected - duplicate applications in household for uuid :{}, and afm :{}", app.getUuid(), app.getTaxisAfm());
                 return false;
-            }
+           }
         }
+        
+        // for(HouseholdMember member:household){
+        //     List<SsiApplication> householdDuplicates = mongoServ.findByHouseholdComposition(member);
+        //     if(householdDuplicates.size()>1){
+        //         log.info("rejected - duplicate applications in household");
+        //         return false;
+        //     }
+        // }
 
         //check if two months have passed while the application is in status suspended
         Iterator<Entry<LocalDateTime, State>> it = monitoredCase.getHistory().entrySet().iterator();

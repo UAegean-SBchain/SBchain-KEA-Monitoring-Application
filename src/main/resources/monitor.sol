@@ -25,9 +25,10 @@ contract CaseMonitor{
     
     struct CasePayment{
         bytes16 uuid;
-        uint[] paymentDateHistory;
-        uint[] paymentValueHistory;
-        CaseState[] paymentStateHistory;
+        uint[] paymentDateHistory;          //the date of payment
+        uint[] paymentValueHistory;         //the actual paid value
+        uint[] paymentCalculationHistory;   //the calculated payment value
+        CaseState[] paymentStateHistory;    //the payment status
     }
 
     struct CaseRejection {
@@ -92,10 +93,12 @@ contract CaseMonitor{
         paymentDateHistory[0] = 0;
         uint[] memory paymentHistory = new uint[](1);
         paymentHistory[0] = 0;
+        uint[] memory paymentCalculationHistory = new uint[](1);
+        paymentCalculationHistory[0] = 0;
         CaseState[] memory paymentStateHistory = new CaseState[](1);
         paymentStateHistory[0] = CaseState.Undefined;
         
-        payments.push(CasePayment(_uuid, paymentDateHistory, paymentHistory, paymentStateHistory));
+        payments.push(CasePayment(_uuid, paymentDateHistory, paymentHistory, paymentCalculationHistory, paymentStateHistory));
         
         uint newIndex = payments.length-1;
         paymentUuidToIndex[_uuid] = newIndex;
@@ -127,7 +130,7 @@ contract CaseMonitor{
         theCase.paymentOffset = _offset;
     }
 
-    function addPayment(bytes16 _uuid, CaseState _state, uint _pDate, uint _payHistory, uint _offset) public{
+    function addPayment(bytes16 _uuid, CaseState _state, uint _pDate, uint _payHistory, uint _payCalculation, uint _offset) public{
 
         require(caseExists(_uuid));
         
@@ -139,10 +142,12 @@ contract CaseMonitor{
         if(payment.paymentDateHistory[0] == 0){
             payment.paymentDateHistory[0] = _pDate;
             payment.paymentValueHistory[0] = _payHistory;
+            payment.paymentCalculationHistory[0] = _payCalculation;
             payment.paymentStateHistory[0] = _state;
         } else{
             payment.paymentDateHistory.push(_pDate);
             payment.paymentValueHistory.push(_payHistory);
+            payment.paymentCalculationHistory.push(_payCalculation);
             payment.paymentStateHistory.push(_state);
         }
 

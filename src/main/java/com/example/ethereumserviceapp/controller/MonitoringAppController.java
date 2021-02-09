@@ -1,5 +1,6 @@
 package com.example.ethereumserviceapp.controller;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -99,7 +100,9 @@ public class MonitoringAppController {
 
     @PostMapping("/monitorCases")
     protected ModelAndView runMonitoringOnCase(@ModelAttribute MonitorCmdHelper monitorCmdHelper, ModelMap model, HttpServletRequest request){
+        log.info("xxxxxxxxxxxxxxxxx start monitoring :{}", LocalDateTime.now());
         helpService.runMonitoring(monitorCmdHelper.getStartDate(), monitorCmdHelper.getNumDays(), Double.valueOf(monitorCmdHelper.getPValue()));
+        log.info("yyyyyyyyyyyyyyyyy end monitoring :{}", LocalDateTime.now());
         model.addAttribute("monitorCmdHelper", monitorCmdHelper);
 
         return listCaseUuids(monitorCmdHelper, model, request);

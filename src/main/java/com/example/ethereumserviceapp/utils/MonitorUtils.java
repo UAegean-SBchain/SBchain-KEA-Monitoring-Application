@@ -538,10 +538,16 @@ public class MonitorUtils extends EthAppUtils{
     }
 
     private static SsiApplication filterHHAndAggregate(List<SsiApplication> householdApps/*, SsiApplication ssiApp*/, List<HouseholdMember> currentHousehold){
+        List<SsiApplication> filteredHouseholdApps = new ArrayList<>();
+        if(householdApps.size() > 1){
+            List<String> currentAfms = currentHousehold.stream().map(h -> h.getAfm()).collect(Collectors.toList());
+            filteredHouseholdApps = householdApps.stream().filter(h -> currentAfms.contains(h.getTaxisAfm())).collect(Collectors.toList());
+        } else {
+            filteredHouseholdApps = householdApps;
+        }
+        // List<String> currentAfms = currentHousehold.stream().map(h -> h.getAfm()).collect(Collectors.toList());
 
-        List<String> currentAfms = currentHousehold.stream().map(h -> h.getAfm()).collect(Collectors.toList());
-
-        List<SsiApplication> filteredHouseholdApps = householdApps.stream().filter(h -> currentAfms.contains(h.getTaxisAfm())).collect(Collectors.toList());
+        // List<SsiApplication> filteredHouseholdApps = householdApps.stream().filter(h -> currentAfms.contains(h.getTaxisAfm())).collect(Collectors.toList());
         return aggregateHouseholdValues(filteredHouseholdApps);
 
     }

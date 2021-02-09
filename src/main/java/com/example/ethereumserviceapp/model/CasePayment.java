@@ -16,6 +16,7 @@ public class CasePayment {
 
     private LocalDateTime paymentDate;
     private BigDecimal payment;
+    private BigDecimal calculatedPayment;
     private State state;
     
 }

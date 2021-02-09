@@ -22,7 +22,14 @@ public class EthAppUtils {
 
     public static SsiApplication aggregateHouseholdValues(List<SsiApplication> householdApps){
 
-        SsiApplication principalApp = householdApps.stream().filter(h -> h.getTaxisAfm().equals(h.getHouseholdPrincipal().getAfm())).collect(Collectors.toList()).get(0);
+        SsiApplication principalApp = new SsiApplication();
+
+        if(householdApps.size() > 1){
+            principalApp = householdApps.stream().filter(h -> h.getTaxisAfm().equals(h.getHouseholdPrincipal().getAfm())).collect(Collectors.toList()).get(0);
+        } else {
+            principalApp = householdApps.get(0);
+        }
+        //SsiApplication principalApp = householdApps.stream().filter(h -> h.getTaxisAfm().equals(h.getHouseholdPrincipal().getAfm())).collect(Collectors.toList()).get(0);
         
         SsiApplication ssiApp = new SsiApplication();
 
@@ -154,6 +161,11 @@ public class EthAppUtils {
             }
         }
 
+        //for (HouseholdMember app : ssiApp.getHouseholdComposition()) {
+            // for(HouseholdMember member : ssiApp.getHouseholdComposition()){
+            //     allAfms.add(member.getAfm());
+            // }
+       // }
         return allAfms;
     }
 

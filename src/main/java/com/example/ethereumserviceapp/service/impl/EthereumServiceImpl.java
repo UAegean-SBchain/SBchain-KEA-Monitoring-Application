@@ -75,9 +75,9 @@ public class EthereumServiceImpl implements EthereumService {
         Bip32ECKeyPair masterKeypair = Bip32ECKeyPair.generateKeyPair(MnemonicUtils.generateSeed(mnemonic, password));
         // Derived the key using the derivation path
         Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, derivationPath);
-        // Load the wallet for the derived key
-        this.credentials = Credentials.create(derivedKeyPair);
-        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x1858cCeC051049Fa1269E958da2d33bCA27c6Db8" // old besu contract "0xFa5B6432308d45B54A1CE1373513Fab77166436f" // old ropsten contract 0x3027b1e481C3478E85f9adD58d239eD9742AB418
+        // Load the wallet for the derived key 
+        this.credentials = Credentials.create(derivedKeyPair); // 0x2a85A14cB9Fefdf55f2Bb8550FEAe8f1C8595697, 0xDa04fa66Bd544fAc14214Da9862F41447Ee55c71, 0x1858cCeC051049Fa1269E958da2d33bCA27c6Db8 previous
+        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0xE777fAf8240196bA99c6e2a89E8F24B75C52Eb2a" // old besu contract "0xFa5B6432308d45B54A1CE1373513Fab77166436f" // old ropsten contract 0x3027b1e481C3478E85f9adD58d239eD9742AB418
                 : System.getenv("CONTRACT_ADDRESS");
         this.REVOCATION_CONTRACT_ADDRESS = System.getenv("REVOCATION_CONTRACT_ADDRESS") == null
                 ? "0x9534d226e56826Cc4C01912Eb388b121Bb0683b5"
@@ -191,7 +191,7 @@ public class EthereumServiceImpl implements EthereumService {
             if (time == null) {
                 time = LocalDateTime.now();
             }
-            ZonedDateTime zdt = time.atZone(ZoneId.of("America/Los_Angeles"));
+            ZonedDateTime zdt = time.atZone(ZoneId.of("Europe/Athens"));
             long millis = zdt.toInstant().toEpochMilli();
             String functionCall = this.getContract()
                     .addCase(uuid, BigInteger.valueOf(millis))
@@ -214,7 +214,7 @@ public class EthereumServiceImpl implements EthereumService {
                 log.info("updating case with uuid {} State {}", monitoredCase.getUuid(), monitoredCase.getState().getValue());
                 LocalDateTime time = monitoredCase.getDate();
 
-                ZonedDateTime zdt = time.atZone(ZoneId.of("America/Los_Angeles"));
+                ZonedDateTime zdt = time.atZone(ZoneId.of("Europe/Athens"));
                 long millis = zdt.toInstant().toEpochMilli();
                 
                 byte[] uuid = ByteConverters.stringToBytes16(monitoredCase.getUuid()).getValue();
@@ -231,7 +231,7 @@ public class EthereumServiceImpl implements EthereumService {
 
                 // if there is a rejection then update rejection struct
                 if(!monitoredCase.getRejectionCode().equals(RejectionCode.REJECTION0)){
-                    long rjctMillis = monitoredCase.getRejectionDate().equals("")? 0L : DateUtils.historyDateStringToLDT(monitoredCase.getRejectionDate()).atZone(ZoneId.of("America/Los_Angeles")).toInstant().toEpochMilli();
+                    long rjctMillis = monitoredCase.getRejectionDate().equals("")? 0L : DateUtils.historyDateStringToLDT(monitoredCase.getRejectionDate()).atZone(ZoneId.of("Europe/Athens")).toInstant().toEpochMilli();
                 
                     String rejectionCall = this.getContract().updateRejection(uuid, BigInteger.valueOf(monitoredCase.getRejectionCode().getValue())
                     , BigInteger.valueOf(rjctMillis)).encodeFunctionCall();
@@ -265,12 +265,13 @@ public class EthereumServiceImpl implements EthereumService {
 
                 log.info("add new payment for case with uuid :{} and state :{}", monitoredCase.getUuid(), monitoredCase.getState().getValue());
                 LocalDateTime time = monitoredCase.getDate();
-                ZonedDateTime zdt = time.atZone(ZoneId.of("America/Los_Angeles"));
+                ZonedDateTime zdt = time.atZone(ZoneId.of("Europe/Athens"));
                 long millis = zdt.toInstant().toEpochMilli();
                 byte[] uuid = ByteConverters.stringToBytes16(monitoredCase.getUuid()).getValue();
                 String functionCall = this.getContract()
                         .addPayment(uuid, BigInteger.valueOf(payment.getState().getValue()), 
-                                BigInteger.valueOf(millis), payment.getPayment().multiply(BigDecimal.valueOf(100)).toBigInteger(), 
+                                BigInteger.valueOf(millis), payment.getPayment().multiply(BigDecimal.valueOf(100)).toBigInteger(),
+                                payment.getCalculatedPayment().multiply(BigDecimal.valueOf(100)).toBigInteger(), 
                                 monitoredCase.getOffset().multiply(BigDecimal.valueOf(100)).toBigInteger())
                         .encodeFunctionCall();
                 String txHash = this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
