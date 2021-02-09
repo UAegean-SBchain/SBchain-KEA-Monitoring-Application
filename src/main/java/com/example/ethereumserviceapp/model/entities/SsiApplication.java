@@ -147,6 +147,9 @@ public class SsiApplication {
     // the municipality this application was sent to
     private String submittedMunicipality;
 
+    private double monthlyAllocation;
+    private double totalAllocation;
+
     // the date of the application
     private LocalDate time;
 
