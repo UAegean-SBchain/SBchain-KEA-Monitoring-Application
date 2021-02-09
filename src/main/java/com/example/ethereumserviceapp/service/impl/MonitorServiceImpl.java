@@ -721,8 +721,8 @@ public class MonitorServiceImpl implements MonitorService {
         ExternalAPICallResult result = new ExternalAPICallResult();
         Optional<BooleanMockResult> oaedRegistrationResult = mockServ.getOAEDRegistration(currentDate, currentDate, pValue,
                 principalApp, makeMockCheck && count < 2, householdApps);
-        String updatedCaseUUID = oaedRegistrationResult.get().getUuid();
         if (oaedRegistrationResult.isPresent() && count < 2) {
+            String updatedCaseUUID = oaedRegistrationResult.get().getUuid();
             count++;
             //TODO the date should be today
             rejectOrSuspendCases(updatedCaseUUID, State.REJECTED,
@@ -741,8 +741,8 @@ public class MonitorServiceImpl implements MonitorService {
         ExternalAPICallResult result = new ExternalAPICallResult();
         Optional<BooleanMockResult> luxuryCheckResult = mockServ.getLuxury(currentDate, currentDate, pValue,
                 principalApp, makeMockCheck && count < 2, householdApps);
-        String updatedCaseUUID = luxuryCheckResult.get().getUuid();
         if (luxuryCheckResult.isPresent() && count < 2) {
+            String updatedCaseUUID = luxuryCheckResult.get().getUuid();
             count++;
             rejectOrSuspendCases(updatedCaseUUID, State.REJECTED,
                     householdApps, luxuryCheckResult.get().getDate().atStartOfDay(), false);
