@@ -83,19 +83,23 @@ public class MonitorServiceImpl implements MonitorService {
 
         // count for random changes to applications for test/economy purposes
         Integer count = 0;
-       
-        uuids.stream().forEach(uuid -> {
+        for(String uuid:uuids){
+        //uuids.stream().forEach(uuid -> {
+            // log.info("========================= count :{}", count);
+            // if there are 2 or more changes already been made this day then stop the mock
+            // checks
 
-            //if there are 2 or more changes already been made this day then stop the mock checks
             Boolean mockChecks = makeMockChecks && count < 2;
 
-            // check if any of this case's credentials has changed during the monitoring process
+            // check if any of this case's credentials has changed during the monitoring
+            // process
             Boolean credChange = false;
 
             Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
             if (!theCase.isPresent()) {
                 log.info("error - case not present");
-                return;
+                //return;
+                continue;
             }
 
             Case monitoredCase = theCase.get();
@@ -103,31 +107,41 @@ public class MonitorServiceImpl implements MonitorService {
 
             if (monitoredCase.getState().equals(State.NONPRINCIPAL)) {
                 log.info("case non principal");
-                return;
+                //return;
+                continue;
             }
 
             log.info("looking into case {} with state {}", uuid, monitoredCase.getState());
             Optional<SsiApplication> ssiCase = mongoServ.findByUuid(uuid);
             if (!ssiCase.isPresent()) {
                 log.info("application in database not present");
-                updateCase(monitoredCase, State.REJECTED, null, currentDate, isTest, uuid, null, credChange, storeDataForSE);
-                return;
+                updateCase(monitoredCase, State.REJECTED, null, currentDate, isTest, uuid, null, credChange,
+                        storeDataForSE);
+                //return;
+                continue;
             }
 
             SsiApplication ssiApp = ssiCase.get();
 
             // if this is not a principal case update state as non principal and continue to
             // the next case
-            if (!ssiApp.getTaxisAfm().equals(ssiApp.getHouseholdPrincipal().getAfm()) && !(monitoredCase.getState().equals(State.REJECTED) || monitoredCase.getState().equals(State.SUSPENDED))) {
+            if (!ssiApp.getTaxisAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())
+                    && !(monitoredCase.getState().equals(State.REJECTED)
+                            || monitoredCase.getState().equals(State.SUSPENDED))) {
                 log.info("case non principal");
-                updateCase(monitoredCase, State.NONPRINCIPAL, ssiApp, currentDate, isTest, uuid, null, credChange, storeDataForSE);
-                return;
+                updateCase(monitoredCase, State.NONPRINCIPAL, ssiApp, currentDate, isTest, uuid, null, credChange,
+                        storeDataForSE);
+                //return;
+                continue;
             }
 
-            // if this is not a principal case that has been rejected or suspended then continue to the next case
-            if ((monitoredCase.getState().equals(State.REJECTED) || monitoredCase.getState().equals(State.SUSPENDED)) && !ssiApp.getTaxisAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())) {
+            // if this is not a principal case that has been rejected or suspended then
+            // continue to the next case
+            if ((monitoredCase.getState().equals(State.REJECTED) || monitoredCase.getState().equals(State.SUSPENDED))
+                    && !ssiApp.getTaxisAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())) {
                 log.info("non principal case that is rejected or suspended");
-                return;
+                //return;
+                continue;
             }
 
             if (monitoredCase.getState().equals(State.REJECTED)) {
@@ -153,17 +167,29 @@ public class MonitorServiceImpl implements MonitorService {
                 log.info("payment failed for 3 concsecutive months");
                 mongoServ.deleteByUuid(uuid);
                 ethServ.deleteCaseByUuid(uuid);
-                return;
+                //return;
+                continue;
             }
 
             Set<String> householdAfms = ssiApp.getHouseholdComposition().stream().map(s -> s.getAfm())
                     .collect(Collectors.toSet());
             List<SsiApplication> householdApps = mongoServ.findByTaxisAfmIn(householdAfms);
 
-            // make external API calls that may update certain values in DB 
-            //Case monitoredCase, double pValue, Boolean makeMockCheck, List<SsiApplication> householdApps, SsiApplication principalApp, Integer count, LocalDate currentDate
+            // make external API calls that may update certain values in DB
+            // Case monitoredCase, double pValue, Boolean makeMockCheck,
+            // List<SsiApplication> householdApps, SsiApplication principalApp, Integer
+            // count, LocalDate currentDate
+            log.info("!!!!!!!!!!!!!!!!!!!!!!! count :{}", count);
+            ExternalChecksResult exCheckResult = externalChecksAndUpdate(monitoredCase, pValue, mockChecks,
+                    householdApps, ssiApp, count, currentDate.toLocalDate());
+            count = exCheckResult.getCount();
+            log.info("@@@@@@@@@@@@@@@@@@@@@@@ count :{},  exCheckResult.getCount() :{}", count,  exCheckResult.getCount());
+            // if there is a financial change then set the credChange to true so that the service calls tha calculate offset method
+            credChange = exCheckResult.getChangedFinancials();
 
-            //externalChecksAndUpdate(monitoredCase, pValue, mockChecks, householdApps, ssiApp, count, currentDate.toLocalDate());
+            if(exCheckResult.getRejection()){
+                rejectOrSuspendCases(uuid, State.REJECTED, householdApps, currentDate, DateUtils.dateToString(exCheckResult.getDate()), RejectionCode.REJECTION1, isTest, true, storeDataForSE);
+            }
 
             // if (!externalChecksAndUpdate(monitoredCase, pValue, mockChecks, householdApps, ssiApp, count, currentDate.toLocalDate())) {
             //     updateCase(monitoredCase, State.REJECTED, ssiApp, currentDate, isTest, uuid, null);
@@ -173,7 +199,8 @@ public class MonitorServiceImpl implements MonitorService {
             // check if credentials are valid and not expired
             if (!credentialsOk(uuid, householdApps, currentDate, isTest, credChange, storeDataForSE)) {
                 log.info("credential fail");
-                return;
+                //return;
+                continue;
             }
             LocalDateTime firstAcceptedDate = LocalDateTime.of(ssiApp.getTime(), LocalTime.of(00, 00, 00));
             Boolean accepted = false;
@@ -200,32 +227,49 @@ public class MonitorServiceImpl implements MonitorService {
 
             // aggregate all the financial values of the household to one new application
             // for verification
-            SsiApplication aggregatedSsiApp = EthAppUtils.aggregateHouseholdValues(householdApps);
+            SsiApplication aggregatedSsiApp = new SsiApplication();
+
+            //if there is only 1 application in the household don't aggregate the values
+            if(householdApps.size()==1){
+                aggregatedSsiApp = householdApps.get(0);
+            } else {
+                aggregatedSsiApp = EthAppUtils.aggregateHouseholdValues(householdApps);
+            }
+            //SsiApplication aggregatedSsiApp = EthAppUtils.aggregateHouseholdValues(householdApps);
             if (checkHouseholdCredentials(monitoredCase, ssiApp, householdApps, aggregatedSsiApp)
                     && !MonitorUtils.isCaseOlderThanSixMonths(firstAcceptedDate, currentDate)) {
                 // if there is a missing application in the household suspend the case
-                if (!checkHouseholdApplications(monitoredCase, ssiApp, householdApps, currentDate.toLocalDate())) {
-                    log.info("household apps not all present, case suspended");
-                    rejectOrSuspendCases(uuid, State.SUSPENDED, householdApps, currentDate, isTest, credChange, storeDataForSE);
-                    //return;
-                }
+                // if (!checkHouseholdApplications(monitoredCase, ssiApp, householdApps, currentDate.toLocalDate())) {
+                //     log.info("household apps not all present, case suspended");
+                //     rejectOrSuspendCases(uuid, State.SUSPENDED, householdApps, currentDate, null, null, isTest, credChange, storeDataForSE);
+                //     continue;
+                //     //return;
+                // }
                 log.info("case accepted");
                 updateCase(monitoredCase, State.ACCEPTED, ssiApp, currentDate, isTest, uuid, aggregatedSsiApp, credChange, storeDataForSE);
+                continue;
             } else {
                 log.info("validation failed, case rejected");
-                rejectOrSuspendCases(uuid, State.REJECTED, householdApps, currentDate, isTest, credChange, storeDataForSE);
+                rejectOrSuspendCases(uuid, State.REJECTED, householdApps, currentDate, null, RejectionCode.REJECTION1, isTest, credChange, storeDataForSE);
+                continue;
             }
             // }
-        });
+        //});
+        }
     }
 
     private void rejectOrSuspendCases(String uuid, State state, List<SsiApplication> householdApps,
-            LocalDateTime currentDate, Boolean isTest, Boolean credChange, List<CaseAppDTO> storeDataForSE) {
+            LocalDateTime currentDate, String rejectionDate, RejectionCode rejectionCode, Boolean isTest, Boolean credChange, List<CaseAppDTO> storeDataForSE) {
 
         log.info("reject or suspend case with uuid :{} and state :{}", uuid, state);
         for (SsiApplication hhSsiApp : householdApps) {
             Optional<Case> theCase = this.ethServ.getCaseByUUID(hhSsiApp.getUuid());
-            updateCase(theCase.isPresent() ? theCase.get() : new Case(), state, hhSsiApp, currentDate, isTest, uuid,
+            Case monitoredCase = theCase.isPresent() ? theCase.get() : new Case();
+            if(rejectionDate != null && !"".equals(rejectionDate)){
+                monitoredCase.setRejectionDate(rejectionDate);
+                monitoredCase.setRejectionCode(rejectionCode);
+            }
+            updateCase(monitoredCase, state, hhSsiApp, currentDate, isTest, uuid,
                     null, credChange, storeDataForSE);
         }
     }
@@ -245,8 +289,11 @@ public class MonitorServiceImpl implements MonitorService {
                 List<SsiApplication> allHouseholdApps = mongoServ
                         .findByTaxisAfmIn(EthAppUtils.fetchAllHouseholdAfms(ssiApp));
                 // BigDecimal offsetBefore = theCase.get().getOffset();
-                if(!monitoredCase.getState().equals(State.NONPRINCIPAL)){
+
+                // calculate offset only for principal members and only if there has been a change in credentials
+                if(ssiApp.getTaxisAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())){
                     if(credChange){
+                        log.info("gggggggggggggggggggg calculate offset");
                         MonitorUtils.calculateOffset(monitoredCase, ssiApp, allHouseholdApps);
                     }
                     
@@ -266,20 +313,21 @@ public class MonitorServiceImpl implements MonitorService {
 
                     BigDecimal dailySum = BigDecimal.ZERO;
 
-                    SsiApplication aggregatedApp = new SsiApplication();
+                    // SsiApplication aggregatedApp = new SsiApplication();
 
-                    //if there is only 1 application in the household don't aggregate the values
-                    if(allHouseholdApps.size()==1){
-                        aggregatedApp = allHouseholdApps.get(0);
-                    } else {
-                        aggregatedApp = EthAppUtils.aggregateHouseholdValues(allHouseholdApps);
-                    }
+                    // //if there is only 1 application in the household don't aggregate the values
+                    // if(allHouseholdApps.size()==1){
+                    //     aggregatedApp = allHouseholdApps.get(0);
+                    // } else {
+                    //     aggregatedApp = EthAppUtils.aggregateHouseholdValues(allHouseholdApps);
+                    // }
                     //int count = 0;
                     if(credChange){
-                        
-                        dailySum = EthAppUtils.calculatePayment(EthAppUtils.monthDays(currentDate.toLocalDate()), acceptedDatesCurrMonth.intValue(), aggregatedApp, currentDate.toLocalDate());
-                    } else {
+                        log.info("hhhhhhhhhhhhhhhhhhh calculate current payment");
                         dailySum = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp, allHouseholdApps, currentDate.toLocalDate(), true);
+                        } else {
+                        dailySum = EthAppUtils.calculatePayment(EthAppUtils.monthDays(currentDate.toLocalDate()), acceptedDatesCurrMonth.intValue(), aggregatedSsiApp, currentDate.toLocalDate());
+                    
                     }
 
                     monitoredCase.setDailyValue(
@@ -311,13 +359,15 @@ public class MonitorServiceImpl implements MonitorService {
                 //     sync = false;
                 // }
             }
+            log.info("update case uuid :{}, date :{}, state :{}, dailyValue :{}, offset:{}, sum:{} ", monitoredCase.getUuid(), monitoredCase.getDate(), monitoredCase.getState(), monitoredCase.getDailyValue(), monitoredCase.getOffset(), monitoredCase.getDailySum());
+        
             this.ethServ.updateCase(monitoredCase);
             log.info("updated case uuid :{}, date :{}, state :{}, dailyValue :{}, offset:{}, sum:{} ", monitoredCase.getUuid(), monitoredCase.getDate(), monitoredCase.getState(), monitoredCase.getDailyValue(), monitoredCase.getOffset(), monitoredCase.getDailySum());
         } else {
             log.error("cannot find case {} while trying to update it", uuid);
         }
 
-        return;
+        //return;
     }
 
     private Boolean credentialsOk(String uuid, List<SsiApplication> householdApps, LocalDateTime currentDate, Boolean isTest, Boolean credChange, List<CaseAppDTO> storeDataForSE){
@@ -334,7 +384,7 @@ public class MonitorServiceImpl implements MonitorService {
             log.info("credential expires at {}", expiresAt);
             if (!expiresAt.isAfter(currentDate)) {
                 //if credentials have expired update case as suspended(paused)
-                rejectOrSuspendCases(uuid, State.SUSPENDED, householdApps, currentDate, isTest, credChange, storeDataForSE);
+                rejectOrSuspendCases(uuid, State.SUSPENDED, householdApps, currentDate, null, null, isTest, credChange, storeDataForSE);
                 credsOk = false;
                 break;
             }
@@ -342,7 +392,7 @@ public class MonitorServiceImpl implements MonitorService {
             boolean isRevoked = this.ethServ.checkRevocationStatus(credIdAndExp[i].getId());
             log.info("is credential {} revoked? == {}", credIdAndExp[i].getId(), isRevoked);
             if (isRevoked){
-                rejectOrSuspendCases(uuid, State.REJECTED, householdApps, currentDate, isTest, credChange, storeDataForSE);
+                rejectOrSuspendCases(uuid, State.REJECTED, householdApps, currentDate, null, RejectionCode.REJECTION2, isTest, credChange, storeDataForSE);
                 credsOk = false;
                 break;
             }
@@ -372,23 +422,23 @@ public class MonitorServiceImpl implements MonitorService {
         return false;
     }
 
-    private Boolean checkHouseholdApplications(Case monitoredCase, SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDate currentDate) {
-        //final LocalDate currentDate = LocalDate.now();
-        final LocalDate endDate = LocalDate.of(currentDate.getYear(), currentDate.getMonthValue(), EthAppUtils.monthDays(currentDate));
+    // private Boolean checkHouseholdApplications(Case monitoredCase, SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDate currentDate) {
+    //     //final LocalDate currentDate = LocalDate.now();
+    //     final LocalDate endDate = LocalDate.of(currentDate.getYear(), currentDate.getMonthValue(), EthAppUtils.monthDays(currentDate));
 
-        List<HouseholdMember> household = ssiApp.getHouseholdComposition();
+    //     List<HouseholdMember> household = ssiApp.getHouseholdComposition();
 
-        //check if by the end of the month all the members of the household have submitted an application
-        if (currentDate.equals(endDate)) {
-            List<String> appAfms = householdApps.stream().map(a -> a.getTaxisAfm()).collect(Collectors.toList());
-            List<String> householdAfms = household.stream().map(m -> m.getAfm()).collect(Collectors.toList());
+    //     //check if by the end of the month all the members of the household have submitted an application
+    //     // if (currentDate.equals(endDate)) {
+    //     //     List<String> appAfms = householdApps.stream().map(a -> a.getTaxisAfm()).collect(Collectors.toList());
+    //     //     List<String> householdAfms = household.stream().map(m -> m.getAfm()).collect(Collectors.toList());
 
-            if (!householdAfms.containsAll(appAfms)) {
-                return false;
-            }
-        }
-        return true;
-    }
+    //     //     if (!householdAfms.containsAll(appAfms)) {
+    //     //         return false;
+    //     //     }
+    //     // }
+    //     return true;
+    // }
 
     private Boolean checkHouseholdCredentials(Case monitoredCase, SsiApplication ssiApp, List<SsiApplication> householdApps, SsiApplication aggregatedSsiApp) {
         //final LocalDate currentDate = LocalDate.now();
@@ -461,6 +511,7 @@ public class MonitorServiceImpl implements MonitorService {
         }
 
         //economics check
+        log.info("jjjjjjjjjjjjjjjjjjjj check if total income is more than thresshold");
         if (EthAppUtils.getTotalMonthlyValue(aggregatedSsiApp, null).compareTo(BigDecimal.ZERO) == 0) {
             log.info("rejected - financial data restriction (total household income > payment thresshold)");
             return false;
@@ -524,57 +575,57 @@ public class MonitorServiceImpl implements MonitorService {
     }
 
     //mock check for deceased members in the household
-    private Boolean checkForDeceasedMembers(HouseholdMember member) {
-        return false;
-    }
+    // private Boolean checkForDeceasedMembers(HouseholdMember member) {
+    //     return false;
+    // }
 
-    private void handleDeceasedMember(SsiApplication ssiApp) {
-        List<HouseholdMember> household = ssiApp.getHouseholdComposition();
-        boolean changed = false;
-        for (HouseholdMember member : household) {
-            if (checkForDeceasedMembers(member)) {
-                household.remove(member);
-                changed = true;
-            }
-        }
+    // private void handleDeceasedMember(SsiApplication ssiApp) {
+    //     List<HouseholdMember> household = ssiApp.getHouseholdComposition();
+    //     boolean changed = false;
+    //     for (HouseholdMember member : household) {
+    //         if (checkForDeceasedMembers(member)) {
+    //             household.remove(member);
+    //             changed = true;
+    //         }
+    //     }
 
-        if (changed) {
-            ssiApp.setHouseholdComposition(household);
-            LinkedHashMap<String, List<HouseholdMember>> hhHistory = ssiApp.getHouseholdCompositionHistory();
-            hhHistory.put(DateUtils.dateToString(LocalDateTime.now()), household);
-            ssiApp.setHouseholdCompositionHistory(hhHistory);
-            mongoServ.updateSsiApp(ssiApp);
-        }
-    }
+    //     if (changed) {
+    //         ssiApp.setHouseholdComposition(household);
+    //         LinkedHashMap<String, List<HouseholdMember>> hhHistory = ssiApp.getHouseholdCompositionHistory();
+    //         hhHistory.put(DateUtils.dateToString(LocalDateTime.now()), household);
+    //         ssiApp.setHouseholdCompositionHistory(hhHistory);
+    //         mongoServ.updateSsiApp(ssiApp);
+    //     }
+    // }
 
 
     //mock housing subsidy check
-    private void houseBenefitCheck(Case monitoredCase, SsiApplication ssiApp, List<LocalDate> rejectionDates) {
-        // mock check
-        if (monitoredCase.equals("")) {
-            LocalDate actualUpdateDate = LocalDate.now(); // mock date, this should return the actual date of the altered credential
-            rejectionDates.add(actualUpdateDate);
-        }
-    }
+    // private void houseBenefitCheck(Case monitoredCase, SsiApplication ssiApp, List<LocalDate> rejectionDates) {
+    //     // mock check
+    //     if (monitoredCase.equals("")) {
+    //         LocalDate actualUpdateDate = LocalDate.now(); // mock date, this should return the actual date of the altered credential
+    //         rejectionDates.add(actualUpdateDate);
+    //     }
+    // }
 
-    private void luxuryLivingCheck(Case monitoredCase, SsiApplication ssiApp, List<LocalDate> rejectionDates) {
-        // mock check
-        if (monitoredCase.equals("")) {
-            LocalDate actualUpdateDate = LocalDate.now(); // mock date, this should return the actual date of the altered credential
-            ssiApp.setLuxury("true");
-            mongoServ.updateSsiApp(ssiApp);
-            rejectionDates.add(actualUpdateDate);
-        }
-    }
+    // private void luxuryLivingCheck(Case monitoredCase, SsiApplication ssiApp, List<LocalDate> rejectionDates) {
+    //     // mock check
+    //     if (monitoredCase.equals("")) {
+    //         LocalDate actualUpdateDate = LocalDate.now(); // mock date, this should return the actual date of the altered credential
+    //         ssiApp.setLuxury("true");
+    //         mongoServ.updateSsiApp(ssiApp);
+    //         rejectionDates.add(actualUpdateDate);
+    //     }
+    // }
 
-    //mockAmkaCheck
-    private void amkaCheck(Case monitoredCase, SsiApplication ssiApp, List<LocalDate> rejectionDates) {
-        // mock check
-        if (monitoredCase.equals("")) {
-            LocalDate actualUpdateDate = LocalDate.now(); // mock date, this should return the actual date of the altered credential
-            rejectionDates.add(actualUpdateDate);
-        }
-    }
+    // //mockAmkaCheck
+    // private void amkaCheck(Case monitoredCase, SsiApplication ssiApp, List<LocalDate> rejectionDates) {
+    //     // mock check
+    //     if (monitoredCase.equals("")) {
+    //         LocalDate actualUpdateDate = LocalDate.now(); // mock date, this should return the actual date of the altered credential
+    //         rejectionDates.add(actualUpdateDate);
+    //     }
+    // }
 
     //update financial values and histories
 
@@ -590,11 +641,14 @@ public class MonitorServiceImpl implements MonitorService {
         LinkedHashMap<String, String> financialHistoryMap;
         String updatedCaseUUID = "";
 
+        log.info("BBBBBBBBBBBBBBBBBBB count :{}", count);
+        log.info("AAAAAAAAAAAAAAAAAAAA financials check should try :{}", makeMockCheck && count < 2);
         Optional<UpdateMockResult> otherBenefitsResult = mockServ.getUpdatedOtherBenefitValue(currentDate, currentDate, pValue, principalApp, makeMockCheck && count < 2, householdApps);
         if (otherBenefitsResult.isPresent() && count < 2) {
             updatedCaseUUID = otherBenefitsResult.get().getUuid();
             changed = true;
             count++;
+            
             // get the ssiApp that was updated
             Optional<SsiApplication> updatedApp = mongoServ.findByUuid(updatedCaseUUID);
             financialHistoryMap = updatedApp.get().getOtherBenefitsRHistory();
@@ -605,7 +659,7 @@ public class MonitorServiceImpl implements MonitorService {
             if (updatedApp.isPresent()) {
                 updatedApp.get().setOtherBenefitsRHistory(financialHistoryMap);
                 updatedApp.get().setOtherBenefitsR(String.valueOf(otherBenefitsResult.get().getValue()));
-                mongoServ.updateSsiApp(principalApp);
+                mongoServ.updateSsiApp(updatedApp.get());
             }
         }
 
@@ -641,7 +695,7 @@ public class MonitorServiceImpl implements MonitorService {
             }
             financialHistoryMap.put(DateUtils.dateToString(ergomBenefitUpdate.get().getDate()), String.valueOf(ergomBenefitUpdate.get().getValue()));
             if (updatedApp.isPresent()) {
-                updatedApp.get().setUnemploymentBenefitRHistory(financialHistoryMap);
+                updatedApp.get().setErgomRHistory(financialHistoryMap);
                 updatedApp.get().setErgomeR(String.valueOf(ergomBenefitUpdate.get().getValue()));
                 mongoServ.updateSsiApp(updatedApp.get());
             }
@@ -650,10 +704,11 @@ public class MonitorServiceImpl implements MonitorService {
 
         Optional<UpdateMockResult> salary = mockServ.getUpdateSalariesData(currentDate, currentDate, pValue, principalApp,
                 makeMockCheck && count < 2, householdApps);
-        if (unemploymentBenefit.isPresent() && count < 2) {
+        if (salary.isPresent() && count < 2) {
+            updatedCaseUUID = salary.get().getUuid();
             changed = true;
             count++;
-            principalApp.setSalariesR(String.valueOf(salary.get().getValue()));
+            //principalApp.setSalariesR(String.valueOf(salary.get().getValue()));
             Optional<SsiApplication> updatedApp = mongoServ.findByUuid(updatedCaseUUID);
             financialHistoryMap = updatedApp.get().getSalariesRHistory();
             if (financialHistoryMap == null) {
@@ -671,9 +726,10 @@ public class MonitorServiceImpl implements MonitorService {
         Optional<UpdateMockResult> pensionResult = mockServ.getUpdatedPension(currentDate, currentDate, pValue, principalApp,
                 makeMockCheck && count < 2, householdApps);
         if (pensionResult.isPresent() && count < 2) {
+            updatedCaseUUID = pensionResult.get().getUuid();
             changed = true;
             count++;
-            principalApp.setSalariesR(String.valueOf(pensionResult.get().getValue()));
+           //principalApp.setSalariesR(String.valueOf(pensionResult.get().getValue()));
             Optional<SsiApplication> updatedApp = mongoServ.findByUuid(updatedCaseUUID);
             financialHistoryMap = updatedApp.get().getPensionsRHistory();
             if (financialHistoryMap == null) {
@@ -682,7 +738,7 @@ public class MonitorServiceImpl implements MonitorService {
             financialHistoryMap.put(DateUtils.dateToString(pensionResult.get().getDate()), String.valueOf(pensionResult.get().getValue()));
             if (updatedApp.isPresent()) {
                 updatedApp.get().setPensionsRHistory(financialHistoryMap);
-                updatedApp.get().setPensionsR(String.valueOf(salary.get().getValue()));
+                updatedApp.get().setPensionsR(String.valueOf(pensionResult.get().getValue()));
                 mongoServ.updateSsiApp(updatedApp.get());
             }
         }
@@ -690,15 +746,16 @@ public class MonitorServiceImpl implements MonitorService {
         Optional<UpdateMockResult> freelanceUpdate = mockServ.getUpdatedFreelance(currentDate, currentDate, pValue, principalApp,
                 makeMockCheck && count < 2, householdApps);
         if (freelanceUpdate.isPresent() && count < 2) {
+            updatedCaseUUID = freelanceUpdate.get().getUuid();
             changed = true;
             count++;
-            principalApp.setSalariesR(String.valueOf(freelanceUpdate.get().getValue()));
+            //principalApp.setSalariesR(String.valueOf(freelanceUpdate.get().getValue()));
             Optional<SsiApplication> updatedApp = mongoServ.findByUuid(updatedCaseUUID);
             financialHistoryMap = updatedApp.get().getSalariesRHistory();
             if (financialHistoryMap == null) {
                 financialHistoryMap = new LinkedHashMap<>();
             }
-            financialHistoryMap.put(DateUtils.dateToString(freelanceUpdate.get().getDate()), String.valueOf(salary.get().getValue()));
+            financialHistoryMap.put(DateUtils.dateToString(freelanceUpdate.get().getDate()), String.valueOf(freelanceUpdate.get().getValue()));
             if (updatedApp.isPresent()) {
                 updatedApp.get().setFreelanceRHistory(financialHistoryMap);
                 updatedApp.get().setFreelanceR(String.valueOf(freelanceUpdate.get().getValue()));
@@ -709,28 +766,31 @@ public class MonitorServiceImpl implements MonitorService {
         Optional<UpdateMockResult> depositsUpdates = mockServ.getUpdatedDepoists(currentDate, currentDate, pValue, principalApp,
                 makeMockCheck && count < 2, householdApps);
         if (depositsUpdates.isPresent() && count < 2) {
+            updatedCaseUUID = depositsUpdates.get().getUuid();
             changed = true;
             count++;
-            principalApp.setSalariesR(String.valueOf(depositsUpdates.get().getValue()));
+            //principalApp.setSalariesR(String.valueOf(depositsUpdates.get().getValue()));
             Optional<SsiApplication> updatedApp = mongoServ.findByUuid(updatedCaseUUID);
             financialHistoryMap = updatedApp.get().getDepositsAHistory();
             if (financialHistoryMap == null) {
                 financialHistoryMap = new LinkedHashMap<>();
             }
-            financialHistoryMap.put(DateUtils.dateToString(depositsUpdates.get().getDate()), String.valueOf(salary.get().getValue()));
+            financialHistoryMap.put(DateUtils.dateToString(depositsUpdates.get().getDate()), String.valueOf(depositsUpdates.get().getValue()));
             if (updatedApp.isPresent()) {
                 updatedApp.get().setDepositsAHistory(financialHistoryMap);
                 updatedApp.get().setDepositsA(String.valueOf(depositsUpdates.get().getValue()));
                 mongoServ.updateSsiApp(updatedApp.get());
             }
         }
-        if (changed) {
-            mongoServ.updateSsiApp(principalApp);
-        }
+        // if (changed) {
+        //     mongoServ.updateSsiApp(principalApp);
+        // }
         //if the financial checks fails now the application should be rejected
 
         ExternalAPICallResult result = new ExternalAPICallResult();
         result.setCount(count);
+        result.setChanged(changed);
+        log.info("111111111111111111111 count :{}", count);
         return result;
     }
 
@@ -739,12 +799,14 @@ public class MonitorServiceImpl implements MonitorService {
                                                 double pValue, Boolean makeMockCheck,
                                                 List<SsiApplication> householdApps, Integer count, LocalDate currentDate, List<LocalDate> rejectionDates) {
         //mock check
-        LinkedHashMap<String, List<HouseholdMember>> householdCompositionHistory;
+        Boolean changed = false;
+        //LinkedHashMap<String, List<HouseholdMember>> householdCompositionHistory;
         Optional<BooleanMockResult> deceasedResult = mockServ.getDeaths(currentDate, currentDate, pValue,
                 principalApp, makeMockCheck && count < 2, householdApps);
         ExternalAPICallResult result = new ExternalAPICallResult();
         if (deceasedResult.isPresent() && count < 2) {
             count++;
+            changed = true;
             //update the list of household members
             LinkedHashMap<String, List<HouseholdMember>> householdHistory = principalApp.getHouseholdCompositionHistory();
             List<HouseholdMember> newHoushold = principalApp.getHouseholdComposition().stream().
@@ -756,6 +818,7 @@ public class MonitorServiceImpl implements MonitorService {
             result.setDate(deceasedResult.get().getDate());
         }
         result.setCount(count);
+        result.setChanged(changed);
         return result;
     }
 
@@ -809,28 +872,36 @@ public class MonitorServiceImpl implements MonitorService {
         List<LocalDate> rejectionDates = new ArrayList<>();
         //validate each household application credentials
 
+        ExternalChecksResult finalResult = new ExternalChecksResult();
+        log.info("QQQQQQQQQQQQQQQQQQQQQQQQ count :{}", count);
         // calls external APIs and updates DB
         ExternalAPICallResult result = financialsCheck(principalApp, pValue, makeMockCheck, householdApps, count, currentDate, rejectionDates);
         int apiCallsUpdates = result.getCount();
-        if(result.getDate() != null) rejectionDates.add(result.getDate());
+        finalResult.setChangedFinancials(result.getChanged());
+        if(result.getDate() != null) rejectionDates.add(result.getDate().toLocalDate());
         if (apiCallsUpdates < 2) {
             //handle deceased member
             result = deceasedCheck(principalApp, pValue, makeMockCheck, householdApps, count, currentDate, rejectionDates);
+            if(!finalResult.getChangedFinancials()){
+                finalResult.setChangedFinancials(result.getChanged());
+            }
             apiCallsUpdates = result.getCount();
-            if(result.getDate() != null) rejectionDates.add(result.getDate());
+            if(result.getDate() != null) rejectionDates.add(result.getDate().toLocalDate());
             if (apiCallsUpdates < 2) {
                 result = oaedRegistrationCheck(principalApp, pValue, makeMockCheck, householdApps, count, currentDate, rejectionDates);
                 apiCallsUpdates = result.getCount();
-                if(result.getDate() != null) rejectionDates.add(result.getDate());
+                if(result.getDate() != null) rejectionDates.add(result.getDate().toLocalDate());
                 if (apiCallsUpdates < 2) {
                     result = luxuryCheck(principalApp, pValue, makeMockCheck, householdApps, count, currentDate, rejectionDates);
-                    if(result.getDate() != null) rejectionDates.add(result.getDate());
+                    if(result.getDate() != null) rejectionDates.add(result.getDate().toLocalDate());
                 }
             }
         }
 
-        ExternalChecksResult finalResult = new ExternalChecksResult();
+        //ExternalChecksResult finalResult = new ExternalChecksResult();
         finalResult.setRejection(false);
+        finalResult.setCount(apiCallsUpdates);
+        //finalResult.setChangedFinancials(result.getChanged());
         if (!rejectionDates.isEmpty()) {
             LocalDate minDate = rejectionDates.stream()
                     .min(Comparator.comparing(LocalDate::toEpochDay))
@@ -841,6 +912,7 @@ public class MonitorServiceImpl implements MonitorService {
             finalResult.setRejection(true);
             finalResult.setDate(minDate);
         }
+        log.info("WWWWWWWWWWWWWWWWWWWWWWWW count :{}, apiCallsUpdates :{}", count, apiCallsUpdates);
 
         return finalResult;
 

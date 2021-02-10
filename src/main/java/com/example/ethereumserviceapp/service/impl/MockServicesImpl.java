@@ -1,25 +1,26 @@
 package com.example.ethereumserviceapp.service.impl;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
 
 import com.example.ethereumserviceapp.model.BooleanMockResult;
 import com.example.ethereumserviceapp.model.HouseholdMember;
 import com.example.ethereumserviceapp.model.UpdateMockResult;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.service.MockServices;
+import com.example.ethereumserviceapp.utils.DateUtils;
 import com.example.ethereumserviceapp.utils.EthAppUtils;
 import com.example.ethereumserviceapp.utils.SatisticUtils;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -29,10 +30,14 @@ public class MockServicesImpl implements MockServices {
     private final Random random = new Random();
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
+    //private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy hh:mm:ss");
+
 
     @Override
     public Optional<UpdateMockResult> getUpdatedOtherBenefitValue(LocalDate dateOfSubmission, LocalDate today, double pValue,
                                                                   SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> householdApps) {
+
+                                                                    log.info("DDDDDDDDDDDDDDDDDD otherbenefit check shouldTry :{}", shouldTry);
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
                 log.info("update value for otherBenefit !");
@@ -51,7 +56,7 @@ public class MockServicesImpl implements MockServices {
                     int margin = (int) (threshold - aggregatedMonthlyIncome);
                     log.info("the margin is {}, increasing value by a max of this  + 500", margin);
                     //random.nextInt(max - min) + min;
-                    newOtherBenefits = random.nextInt((margin + 500) - (int) otherBenefits) + otherBenefits;
+                    newOtherBenefits = random.nextInt((margin + 500) - (int) otherBenefits < 0? (int) otherBenefits - (margin + 500) : (margin + 500) - (int) otherBenefits) + otherBenefits;
                 } else {
                     log.info("DECREASING:: value");
                     int percentage = random.nextInt(100);
@@ -68,7 +73,9 @@ public class MockServicesImpl implements MockServices {
                     updateMonth = "12";
                     year -= 1;
                 }
-                LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                
+                //LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                LocalDateTime updateDate = LocalDateTime.of(year, Integer.valueOf(updateMonth) , Integer.valueOf(updateDay), random.nextInt(23), random.nextInt(59), random.nextInt(59));
                 UpdateMockResult result = new UpdateMockResult();
                 result.setDate(updateDate);
                 result.setValue(newOtherBenefits);
@@ -103,7 +110,7 @@ public class MockServicesImpl implements MockServices {
                     int margin = (int) (threshold - aggregatedMonthlyIncome);
                     log.info("the margin is {}, increasing value by a max of this  + 500", margin);
                     //random.nextInt(max - min) + min;
-                    newErgom = random.nextInt((margin + 500) - (int) ergom) + ergom;
+                    newErgom = random.nextInt((margin + 500) - (int) ergom < 0? (int) ergom - (margin + 500) : (margin + 500) - (int) ergom ) + ergom;
                 } else {
                     log.info("DECREASING:: value");
                     int percentage = random.nextInt(100);
@@ -121,7 +128,8 @@ public class MockServicesImpl implements MockServices {
                     updateMonth = "12";
                     year -= 1;
                 }
-                LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                //LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                LocalDateTime updateDate = LocalDateTime.of(year, Integer.valueOf(updateMonth) , Integer.valueOf(updateDay), random.nextInt(23), random.nextInt(59), random.nextInt(59));
                 UpdateMockResult result = new UpdateMockResult();
                 result.setDate(updateDate);
                 result.setValue(newErgom);
@@ -157,7 +165,7 @@ public class MockServicesImpl implements MockServices {
                     int margin = (int) (threshold - aggregatedMonthlyIncome);
                     log.info("the margin is {}, increasing value by a max of this  + 500", margin);
                     //random.nextInt(max - min) + min;
-                    newOaedBenefit = random.nextInt((margin + 500) - (int) oaedBenefit) + oaedBenefit;
+                    newOaedBenefit = random.nextInt((margin + 500) - (int) oaedBenefit < 0? (int) oaedBenefit - (margin + 500) : (margin + 500) - (int) oaedBenefit) + oaedBenefit;
                 } else {
                     log.info("DECREASING:: value");
                     int percentage = random.nextInt(100);
@@ -175,7 +183,8 @@ public class MockServicesImpl implements MockServices {
                     updateMonth = "12";
                     year -= 1;
                 }
-                LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+               // LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                LocalDateTime updateDate = LocalDateTime.of(year, Integer.valueOf(updateMonth) , Integer.valueOf(updateDay), random.nextInt(23), random.nextInt(59), random.nextInt(59));
                 UpdateMockResult result = new UpdateMockResult();
                 result.setDate(updateDate);
                 result.setValue(newOaedBenefit);
@@ -211,7 +220,7 @@ public class MockServicesImpl implements MockServices {
                     int margin = (int) (threshold - aggregatedMonthlyIncome);
                     log.info("the margin is {}, increasing value by a max of this  + 500", margin);
                     //random.nextInt(max - min) + min;
-                    newSalaries = random.nextInt((margin + 500) - (int) salariesR) + salariesR;
+                    newSalaries = random.nextInt((margin + 500) - (int) salariesR < 0? (int) salariesR - (margin + 500) : (margin + 500) - (int) salariesR) + salariesR;
                 } else {
                     log.info("DECREASING:: value");
                     int percentage = random.nextInt(100 - 0) + 0;
@@ -230,7 +239,8 @@ public class MockServicesImpl implements MockServices {
                     updateMonth = "12";
                     year -= 1;
                 }
-                LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                //LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                LocalDateTime updateDate = LocalDateTime.of(year, Integer.valueOf(updateMonth) , Integer.valueOf(updateDay), random.nextInt(23), random.nextInt(59), random.nextInt(59));
                 UpdateMockResult result = new UpdateMockResult();
                 result.setDate(updateDate);
                 result.setValue(newSalaries);
@@ -263,7 +273,7 @@ public class MockServicesImpl implements MockServices {
                     int margin = (int) (threshold - aggregatedMonthlyIncome);
                     log.info("the margin is {}, increasing value by a max of this  + 500", margin);
                     //random.nextInt(max - min) + min;
-                    newPensions = random.nextInt((margin + 500) - (int) pensionsR) + pensionsR;
+                    newPensions = random.nextInt((margin + 500) - (int) pensionsR < 0? (int) pensionsR - (margin + 500) : (margin + 500) - (int) pensionsR) + pensionsR;
                 } else {
                     log.info("DECREASING:: value");
                     int percentage = random.nextInt(100 - 0) + 0;
@@ -282,7 +292,8 @@ public class MockServicesImpl implements MockServices {
                     updateMonth = "12";
                     year -= 1;
                 }
-                LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                //LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                LocalDateTime updateDate = LocalDateTime.of(year, Integer.valueOf(updateMonth) , Integer.valueOf(updateDay), random.nextInt(23), random.nextInt(59), random.nextInt(59));
                 UpdateMockResult result = new UpdateMockResult();
                 result.setDate(updateDate);
                 result.setValue(newPensions);
@@ -316,7 +327,7 @@ public class MockServicesImpl implements MockServices {
                     int margin = (int) (threshold - aggregatedMonthlyIncome);
                     log.info("the margin is {}, increasing value by a max of this  + 500", margin);
                     //random.nextInt(max - min) + min;
-                    newFreelanceR = random.nextInt((margin + 500) - (int) freelanceR) + freelanceR;
+                    newFreelanceR = random.nextInt((margin + 500) - (int) freelanceR < 0? (int) freelanceR - (margin + 500) : (margin + 500) - (int) freelanceR) + freelanceR;
                 } else {
                     log.info("DECREASING:: value");
                     int percentage = random.nextInt(100 - 0) + 0;
@@ -335,7 +346,8 @@ public class MockServicesImpl implements MockServices {
                     updateMonth = "12";
                     year -= 1;
                 }
-                LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                //LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                LocalDateTime updateDate = LocalDateTime.of(year, Integer.valueOf(updateMonth) , Integer.valueOf(updateDay), random.nextInt(23), random.nextInt(59), random.nextInt(59));
                 UpdateMockResult result = new UpdateMockResult();
                 result.setDate(updateDate);
                 result.setValue(newFreelanceR);
@@ -370,7 +382,7 @@ public class MockServicesImpl implements MockServices {
                     int margin = (int) (threshold - aggregatedMonthlyIncome);
                     log.info("the margin is {}, increasing value by a max of this  + 500", margin);
                     //random.nextInt(max - min) + min;
-                    newDeposits = random.nextInt((margin + 500) - (int) depositsR) + depositsR;
+                    newDeposits = random.nextInt((margin + 500) - (int) depositsR < 0? (int) depositsR - (margin + 500) : (margin + 500) - (int) depositsR) + depositsR;
                 } else {
                     log.info("DECREASING:: value");
                     int percentage = random.nextInt(100 - 0) + 0;
@@ -388,7 +400,8 @@ public class MockServicesImpl implements MockServices {
                     updateMonth = "12";
                     year -= 1;
                 }
-                LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                //LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                LocalDateTime updateDate = LocalDateTime.of(year, Integer.valueOf(updateMonth) , Integer.valueOf(updateDay), random.nextInt(23), random.nextInt(59), random.nextInt(59));
                 UpdateMockResult result = new UpdateMockResult();
                 result.setDate(updateDate);
                 result.setValue(newDeposits);
@@ -422,7 +435,9 @@ public class MockServicesImpl implements MockServices {
                         updateMonth = "12";
                         year -= 1;
                     }
-                    LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                    //LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                    LocalDateTime updateDate = LocalDateTime.of(year, Integer.valueOf(updateMonth) , Integer.valueOf(updateDay), random.nextInt(23), random.nextInt(59), random.nextInt(59));
+                    
                     BooleanMockResult result = new BooleanMockResult();
                     result.setDate(updateDate);
                     result.setValue(true);
@@ -443,7 +458,7 @@ public class MockServicesImpl implements MockServices {
             if (SatisticUtils.shouldChangeValue(pValue)) {
                 final LocalDate referenceDate = LocalDate.now();
                 Optional<HouseholdMember> adultMember = ssiApp.getHouseholdComposition().stream().filter(person -> !person.getAfm().equals(ssiApp.getHouseholdPrincipal().getAfm()) &&
-                        (EthAppUtils.calculateAge(LocalDate.parse(person.getDateOfBirth(), formatter), referenceDate) >= 18)).findFirst();
+                        (EthAppUtils.calculateAge(DateUtils.dateStringToLD(person.getDateOfBirth()), referenceDate) >= 18)).findFirst();
 
 
                 int year = dateOfSubmission.getYear();
@@ -455,7 +470,8 @@ public class MockServicesImpl implements MockServices {
                     updateMonth = "12";
                     year -= 1;
                 }
-                LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                //LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                LocalDateTime updateDate = LocalDateTime.of(year, Integer.valueOf(updateMonth) , Integer.valueOf(updateDay), random.nextInt(23), random.nextInt(59), random.nextInt(59));
                 BooleanMockResult result = new BooleanMockResult();
                 result.setDate(updateDate);
                 result.setValue(true);
@@ -481,7 +497,8 @@ public class MockServicesImpl implements MockServices {
                     updateMonth = "12";
                     year -= 1;
                 }
-                LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                //LocalDate updateDate = LocalDate.parse(updateDay + "/" + updateMonth + "/" + year, formatter);
+                LocalDateTime updateDate = LocalDateTime.of(year, Integer.valueOf(updateMonth) , Integer.valueOf(updateDay), random.nextInt(23), random.nextInt(59), random.nextInt(59));
                 BooleanMockResult result = new BooleanMockResult();
                 result.setDate(updateDate);
                 result.setValue(true);
@@ -497,8 +514,8 @@ public class MockServicesImpl implements MockServices {
     private static double threshold(SsiApplication ssiApp) {
         List<HouseholdMember> household = ssiApp.getHouseholdComposition();
         final LocalDate referenceDate = LocalDate.now();
-        long adults = household.stream().filter(h -> EthAppUtils.calculateAge(LocalDate.parse(h.getDateOfBirth(), formatter), referenceDate) >= 18).count();
-        int adultCount = (int) adults;
+        Long adults = household.stream().filter(h -> EthAppUtils.calculateAge(DateUtils.dateStringToLD(h.getDateOfBirth()), referenceDate) >= 18).count();
+        int adultCount = adults.intValue();
         int minorCount = household.size() - adultCount;
         // remove one adult because the first one has a fixed payment value of 200
         if (adultCount == 0 && minorCount > 0) {

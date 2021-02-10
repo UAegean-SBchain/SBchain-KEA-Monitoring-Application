@@ -781,9 +781,19 @@ public class CsvUtils {
         try {
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("applications.csv"), StandardCharsets.UTF_8));
             StringBuffer oneLine = new StringBuffer();
-            for (String header : HEADERs) {
-                oneLine.append(header).append(CSV_SEPARATOR);
+            for(int i=0; i<HEADERs.length; i++){
+                if(i == HEADERs.length - 1){
+                    oneLine.append(HEADERs[i]);
+                } else {
+                    oneLine.append(HEADERs[i]).append(CSV_SEPARATOR);
+                }
+                
             }
+            
+            // for (String header : HEADERs) {
+                
+            //     oneLine.append(header).append(CSV_SEPARATOR);
+            // }
             bw.write(oneLine.toString());
             bw.newLine();
             for (SsiApplication app : appList) {
@@ -930,7 +940,7 @@ public class CsvUtils {
                 oneLine.append("Dimos Paianias").append(CSV_SEPARATOR);
                 //            "time",
 //                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-                oneLine.append(now.format(yyyyMMddhhmmssFormater_DASH)).append(CSV_SEPARATOR);
+                oneLine.append(now.format(yyyyMMddFormater_DASH)).append(CSV_SEPARATOR);
                 //            "householdPrincipal",
                 oneLine.append(makeMemberToHouseholdString(app.getHouseholdPrincipal())).append(CSV_SEPARATOR);
                 //            "householdComposition",
@@ -938,7 +948,7 @@ public class CsvUtils {
                 //            "householdCompositionHistory",
                 String householdCompositionString = history_time+"_"+ app.getHouseholdComposition().stream().map(hm ->
                         hm.getName()+";"+hm.getSurname()+";"+hm.getAfm()+";"+hm.getDateOfBirth()
-                ).collect(Collectors.joining("+"));
+                ).collect(Collectors.joining("|"));
                 oneLine.append(householdCompositionString).append(CSV_SEPARATOR);
 
                 //            "salariesRHistory",

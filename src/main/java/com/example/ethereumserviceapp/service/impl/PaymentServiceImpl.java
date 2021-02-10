@@ -51,14 +51,20 @@ public class PaymentServiceImpl implements PaymentService{
             // get the case from the block chain
             Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
             //if the case does not exist or is a case belonging to a non principal member, continue to the next case
-            if(!theCase.isPresent() || theCase.get().getState().equals(State.NONPRINCIPAL)){
+            Optional<SsiApplication> ssiApp = mongoServ.findByUuid(uuid);
+            if(!ssiApp.isPresent()){
+                log.info("application does not exist");
+                return;
+            }
+            if(!theCase.isPresent() || !ssiApp.get().getTaxisAfm().equals(ssiApp.get().getHouseholdPrincipal().getAfm())){
                 log.info("payment: case does not exist or case non principal");
                 return;
             }
             Case caseToBePaid = theCase.get();
             LocalDateTime startDate = caseToBePaid.getHistory().entrySet().iterator().next().getKey();
             LocalDateTime currentDate = dateNow == null? LocalDateTime.now() : dateNow;
-            Optional<SsiApplication> ssiApp = mongoServ.findByUuid(uuid);
+            //Optional<SsiApplication> ssiApp = mongoServ.findByUuid(uuid);
+            
             Set<String> householdAfms = ssiApp.get().getHouseholdComposition().stream().map(s -> s.getAfm()).collect(Collectors.toSet());
             List<SsiApplication> householdApps = mongoServ.findByTaxisAfmIn(householdAfms);
             if (caseToBePaid.getState().equals(State.ACCEPTED)) {

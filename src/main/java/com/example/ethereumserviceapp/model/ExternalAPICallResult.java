@@ -1,8 +1,13 @@
 package com.example.ethereumserviceapp.model;
 
-import lombok.*;
-
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
@@ -12,5 +17,7 @@ import java.time.LocalDate;
 public class ExternalAPICallResult {
 
     private int count;
-    private LocalDate date;
+    //private LocalDate date;
+    private LocalDateTime date;
+    private Boolean changed;
 }

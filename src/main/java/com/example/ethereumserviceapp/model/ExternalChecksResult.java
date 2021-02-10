@@ -10,6 +10,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @ToString
 public class ExternalChecksResult {
-    private boolean rejection;
+    private Boolean rejection;
     private LocalDate date;
+    private Boolean changedFinancials;
+    private int count;
 }

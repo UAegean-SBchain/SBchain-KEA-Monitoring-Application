@@ -59,6 +59,7 @@ public class HelperService {
         LocalDateTime endDate = currentDate.plusDays(Long.valueOf(numDays));
         List<CaseAppDTO> storedDataForSE = null;
 
+        log.info("SSSSSSSSSSSSSSSSS start monitoring with pValue :{}", pValue);
         while (currentDate.compareTo(endDate) < 0) {
 
             if (currentDate.plusDays(1).compareTo(endDate) == 0) {
@@ -98,7 +99,7 @@ public class HelperService {
             
             if(!acceptedCases.isEmpty()){
                 Random rand = new Random(); 
-                int randAccepted = rand.nextInt(acceptedCases.size()); 
+                int randAccepted = rand.nextInt(acceptedCases.size()-1); 
                 
                 ExportCaseToExcel excelExporter = new ExportCaseToExcel(acceptedCases.get(randAccepted).getPrincipalCase(), acceptedCases.get(randAccepted).getHouseholdApps());
                 try {
@@ -110,7 +111,7 @@ public class HelperService {
 
             if(!rejectedCases.isEmpty()){
                 Random rand = new Random(); 
-                int randRejected = rand.nextInt(rejectedCases.size());
+                int randRejected = rand.nextInt(rejectedCases.size()-1);
                 
                 ExportCaseToExcel excelExporter = new ExportCaseToExcel(rejectedCases.get(randRejected).getPrincipalCase(), rejectedCases.get(randRejected).getHouseholdApps());
                 try {
