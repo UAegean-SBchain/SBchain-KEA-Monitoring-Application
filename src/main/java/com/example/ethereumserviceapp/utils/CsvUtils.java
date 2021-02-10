@@ -4,6 +4,7 @@ import java.io.*;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -37,7 +38,7 @@ public class CsvUtils {
             "totalIncome", "savedInDb", "status", "submittedMunicipality", "time", "householdPrincipal", "householdComposition", "householdCompositionHistory",
 
             "salariesRHistory", "pensionsRHistory", "farmingRHistory", "freelanceRHistory", "otherBenefitsRHistory", "depositsAHistory", "domesticRealEstateAHistory",
-            "foreignRealEstateAHistory", "monthlyGuarantee", "totalIncome_3", "monthlyIncome", "monthlyAid", "savedInDb_4", "status_5"};
+            "foreignRealEstateAHistory", "monthlyGuarantee", "totalIncome_3", "monthlyIncome", "monthlyAid", "savedInDb_4", "status_5", "monthlyAllocation", "totalAllocation"};
 
 
     private final static List<String> GREEK_FIRST_NAMES_MALE = new ArrayList<>();
@@ -287,6 +288,13 @@ public class CsvUtils {
 
         int maxAmount = (200 + (int) additionalAdults * 100 + (principalApp.getHouseholdComposition().size() - (int) additionalAdults) * 50) * 6;
         int leftOverAmount = addFinancialDataToSsiApp(principalApp, maxAmount);
+
+        SsiApplication aggregatedSsiApp = EthAppUtils.aggregateHouseholdValues(householdAppList);
+        BigDecimal monthly = EthAppUtils.getTotalMonthlyValue(aggregatedSsiApp, null);
+//        log.info("Monthly allocation is {}", monthly);
+        principalApp.setMonthlyAllocation(monthly.doubleValue());
+        principalApp.setTotalAllocation(monthly.multiply(BigDecimal.valueOf(6)).doubleValue());
+
         for (SsiApplication app : householdAppList) {// for all non principal applications
             if (!app.getHouseholdPrincipal().getAfm().equals(app.getTaxisAfm()) && isAdult(app.getTaxisDateOfBirth())) {
                 leftOverAmount = addFinancialDataToSsiApp(app, leftOverAmount);
@@ -928,9 +936,9 @@ public class CsvUtils {
                 //            "householdComposition",
                 oneLine.append(makeHouseHoldString(app.getHouseholdComposition())).append(CSV_SEPARATOR);
                 //            "householdCompositionHistory",
-                String householdCompositionString = history_time+";"+ app.getHouseholdComposition().stream().map(hm ->
+                String householdCompositionString = history_time+"_"+ app.getHouseholdComposition().stream().map(hm ->
                         hm.getName()+";"+hm.getSurname()+";"+hm.getAfm()+";"+hm.getDateOfBirth()
-                ).collect(Collectors.joining("|"));
+                ).collect(Collectors.joining("+"));
                 oneLine.append(householdCompositionString).append(CSV_SEPARATOR);
 
                 //            "salariesRHistory",
@@ -969,7 +977,13 @@ public class CsvUtils {
                 oneLine.append("TRUE").append(CSV_SEPARATOR);
                 //            "status_5"
                 oneLine.append(" ").append(CSV_SEPARATOR);
-
+                //
+                // principalApp.setMonthlyAllocation(monthly.doubleValue());
+                //        principalApp.setTotalAllocation(monthly.multiply(BigDecimal.valueOf(6)).doubleValue());
+                // monthly
+                oneLine.append(app.getMonthlyAllocation()).append(CSV_SEPARATOR);
+                //total
+                oneLine.append(app.getTotalAllocation()).append(CSV_SEPARATOR);
 
                 bw.write(oneLine.toString());
                 bw.newLine();

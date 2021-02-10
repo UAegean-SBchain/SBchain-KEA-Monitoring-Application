@@ -116,7 +116,7 @@ public class EthAppUtils {
         } else if(adultCount == 1 && !ssiApp.getParenthood().equals("single")){
             adultCount = adultCount + minorCount -1;
         }
-        log.info("adult count :{}, minor count :{}", adultCount, minorCount);
+//        log.info("adult count :{}, minor count :{}", adultCount, minorCount);
 
         paymentThresshold = BigDecimal.valueOf(6).multiply(BigDecimal.valueOf(200)
             .add((BigDecimal.valueOf(adultCount).multiply(BigDecimal.valueOf(100))
