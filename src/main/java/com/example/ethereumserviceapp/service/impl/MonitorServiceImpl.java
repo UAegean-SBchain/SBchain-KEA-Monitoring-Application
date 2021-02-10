@@ -67,7 +67,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     @Scheduled(cron = "0 0 12 * * ?")
     public void startScheduledMonitoring() {
-        startMonitoring(LocalDateTime.now(), false, 0, false);
+        startMonitoring(LocalDateTime.now(), false, 0, false, null);
     }
 
     // parameters:
@@ -77,17 +77,20 @@ public class MonitorServiceImpl implements MonitorService {
     // blockchaing, false(default) make asynchronous transactions with the
     // blockchain
     @Override
-    public void startMonitoring(LocalDateTime dateNow, Boolean isTest, double pValue, Boolean makeMockChecks) {
+    public void startMonitoring(LocalDateTime dateNow, Boolean isTest, double pValue, Boolean makeMockChecks, List<CaseAppDTO> storeDataForSE) {
         LocalDateTime currentDate = dateNow == null ? LocalDateTime.now() : dateNow;
         List<String> uuids = this.ethServ.getAllCaseUUID();
         
         // count for random changes to applications for test/economy purposes
         Integer count = 0;
-
+       
         uuids.stream().forEach(uuid -> {
 
             //if there are 2 or more changes already been made this day then stop the mock checks
             Boolean mockChecks = makeMockChecks && count < 2;
+
+            // check if any of this case's credentials has changed during the monitoring process
+            Boolean credChange = false;
 
             Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
             if (!theCase.isPresent()) {
@@ -107,7 +110,7 @@ public class MonitorServiceImpl implements MonitorService {
             Optional<SsiApplication> ssiCase = mongoServ.findByUuid(uuid);
             if (!ssiCase.isPresent()) {
                 log.info("application in database not present");
-                updateCase(monitoredCase, State.REJECTED, null, currentDate, isTest, uuid, null);
+                updateCase(monitoredCase, State.REJECTED, null, currentDate, isTest, uuid, null, credChange, storeDataForSE);
                 return;
             }
 
@@ -117,7 +120,13 @@ public class MonitorServiceImpl implements MonitorService {
             // the next case
             if (!ssiApp.getTaxisAfm().equals(ssiApp.getHouseholdPrincipal().getAfm()) && !(monitoredCase.getState().equals(State.REJECTED) || monitoredCase.getState().equals(State.SUSPENDED))) {
                 log.info("case non principal");
-                updateCase(monitoredCase, State.NONPRINCIPAL, ssiApp, currentDate, isTest, uuid, null);
+                updateCase(monitoredCase, State.NONPRINCIPAL, ssiApp, currentDate, isTest, uuid, null, credChange, storeDataForSE);
+                return;
+            }
+
+            // if this is not a principal case that has been rejected or suspended then continue to the next case
+            if ((monitoredCase.getState().equals(State.REJECTED) || monitoredCase.getState().equals(State.SUSPENDED)) && !ssiApp.getTaxisAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())) {
+                log.info("non principal case that is rejected or suspended");
                 return;
             }
 
@@ -153,7 +162,8 @@ public class MonitorServiceImpl implements MonitorService {
 
             // make external API calls that may update certain values in DB 
             //Case monitoredCase, double pValue, Boolean makeMockCheck, List<SsiApplication> householdApps, SsiApplication principalApp, Integer count, LocalDate currentDate
-            externalChecksAndUpdate(monitoredCase, pValue, mockChecks, householdApps, ssiApp, count, currentDate.toLocalDate());
+
+            //externalChecksAndUpdate(monitoredCase, pValue, mockChecks, householdApps, ssiApp, count, currentDate.toLocalDate());
 
             // if (!externalChecksAndUpdate(monitoredCase, pValue, mockChecks, householdApps, ssiApp, count, currentDate.toLocalDate())) {
             //     updateCase(monitoredCase, State.REJECTED, ssiApp, currentDate, isTest, uuid, null);
@@ -161,7 +171,7 @@ public class MonitorServiceImpl implements MonitorService {
 
 
             // check if credentials are valid and not expired
-            if (!credentialsOk(uuid, householdApps, currentDate, isTest)) {
+            if (!credentialsOk(uuid, householdApps, currentDate, isTest, credChange, storeDataForSE)) {
                 log.info("credential fail");
                 return;
             }
@@ -196,32 +206,32 @@ public class MonitorServiceImpl implements MonitorService {
                 // if there is a missing application in the household suspend the case
                 if (!checkHouseholdApplications(monitoredCase, ssiApp, householdApps, currentDate.toLocalDate())) {
                     log.info("household apps not all present, case suspended");
-                    rejectOrSuspendCases(uuid, State.SUSPENDED, householdApps, currentDate, isTest);
-                    return;
+                    rejectOrSuspendCases(uuid, State.SUSPENDED, householdApps, currentDate, isTest, credChange, storeDataForSE);
+                    //return;
                 }
                 log.info("case accepted");
-                updateCase(monitoredCase, State.ACCEPTED, ssiApp, currentDate, isTest, uuid, aggregatedSsiApp);
+                updateCase(monitoredCase, State.ACCEPTED, ssiApp, currentDate, isTest, uuid, aggregatedSsiApp, credChange, storeDataForSE);
             } else {
                 log.info("validation failed, case rejected");
-                rejectOrSuspendCases(uuid, State.REJECTED, householdApps, currentDate, isTest);
+                rejectOrSuspendCases(uuid, State.REJECTED, householdApps, currentDate, isTest, credChange, storeDataForSE);
             }
             // }
         });
     }
 
     private void rejectOrSuspendCases(String uuid, State state, List<SsiApplication> householdApps,
-            LocalDateTime currentDate, Boolean isTest) {
+            LocalDateTime currentDate, Boolean isTest, Boolean credChange, List<CaseAppDTO> storeDataForSE) {
 
         log.info("reject or suspend case with uuid :{} and state :{}", uuid, state);
         for (SsiApplication hhSsiApp : householdApps) {
             Optional<Case> theCase = this.ethServ.getCaseByUUID(hhSsiApp.getUuid());
             updateCase(theCase.isPresent() ? theCase.get() : new Case(), state, hhSsiApp, currentDate, isTest, uuid,
-                    null);
+                    null, credChange, storeDataForSE);
         }
     }
 
     private void updateCase(Case monitoredCase, State state, SsiApplication ssiApp, LocalDateTime currentDate,
-            Boolean isTest, String uuid, SsiApplication aggregatedSsiApp) {
+            Boolean isTest, String uuid, SsiApplication aggregatedSsiApp, Boolean credChange, List<CaseAppDTO> storeDataForSE) {
                 log.info("update case with uuid :{} and state :{}", uuid, state);
         // Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
         if (!(monitoredCase.getUuid() == null || "".equals(monitoredCase.getUuid()))) {
@@ -236,7 +246,10 @@ public class MonitorServiceImpl implements MonitorService {
                         .findByTaxisAfmIn(EthAppUtils.fetchAllHouseholdAfms(ssiApp));
                 // BigDecimal offsetBefore = theCase.get().getOffset();
                 if(!monitoredCase.getState().equals(State.NONPRINCIPAL)){
-                    //MonitorUtils.calculateOffset(monitoredCase, ssiApp, allHouseholdApps);
+                    if(credChange){
+                        MonitorUtils.calculateOffset(monitoredCase, ssiApp, allHouseholdApps);
+                    }
+                    
                 }
 
                 monitoredCase.setState(state);
@@ -246,13 +259,28 @@ public class MonitorServiceImpl implements MonitorService {
                     // find the dates the case is accepted during this month and add 1 for the
                     // current day that hasn't yet been saved in the block chain
                     Long acceptedDatesCurrMonth = monitoredCase.getHistory().entrySet().stream().filter(
-                            e -> (e.getKey().toLocalDate().compareTo(currentDate.toLocalDate().withDayOfMonth(1)) >= 0)
-                                    && e.getKey().toLocalDate().compareTo(currentDate.toLocalDate()) <= 0
-                                    && e.getValue().equals(State.ACCEPTED))
-                            .count() + 1;
+                        e -> (e.getKey().toLocalDate().compareTo(currentDate.toLocalDate().withDayOfMonth(1)) >= 0)
+                                && e.getKey().toLocalDate().compareTo(currentDate.toLocalDate()) <= 0
+                                && e.getValue().equals(State.ACCEPTED))
+                        .count() + 1;
 
-                    BigDecimal dailySum = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp, allHouseholdApps,
-                            currentDate.toLocalDate(), true);
+                    BigDecimal dailySum = BigDecimal.ZERO;
+
+                    SsiApplication aggregatedApp = new SsiApplication();
+
+                    //if there is only 1 application in the household don't aggregate the values
+                    if(allHouseholdApps.size()==1){
+                        aggregatedApp = allHouseholdApps.get(0);
+                    } else {
+                        aggregatedApp = EthAppUtils.aggregateHouseholdValues(allHouseholdApps);
+                    }
+                    //int count = 0;
+                    if(credChange){
+                        
+                        dailySum = EthAppUtils.calculatePayment(EthAppUtils.monthDays(currentDate.toLocalDate()), acceptedDatesCurrMonth.intValue(), aggregatedApp, currentDate.toLocalDate());
+                    } else {
+                        dailySum = MonitorUtils.calculateCurrentPayment(monitoredCase, ssiApp, allHouseholdApps, currentDate.toLocalDate(), true);
+                    }
 
                     monitoredCase.setDailyValue(
                             dailySum.divide(BigDecimal.valueOf(acceptedDatesCurrMonth), 2, RoundingMode.HALF_UP));
@@ -261,13 +289,22 @@ public class MonitorServiceImpl implements MonitorService {
                     if (isTest) {
                         ExportCaseToExcel excelExporter = new ExportCaseToExcel(monitoredCase, allHouseholdApps);
                         try {
-                            excelExporter.export();
+                            excelExporter.export(isTest, "ExampleCase.xlsx");
                         } catch (IOException e1) {
                             log.error("export to excel error :{}", e1.getMessage());
                         }
                     }
                 }
                 
+                 //store cases for social economy
+                if(storeDataForSE != null){
+                    if(!monitoredCase.getState().equals(State.NONPRINCIPAL)){
+                        CaseAppDTO caseAppDto = new CaseAppDTO();
+                        caseAppDto.setPrincipalCase(monitoredCase);
+                        caseAppDto.setHouseholdApps(allHouseholdApps);
+                        storeDataForSE.add(caseAppDto);
+                    }
+                }
                 
                 // synchronize transaction for test data only if the offset changes
                 // if(offsetBefore.compareTo(theCase.get().getOffset()) == 0){
@@ -279,9 +316,11 @@ public class MonitorServiceImpl implements MonitorService {
         } else {
             log.error("cannot find case {} while trying to update it", uuid);
         }
+
+        return;
     }
 
-    private Boolean credentialsOk(String uuid, List<SsiApplication> householdApps, LocalDateTime currentDate, Boolean sync){
+    private Boolean credentialsOk(String uuid, List<SsiApplication> householdApps, LocalDateTime currentDate, Boolean isTest, Boolean credChange, List<CaseAppDTO> storeDataForSE){
         Boolean credsOk = true;
         CredsAndExp[] credIdAndExp = this.mongoServ.findCredentialIdsByUuid(uuid);
         if(credIdAndExp == null){
@@ -295,7 +334,7 @@ public class MonitorServiceImpl implements MonitorService {
             log.info("credential expires at {}", expiresAt);
             if (!expiresAt.isAfter(currentDate)) {
                 //if credentials have expired update case as suspended(paused)
-                rejectOrSuspendCases(uuid, State.SUSPENDED, householdApps, currentDate, sync);
+                rejectOrSuspendCases(uuid, State.SUSPENDED, householdApps, currentDate, isTest, credChange, storeDataForSE);
                 credsOk = false;
                 break;
             }
@@ -303,7 +342,7 @@ public class MonitorServiceImpl implements MonitorService {
             boolean isRevoked = this.ethServ.checkRevocationStatus(credIdAndExp[i].getId());
             log.info("is credential {} revoked? == {}", credIdAndExp[i].getId(), isRevoked);
             if (isRevoked){
-                rejectOrSuspendCases(uuid, State.REJECTED, householdApps, currentDate, sync);
+                rejectOrSuspendCases(uuid, State.REJECTED, householdApps, currentDate, isTest, credChange, storeDataForSE);
                 credsOk = false;
                 break;
             }

@@ -6,7 +6,9 @@
 package com.example.ethereumserviceapp.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
+import com.example.ethereumserviceapp.model.CaseAppDTO;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 
 /**
@@ -17,7 +19,7 @@ public interface MonitorService {
 
     public void startScheduledMonitoring();
 
-    public void startMonitoring(LocalDateTime currentDate, Boolean isTest, double pValue, Boolean makeMockChecks);
+    public void startMonitoring(LocalDateTime currentDate, Boolean isTest, double pValue, Boolean makeMockChecks, List<CaseAppDTO> storeDataForSE);
 
     public Boolean checkIndividualCredentials(SsiApplication ssiApp);
 

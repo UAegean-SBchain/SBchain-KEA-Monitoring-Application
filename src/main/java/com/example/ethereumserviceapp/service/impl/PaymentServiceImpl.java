@@ -119,7 +119,7 @@ public class PaymentServiceImpl implements PaymentService{
     private CasePayment paymentService(BigDecimal valueToBePaid, Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDateTime currentDate){
     
         CasePayment casePayment = new CasePayment();
-
+        casePayment.setPaymentDate(currentDate);
         Set<String> hhAfms = ssiApp.getHouseholdComposition().stream().map(h -> h.getAfm()).collect(Collectors.toSet());
 
         //mock Call to external service
@@ -128,7 +128,7 @@ public class PaymentServiceImpl implements PaymentService{
             casePayment.setPayment(BigDecimal.ZERO);
             casePayment.setCalculatedPayment(valueToBePaid);
             casePayment.setState(State.FAILED);
-            casePayment.setPaymentDate(currentDate);
+            
             //caseToBePaid.setState(State.PAID);
             return casePayment;
         } 
@@ -142,7 +142,6 @@ public class PaymentServiceImpl implements PaymentService{
             casePayment.setCalculatedPayment(valueToBePaid);
             caseToBePaid.setOffset(BigDecimal.ZERO);
         }
-        casePayment.setPaymentDate(currentDate);
         casePayment.setState(State.PAID);
         return casePayment;
     }

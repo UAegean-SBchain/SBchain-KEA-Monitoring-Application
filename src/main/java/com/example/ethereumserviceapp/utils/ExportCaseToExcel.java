@@ -3,6 +3,7 @@ package com.example.ethereumserviceapp.utils;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +64,7 @@ public class ExportCaseToExcel {
         cell.setCellStyle(style);
     }
      
-    private void writeDataLines() {
+    private void writeDataLines(Boolean isTest) {
 
         sheet = workbook.createSheet("Case");
         int rowCount = 0;
@@ -74,18 +75,26 @@ public class ExportCaseToExcel {
         style.setFont(font);
 
         //Row row = sheet.createRow(rowCount++);
+        List<String> ssiAppHeaders = new ArrayList<>();
 
-        List<String> ssiAppHeaders = Arrays.asList("uuid",	"taxisAfm",	"taxisFamilyName",
-        "taxisFirstName",	"taxisFathersName",	"taxisMothersName",	"taxisFamilyNameLatin",	"taxisFirstNameLatin",	"taxisFathersNameLatin",	"taxisMothersNameLatin",
-        "taxisAmka",	"taxisDateOfBirth",	"taxisGender",	"nationality",	"maritalStatus",	"hospitalized",	"hospitalizedSpecific",
-        "monk",	"luxury",	"street",	"streetNumber",	"po",	"prefecture",	"ownership",	"supplyType",	"meterNumber",
-        "participateFead",	"selectProvider",	"gender",	"disabilityStatus",	"levelOfEducation",	"employmentStatus",	"unemployed",	"employed",
-        "oaedId",	"oaedDate",	"email",	"mobilePhone",	"landline",	"iban",	"streetNumber_1",	"prefecture_2",	"municipality",	"parenthood",	"custody",
-        "additionalAdults",	"salariesR",	"pensionsR",	"farmingR",	"freelanceR",	"rentIncomeR",	"unemploymentBenefitR",	"otherBenefitsR",	"ekasR",
-        "otherIncomeR",	"ergomeR",	"depositInterestA",	"depositsA",	"domesticRealEstateA",	"foreignRealEstateA",	"vehicleValueA",	"investmentsA",
-        "totalIncome",	"savedInDb",	"status",	"submittedMunicipality",	"time",	"householdPrincipal",	"householdComposition",	"householdCompositionHistory",
-        "salariesRHistory",	"pensionsRHistory",	"farmingRHistory",	"freelanceRHistory",	"otherBenefitsRHistory",	"depositsAHistory",	"domesticRealEstateAHistory",
-        "foreignRealEstateAHistory", "unemploymentBenefitRHistory",	"monthlyGuarantee",	"totalIncome_3",	"monthlyIncome",	"monthlyAid",	"savedInDb_4",	"status_5");
+        if(isTest){
+            ssiAppHeaders = Arrays.asList("uuid",	"taxisAfm",	"taxisFamilyName",
+            "taxisFirstName",	"taxisFathersName",	"taxisMothersName",	"taxisFamilyNameLatin",	"taxisFirstNameLatin",	"taxisFathersNameLatin",	"taxisMothersNameLatin",
+            "taxisAmka",	"taxisDateOfBirth",	"taxisGender",	"nationality",	"maritalStatus",	"hospitalized",	"hospitalizedSpecific",
+            "monk",	"luxury",	"street",	"streetNumber",	"po",	"prefecture",	"ownership",	"supplyType",	"meterNumber",
+            "participateFead",	"selectProvider",	"gender",	"disabilityStatus",	"levelOfEducation",	"employmentStatus",	"unemployed",	"employed",
+            "oaedId",	"oaedDate",	"email",	"mobilePhone",	"landline",	"iban",	"streetNumber_1",	"prefecture_2",	"municipality",	"parenthood",	"custody",
+            "additionalAdults",	"salariesR",	"pensionsR",	"farmingR",	"freelanceR",	"rentIncomeR",	"unemploymentBenefitR",	"otherBenefitsR",	"ekasR",
+            "otherIncomeR",	"ergomeR",	"depositInterestA",	"depositsA",	"domesticRealEstateA",	"foreignRealEstateA",	"vehicleValueA",	"investmentsA",
+            "totalIncome",	"savedInDb",	"status",	"submittedMunicipality",	"time",	"householdPrincipal",	"householdComposition",	"householdCompositionHistory",
+            "salariesRHistory",	"pensionsRHistory",	"farmingRHistory",	"freelanceRHistory",	"otherBenefitsRHistory",	"depositsAHistory",	"domesticRealEstateAHistory",
+            "foreignRealEstateAHistory", "unemploymentBenefitRHistory",	"monthlyGuarantee",	"totalIncome_3",	"monthlyIncome",	"monthlyAid",	"savedInDb_4",	"status_5");
+        } else {
+            ssiAppHeaders = Arrays.asList("uuid", "taxisDateOfBirth",	"taxisGender",	"nationality",	"maritalStatus",	"levelOfEducation",	"employmentStatus",	"parenthood",	"salariesR",	"pensionsR",	"farmingR",	"freelanceR",	"rentIncomeR",	"unemploymentBenefitR",	"otherBenefitsR",	"ekasR",
+            "otherIncomeR",	"ergomeR",	"depositInterestA",	"depositsA",	"domesticRealEstateA",	"foreignRealEstateA",	"vehicleValueA",	"investmentsA",
+            "totalIncome",	"status", "salariesRHistory",	"pensionsRHistory",	"farmingRHistory",	"freelanceRHistory",	"otherBenefitsRHistory",	"depositsAHistory",	"domesticRealEstateAHistory",
+            "foreignRealEstateAHistory", "unemploymentBenefitRHistory");
+        }
         writeHeaderLine(rowCount, ssiAppHeaders);
         int columnCount = 0;
 
@@ -98,24 +107,27 @@ public class ExportCaseToExcel {
             //ssn
             //uuid
             //taxisAfm
-            createCell(row, columnCount++, app.getTaxisAfm(), style);
-            //taxisFamilyName
-            createCell(row, columnCount++, app.getTaxisFamilyName(), style);
-            //taxisFirstName
-            createCell(row, columnCount++, app.getTaxisFirstName(), style);
-            //taxisFathersName
-            createCell(row, columnCount++, app.getTaxisFathersName(), style);
-            //taxisMothersName
-            createCell(row, columnCount++, app.getTaxisMothersName(), style);
-            //taxisFamilyNameLatin
-            createCell(row, columnCount++, app.getTaxisFamilyNameLatin(), style);
-            //taxisFirstNameLatin
-            createCell(row, columnCount++, app.getTaxisFirstNameLatin(), style);
-            //taxisFathersNameLatin
-            createCell(row, columnCount++, app.getTaxisFathersNameLatin(), style);
-            createCell(row, columnCount++, app.getTaxisMothersNameLatin(), style);
-            //taxisMothersNameLatin
-            createCell(row, columnCount++, app.getTaxisAmka(), style);
+            if(isTest){
+                createCell(row, columnCount++, app.getTaxisAfm(), style) ;
+                //taxisFamilyName
+                createCell(row, columnCount++, app.getTaxisFamilyName(), style);
+                //taxisFirstName
+                createCell(row, columnCount++, app.getTaxisFirstName(), style);
+                //taxisFathersName
+                createCell(row, columnCount++, app.getTaxisFathersName(), style);
+                //taxisMothersName
+                createCell(row, columnCount++, app.getTaxisMothersName(), style);
+                //taxisFamilyNameLatin
+                createCell(row, columnCount++, app.getTaxisFamilyNameLatin(), style);
+                //taxisFirstNameLatin
+                createCell(row, columnCount++, app.getTaxisFirstNameLatin(), style);
+                //taxisFathersNameLatin
+                createCell(row, columnCount++, app.getTaxisFathersNameLatin(), style);
+                createCell(row, columnCount++, app.getTaxisMothersNameLatin(), style);
+                //taxisMothersNameLatin
+                createCell(row, columnCount++, app.getTaxisAmka(), style);
+            }
+
             //taxisAmka
             createCell(row, columnCount++, app.getTaxisDateOfBirth(), style);
             //taxisDateOfBirth
@@ -125,68 +137,77 @@ public class ExportCaseToExcel {
             //nationality
             createCell(row, columnCount++, app.getMaritalStatus(), style);
             //maritalStatus
-            createCell(row, columnCount++, app.getHospitalized(), style);
-            //hospitalized
-            createCell(row, columnCount++, app.getHospitalizedSpecific(), style);
-            //hospitalizedSpecific
-            createCell(row, columnCount++, app.getMonk(), style);
-            //monk
-            createCell(row, columnCount++, app.getLuxury(), style);
-            //luxury
-            createCell(row, columnCount++, app.getStreet(), style);
-            //street
-            createCell(row, columnCount++, app.getStreetNumber(), style);
-            //streetNumber
-            createCell(row, columnCount++, app.getPo(), style);
-            //po
-            createCell(row, columnCount++, app.getPrefecture(), style);
-            //prefecture
-            createCell(row, columnCount++, app.getOwnership(), style);
-            //ownership
-            createCell(row, columnCount++, app.getSupplyType(), style);
-            //supplyType
-            createCell(row, columnCount++, app.getMeterNumber(), style);
-            //meterNumber
-            createCell(row, columnCount++, app.getParticipateFead(), style);
-            //participateFead
-            createCell(row, columnCount++, app.getSelectProvider(), style);
-            //selectProvider
-            createCell(row, columnCount++, app.getGender(), style);
-            //gender
-            createCell(row, columnCount++, app.getDisabilityStatus(), style);
+
+            if(isTest){
+                createCell(row, columnCount++, app.getHospitalized(), style);
+                //hospitalized
+                createCell(row, columnCount++, app.getHospitalizedSpecific(), style);
+                //hospitalizedSpecific
+                createCell(row, columnCount++, app.getMonk(), style);
+                //monk
+                createCell(row, columnCount++, app.getLuxury(), style);
+                //luxury
+                createCell(row, columnCount++, app.getStreet(), style);
+                //street
+                createCell(row, columnCount++, app.getStreetNumber(), style);
+                //streetNumber
+                createCell(row, columnCount++, app.getPo(), style);
+                //po
+                createCell(row, columnCount++, app.getPrefecture(), style);
+                //prefecture
+                createCell(row, columnCount++, app.getOwnership(), style);
+                //ownership
+                createCell(row, columnCount++, app.getSupplyType(), style);
+                //supplyType
+                createCell(row, columnCount++, app.getMeterNumber(), style);
+                //meterNumber
+                createCell(row, columnCount++, app.getParticipateFead(), style);
+                //participateFead
+                createCell(row, columnCount++, app.getSelectProvider(), style);
+                //selectProvider
+                createCell(row, columnCount++, app.getGender(), style);
+                //gender
+                createCell(row, columnCount++, app.getDisabilityStatus(), style);
+            }
             //disabilityStatus
             createCell(row, columnCount++, app.getLevelOfEducation(), style);
             //levelOfEducation
             createCell(row, columnCount++, app.getEmploymentStatus(), style);
             //employmentStatus
-            createCell(row, columnCount++, app.getUnemployed(), style);
-            //unemployed
-            createCell(row, columnCount++, app.getEmployed(), style);
-            //employed
-            createCell(row, columnCount++, app.getOaedId(), style);
-            //oaedId
-            createCell(row, columnCount++, app.getOaedDate(), style);
-            //oaedDate
-            createCell(row, columnCount++, app.getEmail(), style);
-            //email
-            createCell(row, columnCount++, app.getMobilePhone(), style);
-            //mobilePhone
-            createCell(row, columnCount++, app.getLandline(), style);
-            //landline
-            createCell(row, columnCount++, app.getIban(), style);
-            //iban
-            createCell(row, columnCount++, app.getStreetNumber1(), style);
-            //streetNumber_1
-            createCell(row, columnCount++, app.getPrefecture2(), style);
-            //prefecture_2
-            createCell(row, columnCount++, app.getMunicipality(), style);
-            //municipality
+
+            if(isTest){
+                createCell(row, columnCount++, app.getUnemployed(), style);
+                //unemployed
+                createCell(row, columnCount++, app.getEmployed(), style);
+                //employed
+                createCell(row, columnCount++, app.getOaedId(), style);
+                //oaedId
+                createCell(row, columnCount++, app.getOaedDate(), style);
+                //oaedDate
+                createCell(row, columnCount++, app.getEmail(), style);
+                //email
+                createCell(row, columnCount++, app.getMobilePhone(), style);
+                //mobilePhone
+                createCell(row, columnCount++, app.getLandline(), style);
+                //landline
+                createCell(row, columnCount++, app.getIban(), style);
+                //iban
+                createCell(row, columnCount++, app.getStreetNumber1(), style);
+                //streetNumber_1
+                createCell(row, columnCount++, app.getPrefecture2(), style);
+                //prefecture_2
+                createCell(row, columnCount++, app.getMunicipality(), style);
+                //municipality
+            }
             createCell(row, columnCount++, app.getParenthood(), style);
             //parenthood
-            createCell(row, columnCount++, app.getCustody(), style);
-            //custody
-            createCell(row, columnCount++, app.getAdditionalAdults(), style);
-            //additionalAdults
+            if(isTest){
+                createCell(row, columnCount++, app.getCustody(), style);
+                //custody
+                createCell(row, columnCount++, app.getAdditionalAdults(), style);
+                //additionalAdults
+            }
+
             createCell(row, columnCount++, app.getSalariesR(), style);
             //salariesR
             createCell(row, columnCount++, app.getPensionsR(), style);
@@ -225,18 +246,20 @@ public class ExportCaseToExcel {
             //            "savedInDb",
             createCell(row, columnCount++, "OK", style);
             //            "status",
-            createCell(row, columnCount++, "ACCEPTED", style);
-            //            "submittedMunicipality",
-            createCell(row, columnCount++, "Dimos Paianias", style);
-            //            "time",
-            
-            createCell(row, columnCount++, DateUtils.dateToString(app.getTime()), style);
-            //            "householdPrincipal",
-            createCell(row, columnCount++, makeMemberToHouseholdString(app.getHouseholdPrincipal()), style);
-            //            "householdComposition",
-            createCell(row, columnCount++, makeHouseHoldString(app.getHouseholdComposition()), style);
-            //            "householdCompositionHistory",
-            createCell(row, columnCount++, makeHouseHoldString(app.getHouseholdComposition()), style);
+            if(isTest){
+                createCell(row, columnCount++, "ACCEPTED", style);
+                //            "submittedMunicipality",
+                createCell(row, columnCount++, "Dimos Paianias", style);
+                //            "time",
+                
+                createCell(row, columnCount++, DateUtils.dateToString(app.getTime()), style);
+                //            "householdPrincipal",
+                createCell(row, columnCount++, makeMemberToHouseholdString(app.getHouseholdPrincipal()), style);
+                //            "householdComposition",
+                createCell(row, columnCount++, makeHouseHoldString(app.getHouseholdComposition()), style);
+                //            "householdCompositionHistory",
+                createCell(row, columnCount++, makeHouseHoldString(app.getHouseholdComposition()), style);
+            }
 //            "salariesRHistory",
             createCell(row, columnCount++, makeFinancialHistoryString(app.getSalariesRHistory()), style);
              //            "pensionsRHistory",
@@ -256,19 +279,21 @@ public class ExportCaseToExcel {
             //            "unemploymentBenefitRHistory",
             createCell(row, columnCount++, makeFinancialHistoryString(app.getUnemploymentBenefitRHistory()), style);
             //            "monthlyGuarantee",
-            createCell(row, columnCount++, " ", style);
-            //            "totalIncome_3",
-            createCell(row, columnCount++, " ", style);
-            //            "monthlyIncome",
-            createCell(row, columnCount++, " ", style);
-            //            "monthlyAid",
-            createCell(row, columnCount++, " ", style);
-            //            "savedInDb_4",
-            createCell(row, columnCount++, " ", style);
-           //            "status_5"
-            createCell(row, columnCount++, "TRUE", style);
-            
-            createCell(row, columnCount++, " ", style);
+            if(isTest){
+                createCell(row, columnCount++, " ", style);
+                //            "totalIncome_3",
+                createCell(row, columnCount++, " ", style);
+                //            "monthlyIncome",
+                createCell(row, columnCount++, " ", style);
+                //            "monthlyAid",
+                createCell(row, columnCount++, " ", style);
+                //            "savedInDb_4",
+                createCell(row, columnCount++, " ", style);
+            //            "status_5"
+                createCell(row, columnCount++, "TRUE", style);
+                
+                createCell(row, columnCount++, " ", style);
+            }
 
         }
 
@@ -329,13 +354,13 @@ public class ExportCaseToExcel {
         
     }
      
-    public void export() throws IOException {
+    public void export(Boolean isTest, String fileName) throws IOException {
         File currDir = new File(".");
         String path = currDir.getAbsolutePath();
-        String fileLocation = path.substring(0, path.length() - 1) + "ExampleCase.xlsx";
+        String fileLocation = path.substring(0, path.length() - 1) + fileName;
 
         //writeHeaderLine();
-        writeDataLines();
+        writeDataLines(isTest);
 
         FileOutputStream outputStream = new FileOutputStream(fileLocation);
         workbook.write(outputStream);

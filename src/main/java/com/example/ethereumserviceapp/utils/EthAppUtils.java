@@ -169,17 +169,17 @@ public class EthAppUtils {
         return allAfms;
     }
 
-    public static Boolean areAppHouseholdAfmsTheSame(List<SsiApplication> householdApps, SsiApplication ssiApp){
-        List<HouseholdMember> household = ssiApp.getHouseholdComposition();
-        //check if by the end of the month all the members of the household have submitted an application
-        List<String> appAfms = householdApps.stream().map(a -> a.getTaxisAfm()).collect(Collectors.toList());
-        List<String> householdAfms = household.stream().map(m -> m.getAfm()).collect(Collectors.toList());
-        if(!appAfms.containsAll(householdAfms)){
-            return false;
-        }
+    // public static Boolean areAppHouseholdAfmsTheSame(List<SsiApplication> householdApps, SsiApplication ssiApp){
+    //     List<HouseholdMember> household = ssiApp.getHouseholdComposition();
+    //     //check if by the end of the month all the members of the household have submitted an application
+    //     List<String> appAfms = householdApps.stream().map(a -> a.getTaxisAfm()).collect(Collectors.toList());
+    //     List<String> householdAfms = household.stream().map(m -> m.getAfm()).collect(Collectors.toList());
+    //     if(!appAfms.containsAll(householdAfms)){
+    //         return false;
+    //     }
 
-        return true;
-    }
+    //     return true;
+    // }
 
     public static Integer monthDays(LocalDate date) {
 

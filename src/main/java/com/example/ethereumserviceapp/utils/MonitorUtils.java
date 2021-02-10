@@ -38,9 +38,9 @@ public class MonitorUtils extends EthAppUtils{
     }
 
     //mock method, fill up when more information is available
-    public static Boolean checkExternalSources(){
-        return true;
-    }
+    // public static Boolean checkExternalSources(){
+    //     return true;
+    // }
 
     public static void calculateOffset(Case monitoredCase, SsiApplication ssiApp, List<SsiApplication> householdApps){
 
