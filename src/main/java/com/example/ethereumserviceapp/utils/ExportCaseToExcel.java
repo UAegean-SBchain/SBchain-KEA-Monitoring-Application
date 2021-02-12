@@ -301,7 +301,7 @@ public class ExportCaseToExcel {
 
         columnCount = 0;
 
-        List<String> caseHeaders = Arrays.asList("Uuid", "Latest Date", "Latest State", "Offset", "Rejection Date", "Daily Benefit", "Current Sum");
+        List<String> caseHeaders = Arrays.asList("Uuid", "Latest Date", "Latest State", "Offset", "Rejection Date", "Rejection Code", "Daily Benefit", "Current Sum");
         rowCount = rowCount + 2;
         
         writeHeaderLine(rowCount, caseHeaders);
@@ -314,6 +314,7 @@ public class ExportCaseToExcel {
         createCell(caseRow, columnCount++, String.valueOf(monitoredCase.getState()), style);
         createCell(caseRow, columnCount++, String.valueOf(monitoredCase.getOffset()), style);
         createCell(caseRow, columnCount++, monitoredCase.getRejectionDate(), style);
+        createCell(caseRow, columnCount++, String.valueOf(monitoredCase.getRejectionCode()), style);
         createCell(caseRow, columnCount++, String.valueOf(monitoredCase.getDailyValue()), style);
         createCell(caseRow, columnCount++, String.valueOf(monitoredCase.getDailySum()), style);
 
@@ -337,7 +338,7 @@ public class ExportCaseToExcel {
         //reset row count 
         //rowCount = 1;
 
-        List<String> paymentHeaders = Arrays.asList("Payment Date", "Payment State", "Payment Value");
+        List<String> paymentHeaders = Arrays.asList("Payment Date", "Payment State", "Calculated Payment", "Actual Payment Value");
 
         rowCount = rowCount + 2;
         writeHeaderLine(rowCount , paymentHeaders);
@@ -349,6 +350,7 @@ public class ExportCaseToExcel {
             //int columnCount = 11;
             createCell(payRow, columnCount++, DateUtils.dateToString(ph.getPaymentDate()), style);
             createCell(payRow, columnCount++, String.valueOf(ph.getState()), style);
+            createCell(payRow, columnCount++, String.valueOf(ph.getCalculatedPayment()), style);
             createCell(payRow, columnCount++, String.valueOf(ph.getPayment()), style);
         }
         

@@ -95,10 +95,12 @@ public class PaymentServiceImpl implements PaymentService{
     private void calculatePayment(Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDateTime currentDate, Boolean sync){
         List<SsiApplication> allHouseholdApps = mongoServ.findByTaxisAfmIn(EthAppUtils.fetchAllHouseholdAfms(ssiApp)); 
         //calculate the current payment and subtract the any previous offset from it
-        BigDecimal paymentValue = MonitorUtils.calculateCurrentPayment(caseToBePaid, ssiApp, allHouseholdApps, currentDate.toLocalDate(), false).subtract(caseToBePaid.getOffset());
-        log.info("payment value :{}", paymentValue);
+        BigDecimal calculatedValue = MonitorUtils.calculateCurrentPayment(caseToBePaid, ssiApp, allHouseholdApps, currentDate.toLocalDate(), false);
+        BigDecimal valueToBePaid = calculatedValue.subtract(caseToBePaid.getOffset());
+        
+        log.info("calculatedValue :{}, actual value to be paid :{}", calculatedValue, valueToBePaid);
         //Call to payment service
-        CasePayment casePayment = paymentService(paymentValue, caseToBePaid, ssiApp, householdApps, currentDate);
+        CasePayment casePayment = paymentService(calculatedValue, valueToBePaid, caseToBePaid, ssiApp, householdApps, currentDate);
         ethServ.addPayment(caseToBePaid, casePayment, sync);
         log.info("new payment :{}", casePayment);
         //addPayment(paymentValue, caseToBePaid, currentDate, paymentState, sync);
@@ -122,7 +124,7 @@ public class PaymentServiceImpl implements PaymentService{
     //     return State.PAID;
     // }
 
-    private CasePayment paymentService(BigDecimal valueToBePaid, Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDateTime currentDate){
+    private CasePayment paymentService(BigDecimal calculatedValue, BigDecimal valueToBePaid, Case caseToBePaid, SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDateTime currentDate){
     
         CasePayment casePayment = new CasePayment();
         casePayment.setPaymentDate(currentDate);
@@ -132,7 +134,7 @@ public class PaymentServiceImpl implements PaymentService{
         if(!mockExternalPaymentService(valueToBePaid, caseToBePaid.getUuid()) || mongoServ.findByTaxisAfmIn(hhAfms).size() != householdApps.size()){
             caseToBePaid.setOffset(valueToBePaid.compareTo(BigDecimal.ZERO) < 0? valueToBePaid.negate() : valueToBePaid);
             casePayment.setPayment(BigDecimal.ZERO);
-            casePayment.setCalculatedPayment(valueToBePaid);
+            casePayment.setCalculatedPayment(calculatedValue);
             casePayment.setState(State.FAILED);
             
             //caseToBePaid.setState(State.PAID);
@@ -142,10 +144,10 @@ public class PaymentServiceImpl implements PaymentService{
         if (valueToBePaid.compareTo(BigDecimal.ZERO) < 0) {
             caseToBePaid.setOffset(valueToBePaid.negate());
             casePayment.setPayment(BigDecimal.ZERO);
-            casePayment.setCalculatedPayment(valueToBePaid);//
+            casePayment.setCalculatedPayment(calculatedValue);//
         } else {
             casePayment.setPayment(valueToBePaid);
-            casePayment.setCalculatedPayment(valueToBePaid);
+            casePayment.setCalculatedPayment(calculatedValue);
             caseToBePaid.setOffset(BigDecimal.ZERO);
         }
         casePayment.setState(State.PAID);

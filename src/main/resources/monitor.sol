@@ -20,7 +20,7 @@ contract CaseMonitor{
         uint[] payPerDayHistory;
         uint[] sumDailyValueHistory;
         CaseState currState;
-        uint paymentOffset;
+        int paymentOffset;
     }
     
     struct CasePayment{
@@ -33,7 +33,7 @@ contract CaseMonitor{
 
     struct CaseRejection {
         bytes16 uuid;
-        uint rejectionCode;
+        RejectionCode rejectionCode;
         uint rejectionDate;
     }
 
@@ -46,6 +46,14 @@ contract CaseMonitor{
         Suspended,    //case has been suspended
         Failed,       //case has failed to be paid
         NonPrincipal  //case belongs to a non principal household member
+    }
+
+    enum RejectionCode{
+        Rejection0,
+        Rejection1,
+        Rejection2,
+        Rejection3,
+        Rejection4
     }
 
     function _getCaseIndex(bytes16 _uuid) public view returns (uint) {
@@ -108,18 +116,25 @@ contract CaseMonitor{
         
         require(!rejectionExists(_uuid));
         
-        rejections.push(CaseRejection(_uuid, 0, 0));
+        rejections.push(CaseRejection(_uuid, RejectionCode.Rejection0, 0));
         
         uint newIndex = rejections.length-1;
         rejectionUuidToIndex[_uuid] = newIndex;
     }
 
-    function updateCase(bytes16 _uuid, uint _date, CaseState _state, uint _payPerDay, uint _sumDaily, uint _offset) public {
+    function updateCase(bytes16 _uuid, uint _date, CaseState _state, uint _payPerDay, uint _sumDaily, int _offset, RejectionCode _rejectionCode, uint _rejectionDate) public {
 
         require(caseExists(_uuid));
         
         uint index = _getCaseIndex(_uuid);
         Case storage theCase = cases[index];
+        if(_rejectionCode != RejectionCode.Rejection0){
+            uint rejectionIndex = _getRejectionIndex(_uuid);
+            CaseRejection storage rejectedCase = rejections[rejectionIndex];
+            
+            rejectedCase.rejectionCode = _rejectionCode;
+            rejectedCase.rejectionDate = _rejectionDate;
+        }
         
         theCase.latestDate = _date;
         theCase.datesHistory.push(_date);
@@ -128,9 +143,11 @@ contract CaseMonitor{
         theCase.sumDailyValueHistory.push(_sumDaily);
         theCase.currState= _state;
         theCase.paymentOffset = _offset;
+        
+        
     }
 
-    function addPayment(bytes16 _uuid, CaseState _state, uint _pDate, uint _payHistory, uint _payCalculation, uint _offset) public{
+    function addPayment(bytes16 _uuid, CaseState _state, uint _pDate, uint _payHistory, uint _payCalculation, int _offset) public{
 
         require(caseExists(_uuid));
         
@@ -152,15 +169,6 @@ contract CaseMonitor{
         }
 
         theCase.paymentOffset = _offset;
-    }
-
-    function updateRejection(bytes16 _uuid, uint _rejectionCode, uint _rejectionDate) public{
-        require(rejectionExists(_uuid));
-        
-        uint index = _getRejectionIndex(_uuid);
-        CaseRejection storage rejectedCase = rejections[index];
-        rejectedCase.rejectionCode = _rejectionCode;
-        rejectedCase.rejectionDate = _rejectionDate;
     }
 
     function caseExists(bytes16 _uuid) public view returns (bool) {
@@ -211,13 +219,13 @@ contract CaseMonitor{
 
     function getCase(bytes16 _uuid) public view returns (
         bytes16 uuid,
-        uint creationDate,
+        uint latestDate,
         uint[] memory datesHistory,
         CaseState[] memory statesHistory,
         uint[] memory payPerDayHistory,
         uint[] memory sumDailyValueHistory,
         CaseState currState,
-        uint paymentOffset) {
+        int paymentOffset) {
             
         require(caseExists(_uuid));
 
@@ -234,18 +242,19 @@ contract CaseMonitor{
         bytes16 uuid,
         uint[] memory paymentDateHistory,
         uint[] memory paymentValueHistory,
+        uint[] memory paymentCalculationHistory,
         CaseState[] memory paymentStateHistory) {
             
         require(paymentExists(_uuid));
 
         CasePayment storage payment = payments[_getPaymentIndex(_uuid)];
-        return (payment.uuid, payment.paymentDateHistory, payment.paymentValueHistory, payment.paymentStateHistory); 
+        return (payment.uuid, payment.paymentDateHistory, payment.paymentValueHistory, payment.paymentCalculationHistory, payment.paymentStateHistory); 
         
     }
 
     function getRejection(bytes16 _uuid) public view returns (
         bytes16 uuid,
-        uint rejectionCode,
+        RejectionCode rejectionCode,
         uint rejectionDate) {
             
         require(rejectionExists(_uuid));

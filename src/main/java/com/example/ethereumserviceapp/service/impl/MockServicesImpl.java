@@ -37,7 +37,6 @@ public class MockServicesImpl implements MockServices {
     public Optional<UpdateMockResult> getUpdatedOtherBenefitValue(LocalDate dateOfSubmission, LocalDate today, double pValue,
                                                                   SsiApplication ssiApp, boolean shouldTry, List<SsiApplication> householdApps) {
 
-                                                                    log.info("DDDDDDDDDDDDDDDDDD otherbenefit check shouldTry :{}", shouldTry);
         if (shouldTry) {
             if (SatisticUtils.shouldChangeValue(pValue)) {
                 log.info("update value for otherBenefit !");

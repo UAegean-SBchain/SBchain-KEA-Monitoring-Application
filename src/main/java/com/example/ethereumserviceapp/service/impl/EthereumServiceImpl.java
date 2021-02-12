@@ -21,6 +21,7 @@ import com.example.ethereumserviceapp.contract.VcRevocationRegistry;
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.CasePayment;
 import com.example.ethereumserviceapp.model.RejectionCode;
+import com.example.ethereumserviceapp.model.State;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.utils.ByteConverters;
 import com.example.ethereumserviceapp.utils.ContractBuilder;
@@ -77,7 +78,7 @@ public class EthereumServiceImpl implements EthereumService {
         Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, derivationPath);
         // Load the wallet for the derived key 
         this.credentials = Credentials.create(derivedKeyPair); //0xE777fAf8240196bA99c6e2a89E8F24B75C52Eb2a, 0x2a85A14cB9Fefdf55f2Bb8550FEAe8f1C8595697, 0xDa04fa66Bd544fAc14214Da9862F41447Ee55c71, 0x1858cCeC051049Fa1269E958da2d33bCA27c6Db8 previous
-        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x735064D5ecF4fa2D145B87C60A734f04d9b70553" // old besu contract "0xFa5B6432308d45B54A1CE1373513Fab77166436f" // old ropsten contract 0x3027b1e481C3478E85f9adD58d239eD9742AB418
+        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x044B6015Cd54c166C01C0CeF38ebd137DCcCB73a" // old besu contract "0xFa5B6432308d45B54A1CE1373513Fab77166436f" // old ropsten contract 0x3027b1e481C3478E85f9adD58d239eD9742AB418
                 : System.getenv("CONTRACT_ADDRESS");
         this.REVOCATION_CONTRACT_ADDRESS = System.getenv("REVOCATION_CONTRACT_ADDRESS") == null
                 ? "0x9534d226e56826Cc4C01912Eb388b121Bb0683b5"
@@ -129,7 +130,6 @@ public class EthereumServiceImpl implements EthereumService {
         List<String> result = new ArrayList<>();
         try {
             List<byte[]> cases = this.getContract().getAllCases().sendAsync().get();
-
             cases.stream().forEach(caseId -> {
                 result.add(ByteConverters.hexToASCII(Numeric.toHexStringNoPrefix((byte[]) caseId)));
             });
@@ -145,26 +145,27 @@ public class EthereumServiceImpl implements EthereumService {
 
     @Override
     public Optional<Case> getCaseByUUID(String uuid) {
-        List<String> cases = getAllCaseUUID();
-        Optional<String> match = cases.stream().filter(caseId -> {
-            // log.info("comparing |{}|{}|", caseId, uuid);
-            return caseId.trim().equals(uuid.trim());
-        }).findFirst();
+        // List<String> cases = getAllCaseUUID();
+        // Optional<String> match = cases.stream().filter(caseId -> {
+        //     log.info("comparing |{}|{}|", caseId, uuid);
+        //     return caseId.trim().equals(uuid.trim());
+        // }).findFirst();
 
-        if (match.isPresent()) {
-            byte[] byteUuid = ByteConverters.stringToBytes16(match.get()).getValue();
+        // if (match.isPresent()) {
+            //byte[] byteUuid = ByteConverters.stringToBytes16(match.get()).getValue();
+            byte[] byteUuid = ByteConverters.stringToBytes16(uuid).getValue();
             try {
                 Optional<Case> theCase = Optional.of(ContractBuilder.buildCaseFromTuple(this.getContract().getCase(byteUuid).send()));
-
                 if(theCase.isPresent()){
                     ContractBuilder.linkPaymentToCase(this.getContract().getPayment(byteUuid).send(), theCase.get());
                     ContractBuilder.linkRejectionToCase(this.getContract().getRejection(byteUuid).send(), theCase.get());
+                    return theCase;
                 }
-                return theCase;
+                return Optional.empty();
             } catch (Exception ex) {
                 log.error(ex.getMessage());
             }
-        }
+       // }
         return Optional.empty();
     }
 
@@ -216,37 +217,29 @@ public class EthereumServiceImpl implements EthereumService {
 
                 ZonedDateTime zdt = time.atZone(ZoneId.of("Europe/Athens"));
                 long millis = zdt.toInstant().toEpochMilli();
-                log.info("fffffffffffff date :{}, millis :{}", time, millis);
+                long rjctMillis = monitoredCase.getRejectionDate() == null || monitoredCase.getRejectionDate().equals("")? 0L : DateUtils.dateStringToLD(monitoredCase.getRejectionDate()).atStartOfDay(ZoneId.of("Europe/Athens")).toInstant().toEpochMilli();
                 byte[] uuid = ByteConverters.stringToBytes16(monitoredCase.getUuid()).getValue();
                 String functionCall = this.getContract()
                         .updateCase(uuid,
                                 BigInteger.valueOf(millis), BigInteger.valueOf(monitoredCase.getState().getValue()),
                                  (monitoredCase.getDailyValue() != null? monitoredCase.getDailyValue().multiply(BigDecimal.valueOf(100)).toBigInteger() : BigInteger.valueOf(0)),
                                  (monitoredCase.getDailySum() != null? monitoredCase.getDailySum().multiply(BigDecimal.valueOf(100)).toBigInteger() : BigInteger.valueOf(0)), 
-                                 (monitoredCase.getOffset() != null? monitoredCase.getOffset().multiply(BigDecimal.valueOf(100)).toBigInteger() : BigInteger.valueOf(0))/*,
-                                  BigInteger.valueOf(rjctMillis)*/ )
+                                 (monitoredCase.getOffset() != null? monitoredCase.getOffset().multiply(BigDecimal.valueOf(100)).toBigInteger() : BigInteger.valueOf(0)),
+                                 BigInteger.valueOf(monitoredCase.getRejectionCode().getValue()), 
+                                 BigInteger.valueOf(rjctMillis))
                         .encodeFunctionCall();
                 String txHash = this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
                         contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
 
-                // if there is a rejection then update rejection struct
-                if(!monitoredCase.getRejectionCode().equals(RejectionCode.REJECTION0)){
-                    long rjctMillis = monitoredCase.getRejectionDate().equals("")? 0L : DateUtils.dateStringToLD(monitoredCase.getRejectionDate()).atStartOfDay(ZoneId.of("Europe/Athens")).toInstant().toEpochMilli();
                 
-                    String rejectionCall = this.getContract().updateRejection(uuid, BigInteger.valueOf(monitoredCase.getRejectionCode().getValue())
-                    , BigInteger.valueOf(rjctMillis)).encodeFunctionCall();
 
-                    this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
-                        contract.getContractAddress(), rejectionCall, BigInteger.ZERO).getTransactionHash();
-                }
-
-                // if(sync){
-                //     TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(
-                //         web3, 
-                //         TransactionManager.DEFAULT_POLLING_FREQUENCY, 
-                //         TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
-                //     TransactionReceipt txReceipt = receiptProcessor.waitForTransactionReceipt(txHash);
-                // }
+            //     if(monitoredCase.getState().equals(State.REJECTED)){
+            //         TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(
+            //             web3, 
+            //             TransactionManager.DEFAULT_POLLING_FREQUENCY, 
+            //             TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+            //         TransactionReceipt txReceipt = receiptProcessor.waitForTransactionReceipt(txHash);
+            //     }
 
             // } catch (TransactionException e){
             //     log.error(e.getMessage());
@@ -258,9 +251,54 @@ public class EthereumServiceImpl implements EthereumService {
         }
     }
 
+    // @Override
+    // public void updateRejection(Case monitoredCase){
+
+    //     if (this.checkIfCaseExists(monitoredCase.getUuid())) {
+    //         try {
+
+    //             log.info("reject case :{} with date :{} and code :{}", monitoredCase.getUuid(), monitoredCase.getRejectionDate(), monitoredCase.getRejectionCode());
+
+    //             long rjctMillis = monitoredCase.getRejectionDate() == null || monitoredCase.getRejectionDate().equals("")? 0L : DateUtils.dateStringToLD(monitoredCase.getRejectionDate()).atStartOfDay(ZoneId.of("Europe/Athens")).toInstant().toEpochMilli();
+
+    //             log.info("reject date millis :{}, big int Code :{}, bigIntDate :{}", rjctMillis, BigInteger.valueOf(monitoredCase.getRejectionCode().getValue()), BigInteger.valueOf(rjctMillis));
+                
+    //             byte[] uuid = ByteConverters.stringToBytes16(monitoredCase.getUuid()).getValue();
+    //             String functionCall = this.getContract()
+    //                     .updateRejection(uuid, BigInteger.valueOf(monitoredCase.getRejectionCode().getValue()), 
+    //                         BigInteger.valueOf(rjctMillis))
+    //                     .encodeFunctionCall();
+    //             String txHash = this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
+    //                     contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
+
+    //             // if(sync){
+    //             //     TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(
+    //             //         web3, 
+    //             //         TransactionManager.DEFAULT_POLLING_FREQUENCY, 
+    //             //         TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+    //             //     TransactionReceipt txReceipt = receiptProcessor.waitForTransactionReceipt(txHash);
+    //             // }
+    //         } catch (IOException ex) {
+    //             log.error(ex.getMessage());
+    //         }
+    //     } else {
+    //         log.error("no case found for uuid {}", monitoredCase.getUuid());
+    //     }
+    //     // if there is a rejection then update rejection struct
+    //     // if(!monitoredCase.getRejectionCode().equals(RejectionCode.REJECTION0)){
+    //     //     long rjctMillis = monitoredCase.getRejectionDate().equals("") || monitoredCase.getRejectionDate() ==null? 0L : DateUtils.dateStringToLD(monitoredCase.getRejectionDate()).atStartOfDay(ZoneId.of("Europe/Athens")).toInstant().toEpochMilli();
+
+    //     //     String rejectionCall = this.getContract().updateRejection(uuid, BigInteger.valueOf(monitoredCase.getRejectionCode().getValue())
+    //     //     , BigInteger.valueOf(rjctMillis)).encodeFunctionCall();
+
+    //     //     this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
+    //     //         contract.getContractAddress(), rejectionCall, BigInteger.ZERO).getTransactionHash();
+    //     // }
+    // }
+
     @Override
     public void addPayment(Case monitoredCase, CasePayment payment, Boolean sync){
-        if (this.checkIfCaseExists(monitoredCase.getUuid())) {
+        //if (this.checkIfCaseExists(monitoredCase.getUuid())) {
             try {
 
                 log.info("add new payment for case with uuid :{} and state :{}", monitoredCase.getUuid(), monitoredCase.getState().getValue());
@@ -277,21 +315,19 @@ public class EthereumServiceImpl implements EthereumService {
                 String txHash = this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
                         contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
 
-                if(sync){
-                    TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(
-                        web3, 
-                        TransactionManager.DEFAULT_POLLING_FREQUENCY, 
-                        TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
-                    TransactionReceipt txReceipt = receiptProcessor.waitForTransactionReceipt(txHash);
-                }
-            } catch (TransactionException e){
-                log.error(e.getMessage());
+                // if(sync){
+                //     TransactionReceiptProcessor receiptProcessor = new PollingTransactionReceiptProcessor(
+                //         web3, 
+                //         TransactionManager.DEFAULT_POLLING_FREQUENCY, 
+                //         TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+                //     TransactionReceipt txReceipt = receiptProcessor.waitForTransactionReceipt(txHash);
+                // }
             } catch (IOException ex) {
                 log.error(ex.getMessage());
             }
-        } else {
-            log.error("no case found for uuid {}", monitoredCase.getUuid());
-        }
+        // } else {
+        //     log.error("no case found for uuid {}", monitoredCase.getUuid());
+        // }
     }
 
     @Override

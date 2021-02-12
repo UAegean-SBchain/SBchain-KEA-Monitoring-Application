@@ -26,10 +26,13 @@ import org.web3j.tuples.generated.Tuple5;
 import org.web3j.tuples.generated.Tuple8;
 import org.web3j.utils.Numeric;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  *
  * @author nikos
  */
+@Slf4j
 public class ContractBuilder {
 
     public static Case buildCaseFromTuple(Tuple8<byte[], BigInteger, List<BigInteger>, List<BigInteger>,
@@ -95,13 +98,12 @@ public class ContractBuilder {
 
     public static void linkRejectionToCase(Tuple3<byte[], BigInteger, BigInteger> theRejection , Case theCase){
 
-        if(theRejection.component2().longValue() == 0){
+        if(theRejection.component3().longValue() == 0){
             theCase.setRejectionDate("");
         }else{
-            theCase.setRejectionDate(DateUtils.dateToString(Instant.ofEpochMilli(theRejection.component2().longValue()).atZone(ZoneId.systemDefault()).toLocalDateTime()));
+            theCase.setRejectionDate(DateUtils.dateToString(Instant.ofEpochMilli(theRejection.component3().longValue()).atZone(ZoneId.systemDefault()).toLocalDate()));
         }
-
-        theCase.setRejectionCode(RejectionCode.values()[theRejection.component3().intValue()]);
+        theCase.setRejectionCode(RejectionCode.values()[theRejection.component2().intValue()]);
     }
 
 }

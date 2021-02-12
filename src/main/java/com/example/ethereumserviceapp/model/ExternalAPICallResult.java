@@ -16,7 +16,7 @@ import lombok.ToString;
 @ToString
 public class ExternalAPICallResult {
 
-    private int count;
+    private Integer count;
     //private LocalDate date;
     private LocalDateTime date;
     private Boolean changed;

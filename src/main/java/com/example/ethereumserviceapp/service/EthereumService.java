@@ -35,6 +35,8 @@ public interface EthereumService {
 
     public void updateCase(Case monitoredCase);
 
+    //public void updateRejection(Case monitoredCase);
+
     public void addPayment(Case monitoredCase, CasePayment payment, Boolean sync);
 
     public boolean checkIfCaseExists(String uuid);

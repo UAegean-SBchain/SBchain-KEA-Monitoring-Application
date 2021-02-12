@@ -99,7 +99,7 @@ public class HelperService {
             
             if(!acceptedCases.isEmpty()){
                 Random rand = new Random(); 
-                int randAccepted = rand.nextInt(acceptedCases.size()-1); 
+                int randAccepted = acceptedCases.size() <= 1? acceptedCases.size() : rand.nextInt(acceptedCases.size()-1);
                 
                 ExportCaseToExcel excelExporter = new ExportCaseToExcel(acceptedCases.get(randAccepted).getPrincipalCase(), acceptedCases.get(randAccepted).getHouseholdApps());
                 try {
@@ -111,7 +111,7 @@ public class HelperService {
 
             if(!rejectedCases.isEmpty()){
                 Random rand = new Random(); 
-                int randRejected = rand.nextInt(rejectedCases.size()-1);
+                int randRejected = rejectedCases.size() <= 1? rejectedCases.size() :rand.nextInt(rejectedCases.size()-1);
                 
                 ExportCaseToExcel excelExporter = new ExportCaseToExcel(rejectedCases.get(randRejected).getPrincipalCase(), rejectedCases.get(randRejected).getHouseholdApps());
                 try {
