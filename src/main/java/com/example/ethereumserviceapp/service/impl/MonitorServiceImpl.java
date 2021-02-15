@@ -21,6 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -82,14 +83,16 @@ public class MonitorServiceImpl implements MonitorService {
         List<String> uuids = this.ethServ.getAllCaseUUID();
 
         // count for random changes to applications for test/economy purposes
-        Integer count = 0;
-        for(String uuid:uuids){
-        //uuids.stream().forEach(uuid -> {
+        //Integer count = 0;
+        AtomicInteger count = new AtomicInteger();
+        count.set(0);
+        //for(String uuid:uuids){
+        uuids.parallelStream().forEach(uuid -> {
             // log.info("========================= count :{}", count);
             // if there are 2 or more changes already been made this day then stop the mock
             // checks
 
-            Boolean mockChecks = makeMockChecks && count < 2;
+            Boolean mockChecks = makeMockChecks && count.get() < 2;
 
             // check if any of this case's credentials has changed during the monitoring
             // process
@@ -98,8 +101,8 @@ public class MonitorServiceImpl implements MonitorService {
             Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
             if (!theCase.isPresent()) {
                 log.info("error - case not present");
-                //return;
-                continue;
+                return;
+                //continue;
             }
 
             Case monitoredCase = theCase.get();
@@ -107,8 +110,8 @@ public class MonitorServiceImpl implements MonitorService {
 
             if (monitoredCase.getState().equals(State.NONPRINCIPAL)) {
                 log.info("case non principal");
-                //return;
-                continue;
+                return;
+                //continue;
             }
 
             log.info("looking into case {} with state {}", uuid, monitoredCase.getState());
@@ -117,8 +120,8 @@ public class MonitorServiceImpl implements MonitorService {
                 log.info("application in database not present");
                 updateCase(monitoredCase, State.REJECTED, null, currentDate, isTest, uuid, null, credChange,
                         storeDataForSE);
-                //return;
-                continue;
+                return;
+                //continue;
             }
 
             SsiApplication ssiApp = ssiCase.get();
@@ -131,8 +134,8 @@ public class MonitorServiceImpl implements MonitorService {
                 log.info("case non principal");
                 updateCase(monitoredCase, State.NONPRINCIPAL, ssiApp, currentDate, isTest, uuid, null, credChange,
                         storeDataForSE);
-                //return;
-                continue;
+                return;
+                //continue;
             }
 
             // if this is not a principal case that has been rejected or suspended then
@@ -140,8 +143,8 @@ public class MonitorServiceImpl implements MonitorService {
             if ((monitoredCase.getState().equals(State.REJECTED) || monitoredCase.getState().equals(State.SUSPENDED))
                     && !ssiApp.getTaxisAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())) {
                 log.info("non principal case that is rejected or suspended");
-                //return;
-                continue;
+                return;
+                //continue;
             }
 
             // if the case is rejected for more than one month then delete it
@@ -159,8 +162,8 @@ public class MonitorServiceImpl implements MonitorService {
                 log.info("payment failed for 3 concsecutive months");
                 mongoServ.deleteByUuid(uuid);
                 ethServ.deleteCaseByUuid(uuid);
-                //return;
-                continue;
+                return;
+                //continue;
             }
 
             Set<String> householdAfms = ssiApp.getHouseholdComposition().stream().map(s -> s.getAfm())
@@ -172,8 +175,8 @@ public class MonitorServiceImpl implements MonitorService {
             // List<SsiApplication> householdApps, SsiApplication principalApp, Integer
             // count, LocalDate currentDate
             ExternalChecksResult exCheckResult = externalChecksAndUpdate(monitoredCase, pValue, mockChecks,
-                    householdApps, ssiApp, count, currentDate.toLocalDate());
-            count = exCheckResult.getCount();
+                    householdApps, ssiApp, count.get(), currentDate.toLocalDate());
+            count.set(exCheckResult.getCount());
             // if there is a financial change then set the credChange to true so that the service calls tha calculate offset method
             credChange = exCheckResult.getChangedFinancials() || exCheckResult.getRejection();
 
@@ -187,7 +190,8 @@ public class MonitorServiceImpl implements MonitorService {
                     log.info("aaaaaaa rejected case uuid :{}, date :{}, state :{}, dailyValue :{}, offset:{}, sum:{}, rejectionCode :{}, rejection date :{} ", monitoredCase.getUuid(), monitoredCase.getDate(), monitoredCase.getState(), monitoredCase.getDailyValue(), monitoredCase.getOffset(), monitoredCase.getDailySum(), monitoredCase.getRejectionCode(), monitoredCase.getRejectionDate());
             
                     updateCase(monitoredCase, State.REJECTED, ssiApp, currentDate, isTest, uuid, null, credChange, storeDataForSE);
-                    continue;
+                    //continue;
+                    return;
                 }
                 if(storeDataForSE != null){
                     if(!monitoredCase.getState().equals(State.NONPRINCIPAL)){
@@ -197,7 +201,8 @@ public class MonitorServiceImpl implements MonitorService {
                         storeDataForSE.add(caseAppDto);
                     }
                 }
-                continue;
+                //continue;
+                return;
             }
 
             if(exCheckResult.getRejection()){
@@ -207,7 +212,8 @@ public class MonitorServiceImpl implements MonitorService {
                 monitoredCase.setDailySum(BigDecimal.ZERO);
                 updateCase(monitoredCase, State.REJECTED, ssiApp, currentDate, isTest, uuid, null, credChange, storeDataForSE);
                 //rejectOrSuspendCases(uuid, State.REJECTED, householdApps, currentDate, DateUtils.dateToString(exCheckResult.getDate()), RejectionCode.REJECTION1, isTest, true, storeDataForSE);
-                continue;
+                //continue;
+                return;
             }
 
             // if (!externalChecksAndUpdate(monitoredCase, pValue, mockChecks, householdApps, ssiApp, count, currentDate.toLocalDate())) {
@@ -218,8 +224,8 @@ public class MonitorServiceImpl implements MonitorService {
             // check if credentials are valid and not expired
             if (!credentialsOk(monitoredCase, ssiApp, householdApps, currentDate, isTest, credChange, storeDataForSE)) {
                 log.info("credential fail");
-                //return;
-                continue;
+                return;
+                //continue;
             }
             LocalDateTime firstAcceptedDate = LocalDateTime.of(ssiApp.getTime(), LocalTime.of(00, 00, 00));
             Boolean accepted = false;
@@ -270,12 +276,13 @@ public class MonitorServiceImpl implements MonitorService {
                     monitoredCase.setDailySum(BigDecimal.ZERO);
                     updateCase(monitoredCase, State.SUSPENDED, ssiApp, currentDate, isTest, monitoredCase.getUuid(), null, credChange, storeDataForSE);
                     //rejectOrSuspendCases(uuid, State.SUSPENDED, householdApps, currentDate, null, null, isTest, credChange, storeDataForSE);
-                    continue;
-                    //return;
+                    //continue;
+                    return;
                 }
                 log.info("case accepted");
                 updateCase(monitoredCase, State.ACCEPTED, ssiApp, currentDate, isTest, uuid, aggregatedSsiApp, credChange, storeDataForSE);
-                continue;
+                //continue;
+                return;
             } else {
                 log.info("validation failed, case rejected");
                 monitoredCase.setRejectionDate(DateUtils.dateToString(currentDate.toLocalDate()));
@@ -284,11 +291,12 @@ public class MonitorServiceImpl implements MonitorService {
                 monitoredCase.setDailySum(BigDecimal.ZERO);
                 //rejectOrSuspendCases(uuid, State.REJECTED, householdApps, currentDate, null, RejectionCode.REJECTION1, isTest, credChange, storeDataForSE);
                 updateCase(monitoredCase, State.REJECTED, ssiApp, currentDate, isTest, uuid, aggregatedSsiApp, credChange, storeDataForSE);
-                continue;
+                //continue;
+                return;
             }
             // }
-        //});
-        }
+        });
+        //}
     }
 
     // private void rejectOrSuspendCases(String uuid, State state, List<SsiApplication> householdApps,
