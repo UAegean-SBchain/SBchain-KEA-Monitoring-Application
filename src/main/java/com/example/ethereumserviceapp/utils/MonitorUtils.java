@@ -471,6 +471,9 @@ public class MonitorUtils extends EthAppUtils{
         if(ssiApp.getForeignRealEstateAHistory()!=null){
             credHistoriesMap.put("foreignRE", ssiApp.getForeignRealEstateAHistory());
         }
+        if(ssiApp.getErgomRHistory()!=null){
+            credHistoriesMap.put("ergome", ssiApp.getErgomRHistory());
+        }
     }
 
     private static void updatePaymentCredential(LocalDateTime date, String name, String value, List<HouseholdMember> household, String afm, List<PaymentCredential> changedCredentials){
@@ -511,6 +514,9 @@ public class MonitorUtils extends EthAppUtils{
             break;
             case "foreignRE":
             ssiApp.setForeignRealEstateA(value);
+            break;
+            case "ergome":
+            ssiApp.setErgomeR(value);
             break;
             case "household" :
             ssiApp.setHouseholdComposition(household);

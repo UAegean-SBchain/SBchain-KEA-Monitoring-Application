@@ -94,7 +94,7 @@ public class ExampleRunTest extends TestUtils{
 //        Mockito.when(mongoServ.findByHouseholdPrincipalIn(any())).thenReturn(oneItemList);
         //Mockito.when(mongoServ.findByHouseholdComposition(any())).thenReturn(oneItemList);
         //Mockito.when(mongoServ.findByMeterNumber(anyString())).thenReturn(oneItemList);
-        Mockito.when(mongoServ.findByIban(anyString())).thenReturn(oneItemList);
+        //Mockito.when(mongoServ.findByIban(anyString())).thenReturn(oneItemList);
         //doNothing().when(ethServ).updateCase(any(), false);
 
         //monServ.startScheduledMonitoring();

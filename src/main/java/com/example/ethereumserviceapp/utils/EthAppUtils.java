@@ -35,33 +35,71 @@ public class EthAppUtils {
 
         ssiApp.setHouseholdComposition(principalApp.getHouseholdComposition());
         ssiApp.setTaxisAfm(principalApp.getTaxisAfm());
+        BigDecimal salaries = BigDecimal.ZERO;
+        BigDecimal pensions = BigDecimal.ZERO;
+        BigDecimal farming = BigDecimal.ZERO;
+        BigDecimal freelance = BigDecimal.ZERO;
+        BigDecimal otherBnfts = BigDecimal.ZERO;
+        BigDecimal deposits = BigDecimal.ZERO;
+        BigDecimal domesticRe = BigDecimal.ZERO;
+        BigDecimal foreignRe = BigDecimal.ZERO;
+        BigDecimal unemplBenefit = BigDecimal.ZERO;
+        BigDecimal ergome = BigDecimal.ZERO;
         
-        ssiApp.setSalariesR(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getSalariesR()== null? "0" : x.getSalariesR()).subtract(new BigDecimal(x.getSalariesR()== null? "0" : x.getSalariesR()).multiply(BigDecimal.valueOf(0.2))))
-                .reduce(BigDecimal.ZERO, BigDecimal::add)));
+        for(SsiApplication hhApp:householdApps){
+             //salaries = salaries.add(new BigDecimal(hhApp.getSalariesR()== null? "0" : hhApp.getSalariesR()).subtract(new BigDecimal(hhApp.getSalariesR()== null? "0" : hhApp.getSalariesR()).multiply(BigDecimal.valueOf(0.2))));
+             salaries = salaries.add(new BigDecimal(hhApp.getSalariesR() == null? "0" : hhApp.getSalariesR()));
+             pensions = pensions.add(new BigDecimal(hhApp.getPensionsR() == null? "0" : hhApp.getPensionsR()));
+             farming = farming.add(new BigDecimal(hhApp.getFarmingR() == null? "0" : hhApp.getFarmingR()));
+             freelance = freelance.add(new BigDecimal(hhApp.getFreelanceR() == null? "0" : hhApp.getFreelanceR()));
+             otherBnfts = otherBnfts.add(new BigDecimal(hhApp.getOtherBenefitsR() == null? "0" : hhApp.getOtherBenefitsR()));
+             deposits = deposits.add(new BigDecimal(hhApp.getDepositsA() == null? "0" : hhApp.getDepositsA()));
+             domesticRe = domesticRe.add(new BigDecimal(hhApp.getDomesticRealEstateA() == null? "0" : hhApp.getDomesticRealEstateA()));
+             foreignRe = foreignRe.add(new BigDecimal(hhApp.getForeignRealEstateA() == null? "0" : hhApp.getForeignRealEstateA()));
+             unemplBenefit = unemplBenefit.add(new BigDecimal(hhApp.getUnemploymentBenefitR() == null? "0" : hhApp.getUnemploymentBenefitR()));
+             ergome = ergome.add(new BigDecimal(hhApp.getErgomeR() == null? "0" : hhApp.getErgomeR()));
+        }
 
-        ssiApp.setPensionsR(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getPensionsR() == null? "0" : x.getPensionsR()))
-        .reduce(BigDecimal.ZERO, BigDecimal::add)));
+        salaries = salaries.subtract(salaries.multiply(BigDecimal.valueOf(0.2)));
 
-        ssiApp.setFarmingR(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getFarmingR() == null? "0" : x.getFarmingR()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add)));
+        ssiApp.setSalariesR(String.valueOf(salaries));
+        ssiApp.setPensionsR(String.valueOf(pensions));
+        ssiApp.setFarmingR(String.valueOf(farming));
+        ssiApp.setFreelanceR(String.valueOf(freelance));
+        ssiApp.setOtherBenefitsR(String.valueOf(otherBnfts));
+        ssiApp.setDepositsA(String.valueOf(deposits));
+        ssiApp.setDomesticRealEstateA(String.valueOf(domesticRe));
+        ssiApp.setForeignRealEstateA(String.valueOf(foreignRe));
+        ssiApp.setUnemploymentBenefitR(String.valueOf(unemplBenefit));
+        ssiApp.setErgomeR(String.valueOf(ergome));
 
-        ssiApp.setFreelanceR(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getFreelanceR() == null? "0" : x.getFreelanceR()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add)));
+        
+        // ssiApp.setSalariesR(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getSalariesR()== null? "0" : x.getSalariesR()).subtract(new BigDecimal(x.getSalariesR()== null? "0" : x.getSalariesR()).multiply(BigDecimal.valueOf(0.2))))
+        //         .reduce(BigDecimal.ZERO, BigDecimal::add)));
 
-        ssiApp.setOtherBenefitsR(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getOtherBenefitsR() == null? "0" : x.getOtherBenefitsR()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add)));
+        // ssiApp.setPensionsR(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getPensionsR() == null? "0" : x.getPensionsR()))
+        // .reduce(BigDecimal.ZERO, BigDecimal::add)));
 
-        ssiApp.setDepositsA(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getDepositsA() == null? "0" : x.getDepositsA()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add)));
+        // ssiApp.setFarmingR(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getFarmingR() == null? "0" : x.getFarmingR()))
+        //         .reduce(BigDecimal.ZERO, BigDecimal::add)));
 
-        ssiApp.setDomesticRealEstateA(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getDomesticRealEstateA() == null? "0" : x.getDomesticRealEstateA()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add)));
+        // ssiApp.setFreelanceR(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getFreelanceR() == null? "0" : x.getFreelanceR()))
+        //         .reduce(BigDecimal.ZERO, BigDecimal::add)));
 
-        ssiApp.setForeignRealEstateA(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getForeignRealEstateA() == null? "0" : x.getForeignRealEstateA()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add)));
+        // ssiApp.setOtherBenefitsR(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getOtherBenefitsR() == null? "0" : x.getOtherBenefitsR()))
+        //         .reduce(BigDecimal.ZERO, BigDecimal::add)));
 
-        ssiApp.setUnemploymentBenefitR(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getUnemploymentBenefitR() == null? "0" : x.getUnemploymentBenefitR()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add)));
+        // ssiApp.setDepositsA(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getDepositsA() == null? "0" : x.getDepositsA()))
+        //         .reduce(BigDecimal.ZERO, BigDecimal::add)));
+
+        // ssiApp.setDomesticRealEstateA(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getDomesticRealEstateA() == null? "0" : x.getDomesticRealEstateA()))
+        //         .reduce(BigDecimal.ZERO, BigDecimal::add)));
+
+        // ssiApp.setForeignRealEstateA(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getForeignRealEstateA() == null? "0" : x.getForeignRealEstateA()))
+        //         .reduce(BigDecimal.ZERO, BigDecimal::add)));
+
+        // ssiApp.setUnemploymentBenefitR(String.valueOf(householdApps.stream().map(x -> new BigDecimal(x.getUnemploymentBenefitR() == null? "0" : x.getUnemploymentBenefitR()))
+        //         .reduce(BigDecimal.ZERO, BigDecimal::add)));
 
         return ssiApp;
     }
@@ -131,6 +169,7 @@ public class EthAppUtils {
             BigDecimal domesticRe = new BigDecimal(ssiApp.getDomesticRealEstateA() == null? "0" : ssiApp.getDomesticRealEstateA());
             BigDecimal foreignRe = new BigDecimal(ssiApp.getForeignRealEstateA() == null? "0" : ssiApp.getForeignRealEstateA());
             BigDecimal unemplBenefit = new BigDecimal(ssiApp.getUnemploymentBenefitR() == null? "0" : ssiApp.getUnemploymentBenefitR());
+            BigDecimal ergome = new BigDecimal(ssiApp.getUnemploymentBenefitR() == null? "0" : ssiApp.getUnemploymentBenefitR());
             
         //log.info("salaries :{}, pensions :{}, farming :{}, freelance :{}, otherBnfts :{}, deposits :{}, domesticRe :{}, foreignRe :{}, unemplBenefit :{}", salaries, pensions, farming, freelance, otherBnfts, deposits, domesticRe, foreignRe, unemplBenefit);
 
@@ -142,8 +181,8 @@ public class EthAppUtils {
                 deposits).add(
                 domesticRe).add(
                 foreignRe).add(
-                unemplBenefit)
-                ).divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
+                unemplBenefit).add(
+                ergome)).divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
 
         log.info("payment check payment thresshold :{}, total income :{}", paymentThresshold, totalIncome);
 

@@ -535,13 +535,15 @@ public class MockServicesImpl implements MockServices {
 
     private BigDecimal getTotalIncome(SsiApplication ssiApp) {
         BigDecimal salaries = new BigDecimal(ssiApp.getSalariesR() == null ? "0" : ssiApp.getSalariesR()).subtract(new BigDecimal(ssiApp.getSalariesR() == null ? "0" : ssiApp.getSalariesR()).multiply(BigDecimal.valueOf(0.2)));
-        BigDecimal pensions = new BigDecimal(ssiApp.getPensionsR() == null ? "0" : ssiApp.getPensionsR());
-        BigDecimal farming = new BigDecimal(ssiApp.getFarmingR() == null ? "0" : ssiApp.getFarmingR());
-        BigDecimal freelance = new BigDecimal(ssiApp.getFreelanceR() == null ? "0" : ssiApp.getFreelanceR());
-        BigDecimal otherBnfts = new BigDecimal(ssiApp.getOtherBenefitsR() == null ? "0" : ssiApp.getOtherBenefitsR());
-        BigDecimal deposits = new BigDecimal(ssiApp.getDepositsA() == null ? "0" : ssiApp.getDepositsA());
-        BigDecimal domesticRe = new BigDecimal(ssiApp.getDomesticRealEstateA() == null ? "0" : ssiApp.getDomesticRealEstateA());
-        BigDecimal foreignRe = new BigDecimal(ssiApp.getForeignRealEstateA() == null ? "0" : ssiApp.getForeignRealEstateA());
+        BigDecimal pensions = new BigDecimal(ssiApp.getPensionsR() == null? "0" : ssiApp.getPensionsR());
+        BigDecimal farming = new BigDecimal(ssiApp.getFarmingR() == null? "0" : ssiApp.getFarmingR());
+        BigDecimal freelance = new BigDecimal(ssiApp.getFreelanceR() == null? "0" : ssiApp.getFreelanceR());
+        BigDecimal otherBnfts = new BigDecimal(ssiApp.getOtherBenefitsR() == null? "0" : ssiApp.getOtherBenefitsR());
+        BigDecimal deposits = new BigDecimal(ssiApp.getDepositsA() == null? "0" : ssiApp.getDepositsA());
+        BigDecimal domesticRe = new BigDecimal(ssiApp.getDomesticRealEstateA() == null? "0" : ssiApp.getDomesticRealEstateA());
+        BigDecimal foreignRe = new BigDecimal(ssiApp.getForeignRealEstateA() == null? "0" : ssiApp.getForeignRealEstateA());
+        BigDecimal unemplBenefit = new BigDecimal(ssiApp.getUnemploymentBenefitR() == null? "0" : ssiApp.getUnemploymentBenefitR());
+        BigDecimal ergome = new BigDecimal(ssiApp.getUnemploymentBenefitR() == null? "0" : ssiApp.getUnemploymentBenefitR());
 
         return (salaries.add(
                 pensions).add(
@@ -550,8 +552,9 @@ public class MockServicesImpl implements MockServices {
                 otherBnfts).add(
                 deposits).add(
                 domesticRe).add(
-                foreignRe)
-        ).divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
+                foreignRe).add(
+                unemplBenefit).add(
+                ergome)).divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
 
     }
 
