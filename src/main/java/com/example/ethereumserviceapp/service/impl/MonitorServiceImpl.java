@@ -187,6 +187,15 @@ public class MonitorServiceImpl implements MonitorService {
                     log.info("aaaaaaa rejected case uuid :{}, date :{}, state :{}, dailyValue :{}, offset:{}, sum:{}, rejectionCode :{}, rejection date :{} ", monitoredCase.getUuid(), monitoredCase.getDate(), monitoredCase.getState(), monitoredCase.getDailyValue(), monitoredCase.getOffset(), monitoredCase.getDailySum(), monitoredCase.getRejectionCode(), monitoredCase.getRejectionDate());
             
                     updateCase(monitoredCase, State.REJECTED, ssiApp, currentDate, isTest, uuid, null, credChange, storeDataForSE);
+                    continue;
+                }
+                if(storeDataForSE != null){
+                    if(!monitoredCase.getState().equals(State.NONPRINCIPAL)){
+                        CaseAppDTO caseAppDto = new CaseAppDTO();
+                        caseAppDto.setPrincipalCase(monitoredCase);
+                        caseAppDto.setHouseholdApps(householdApps);
+                        storeDataForSE.add(caseAppDto);
+                    }
                 }
                 continue;
             }

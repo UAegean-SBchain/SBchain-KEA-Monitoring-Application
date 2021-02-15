@@ -59,20 +59,18 @@ public class HelperService {
         LocalDateTime endDate = currentDate.plusDays(Long.valueOf(numDays));
         List<CaseAppDTO> storedDataForSE = null;
 
-        log.info("SSSSSSSSSSSSSSSSS start monitoring with pValue :{}", pValue);
         while (currentDate.compareTo(endDate) < 0) {
 
             if (currentDate.plusDays(1).compareTo(endDate) == 0) {
                 storedDataForSE = new ArrayList<>();
             }
-            monitorService.startMonitoring(currentDate, false, pValue, true, storedDataForSE);
             if (currentDate.getDayOfMonth() == 1) {
                 paymentService.startPayment(currentDate, false);
             }
+            monitorService.startMonitoring(currentDate, false, pValue, true, storedDataForSE);
+            
             currentDate = currentDate.plusDays(1);
         }
-
-        //ObjectMapper jsonCases = new ObjectMapper();
 
         // Object to JSON in file
         try {
@@ -96,10 +94,9 @@ public class HelperService {
         if(storedDataForSE != null && !storedDataForSE.isEmpty()){
             List<CaseAppDTO> acceptedCases = storedDataForSE.stream().filter(c -> c.getPrincipalCase().getState().equals(State.ACCEPTED)).collect(Collectors.toList());
             List<CaseAppDTO> rejectedCases = storedDataForSE.stream().filter(c -> c.getPrincipalCase().getState().equals(State.REJECTED)).collect(Collectors.toList());
-            
-            if(!acceptedCases.isEmpty()){
+            if(!acceptedCases.isEmpty() && acceptedCases.size()>0){
                 Random rand = new Random(); 
-                int randAccepted = acceptedCases.size() <= 1? acceptedCases.size() : rand.nextInt(acceptedCases.size()-1);
+                int randAccepted = acceptedCases.size() == 1? 0 : rand.nextInt(acceptedCases.size()-1);
                 
                 ExportCaseToExcel excelExporter = new ExportCaseToExcel(acceptedCases.get(randAccepted).getPrincipalCase(), acceptedCases.get(randAccepted).getHouseholdApps());
                 try {
@@ -109,9 +106,9 @@ public class HelperService {
                 }
             }
 
-            if(!rejectedCases.isEmpty()){
+            if(!rejectedCases.isEmpty() && rejectedCases.size()>0){
                 Random rand = new Random(); 
-                int randRejected = rejectedCases.size() <= 1? rejectedCases.size() :rand.nextInt(rejectedCases.size()-1);
+                int randRejected = rejectedCases.size() == 1? 0 :rand.nextInt(rejectedCases.size()-1);
                 
                 ExportCaseToExcel excelExporter = new ExportCaseToExcel(rejectedCases.get(randRejected).getPrincipalCase(), rejectedCases.get(randRejected).getHouseholdApps());
                 try {
@@ -120,41 +117,6 @@ public class HelperService {
                     log.error("export to excel error :{}", e1.getMessage());
                 }
             }
-
-            
-
         }
-        
-
-        
-       
-
-       
-        
-        // for(Case c:storedDataForSE){
-        //     mongoService.findByUuid(uuid)
-        // }
-
     }
-
-    // public void runMonitoringOnCase(String uuid){
-    //     Optional<Case> monitoredCase = ethService.getCaseByUUID(uuid);
-
-    //     if(!monitoredCase.isPresent()){
-    //         return;
-    //     }
-
-    //     LocalDateTime startDate = monitoredCase.get().getDate();
-    //     LocalDateTime endDate = startDate.plusMonths(6).isBefore(LocalDateTime.now())? startDate.plusMonths(6) : LocalDateTime.now();
-
-    //     LocalDateTime currentDate = startDate;
-    //     while(currentDate.compareTo(endDate) <=0){
-    //         monitorService.startMonitoring(currentDate, uuid, true);
-    //         if(currentDate.getDayOfMonth() == 1){
-    //             paymentService.startPayment(currentDate, uuid, true);
-    //         }
-    //         currentDate = currentDate.plusDays(1);
-    //     }
-
-    // }
 }

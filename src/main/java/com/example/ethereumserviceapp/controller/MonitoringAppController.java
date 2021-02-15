@@ -60,7 +60,6 @@ public class MonitoringAppController {
     protected ModelAndView getCase(@RequestParam(value = "uuid", required = true) String uuid, ModelMap model, HttpServletRequest request){
 
         Optional<Case> ethCase = ethService.getCaseByUUID(uuid);
-        log.info("111111111111111111111 case :{}", ethCase);
         model.addAttribute("ethCase", ethCase.isPresent()? ethCase.get() : "");
 
         Optional<SsiApplication> ssiApp = mongoServ.findByUuid(uuid);
@@ -106,15 +105,6 @@ public class MonitoringAppController {
         helpService.runMonitoring(monitorCmdHelper.getStartDate(), monitorCmdHelper.getNumDays(), Double.valueOf(monitorCmdHelper.getPValue()));
         log.info("yyyyyyyyyyyyyyyyy end monitoring :{}", LocalDateTime.now());
         model.addAttribute("monitorCmdHelper", monitorCmdHelper);
-
-        
-
-        // ExportCaseToExcel excelExporter = new ExportCaseToExcel(monitoredCase, allHouseholdApps);
-        //                 try {
-        //                     excelExporter.export(isTest);
-        //                 } catch (IOException e1) {
-        //                     log.error("export to excel error :{}", e1.getMessage());
-        //                 }
 
         return listCaseUuids(monitorCmdHelper, model, request);
     }
