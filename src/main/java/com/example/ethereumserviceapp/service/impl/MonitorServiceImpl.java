@@ -523,57 +523,12 @@ public class MonitorServiceImpl implements MonitorService {
 
         //validate each household application credentials
         for (SsiApplication app : householdApps) {
-            if (!checkIndividualCredentials(app)) {
-
+            if(mongoServ.findByTaxisAfm(app.getTaxisAfm()).size()>1){
+                log.info("rejected - afm exists in different houshold");
                 return false;
             }
         }
 
-        return true;
-    }
-
-    public Boolean checkIndividualCredentials(SsiApplication ssiApp) {
-
-        List<HouseholdMember> household = ssiApp.getHouseholdComposition();
-        if (household == null) {
-            log.info("rejected - household missing");
-            return false;
-        }
-
-        //external oaed check
-        // if(!oaedRegistrationCheck(ssiApp.getOaedId())){
-        //     log.info("rejected - applicant not found on OAED");
-        //     return false;
-        // }
-
-        //check unemployment status
-        // if(ssiApp.getUnemployed().equals("false")){
-        //     return false;
-        // }
-
-        //external housing subsidy check
-        // if(!houseBenefitCheck(ssiApp.getTaxisAfm()){
-        //     log.info("rejected - housing benefits");
-        //     return false;
-        // }
-
-        // check for luxury living
-        // if(ssiApp.getLuxury() == null? false : ssiApp.getLuxury().equals(String.valueOf(Boolean.TRUE))){
-        //     log.info("rejected - luxury living");
-        //     return false;
-        // }
-
-        // check that if there differences in Amka register
-        // if(differenceInAmka(ssiApp.getTaxisAmka())){
-        //     log.info("rejected - differences in AMKA");
-        //     return false;
-        // }
-
-        //check if iban exists in other application
-        if (mongoServ.findByIban(ssiApp.getIban()).size() > 1) {
-            log.info("rejected - duplicate IBAN");
-            return false;
-        }
         return true;
     }
 

@@ -70,9 +70,6 @@ public class EthereumController {
             if (!ssiApp.isPresent()) {
                 return "FAIL";
             }
-            if(!monitorService.checkIndividualCredentials(ssiApp.get())){
-                return "FAIL";
-            }
             c.get().setState(State.ACCEPTED);
             this.ethService.updateCase(c.get()/*, false*/);
             return "OK";

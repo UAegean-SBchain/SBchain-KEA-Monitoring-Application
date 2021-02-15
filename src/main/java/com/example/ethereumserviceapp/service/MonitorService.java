@@ -21,6 +21,4 @@ public interface MonitorService {
 
     public void startMonitoring(LocalDateTime currentDate, Boolean isTest, double pValue, Boolean makeMockChecks, List<CaseAppDTO> storeDataForSE);
 
-    public Boolean checkIndividualCredentials(SsiApplication ssiApp);
-
 }
