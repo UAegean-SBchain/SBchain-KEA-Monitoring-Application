@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="#{personal.info.title}">Getting Started: Serving Web Content</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- <link rel="stylesheet" href="../static/css/main.css" th:href="@{/css/main.css}"/> -->
+</head>
+<body>
+     <form method="post" action="#" th:action="@{/monitorCases}" th:object="${monitorCmdHelper}" id="infoForm">
+        <h4> Start Monitoring</h4>
+        <div>Start Date: <input type="datetime-local" th:field="*{startDate}" />
+        </div>
+        <div>Number of days: <input type="number" th:field="*{numDays}" /></div>
+        <div>Binomial Distribution pValue: <input type="number" step="0.01" th:field="*{pValue}" /></div>
+        <div>
+            <input type="submit" value="Submit" />
+        </div>
+    </form>
+    </div>
+    <!-- <div th:replace="fragments/footer"></div> -->
+</body>
+</html>

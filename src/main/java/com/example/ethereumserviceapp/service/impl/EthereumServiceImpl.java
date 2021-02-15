@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -20,28 +21,26 @@ import com.example.ethereumserviceapp.contract.CaseMonitor;
 import com.example.ethereumserviceapp.contract.VcRevocationRegistry;
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.CasePayment;
-import com.example.ethereumserviceapp.model.RejectionCode;
-import com.example.ethereumserviceapp.model.State;
 import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.utils.ByteConverters;
 import com.example.ethereumserviceapp.utils.ContractBuilder;
 import com.example.ethereumserviceapp.utils.DateUtils;
 import com.example.ethereumserviceapp.utils.RandomIdGenerator;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.web3j.crypto.Bip32ECKeyPair;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.MnemonicUtils;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.FastRawTransactionManager;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.DefaultGasProvider;
-import org.web3j.tx.response.PollingTransactionReceiptProcessor;
-import org.web3j.tx.response.TransactionReceiptProcessor;
 import org.web3j.utils.Numeric;
 
 import lombok.extern.slf4j.Slf4j;
@@ -380,5 +379,25 @@ public class EthereumServiceImpl implements EthereumService {
             log.error(ex.getMessage());
         }
 
+    }
+
+    @Override
+    public Page<String> getCaseUuidsPaginated(Pageable pageable) {
+        int pageSize = pageable.getPageSize();
+        int currentPage = pageable.getPageNumber();
+        int startItem = currentPage * pageSize;
+        List<String> uuidList = getAllCaseUUID();
+        List<String> uuidSublist;
+
+        if (uuidList.size() < startItem) {
+            uuidSublist = Collections.emptyList();
+        } else {
+            int toIndex = Math.min(startItem + pageSize, uuidList.size());
+            uuidSublist = uuidList.subList(startItem, toIndex);
+        }
+
+        Page<String> uuidPage = new PageImpl<String>(uuidSublist, PageRequest.of(currentPage, pageSize), uuidList.size());
+
+        return uuidPage;
     }
 }

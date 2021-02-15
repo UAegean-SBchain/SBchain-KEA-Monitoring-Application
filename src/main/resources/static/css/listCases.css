@@ -1,0 +1,40 @@
+ul{
+    list-style: none;
+  }
+  
+  .pageNumList{
+    display: inline;
+  }
+
+  .pageNumContainer{
+      background-color: gray;
+  }
+
+  .active{
+      background-color: rgb(57, 110, 255);
+      color:white;
+  }
+
+  .paginationNums{
+      display:flex;
+      flex-direction: row;
+    margin: 0.5rem;
+  }
+
+  .pNum{
+      margin:0.2rem;
+      padding: 0 0.5rem 0 0.5rem;
+      background-color: lightgray;
+  }
+
+  .resultsTable{
+      margin-top: 1rem;
+      width:100%;
+  }
+
+  .tHeader{
+    padding: 0.5rem;
+    background-color: rgb(57, 110, 255);
+    color:white;
+  }
+

@@ -13,6 +13,8 @@ import com.example.ethereumserviceapp.contract.VcRevocationRegistry;
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.CasePayment;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.web3j.crypto.Credentials;
 
 /**
@@ -44,6 +46,8 @@ public interface EthereumService {
     public VcRevocationRegistry getRevocationContract();
 
     public boolean checkRevocationStatus(String uuid);
+
+    public Page<String> getCaseUuidsPaginated(Pageable pageable);
 
     //public void revokeCredentials(String uuid);
 }
