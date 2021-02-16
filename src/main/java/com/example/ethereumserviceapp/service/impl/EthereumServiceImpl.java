@@ -8,6 +8,7 @@ package com.example.ethereumserviceapp.service.impl;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -43,7 +44,7 @@ import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.tx.response.PollingTransactionReceiptProcessor;
 import org.web3j.tx.response.TransactionReceiptProcessor;
 import org.web3j.utils.Numeric;
-
+import org.apache.commons.codec.binary.Hex;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -55,7 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 public class EthereumServiceImpl implements EthereumService {
 
     private Web3j web3;
-    private String mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
+    private String mnemonic = "";
     private Credentials credentials;
     private CaseMonitor contract;
     private VcRevocationRegistry revocationContract;
@@ -78,7 +79,7 @@ public class EthereumServiceImpl implements EthereumService {
         Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, derivationPath);
         // Load the wallet for the derived key 
         this.credentials = Credentials.create(derivedKeyPair); //0xE777fAf8240196bA99c6e2a89E8F24B75C52Eb2a, 0x2a85A14cB9Fefdf55f2Bb8550FEAe8f1C8595697, 0xDa04fa66Bd544fAc14214Da9862F41447Ee55c71, 0x1858cCeC051049Fa1269E958da2d33bCA27c6Db8 previous
-        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x044B6015Cd54c166C01C0CeF38ebd137DCcCB73a" // old besu contract "0xFa5B6432308d45B54A1CE1373513Fab77166436f" // old ropsten contract 0x3027b1e481C3478E85f9adD58d239eD9742AB418
+        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0xa4fB8b2c7264452eDD946Df6Dbb5c4842aa62Cf1" // old besu contract "0xFa5B6432308d45B54A1CE1373513Fab77166436f" // old ropsten contract 0x3027b1e481C3478E85f9adD58d239eD9742AB418
                 : System.getenv("CONTRACT_ADDRESS");
         this.REVOCATION_CONTRACT_ADDRESS = System.getenv("REVOCATION_CONTRACT_ADDRESS") == null
                 ? "0x9534d226e56826Cc4C01912Eb388b121Bb0683b5"
@@ -91,7 +92,7 @@ public class EthereumServiceImpl implements EthereumService {
         if (this.credentials == null) {
             this.web3 = Web3j.build(new HttpService("http://I4mlab-besu.westeurope.cloudapp.azure.com:8545"));//https://ropsten.infura.io/v3/58249bdbdaf449d7b1cb4f3e1955ee77
             String password = null; // no encryption
-            this.mnemonic = "heavy peace decline bean recall budget trigger video era trash also unveil";
+            this.mnemonic = "talk prefer horse hope near copy time broken balance jaguar face scrap";
             // Derivation path wanted: // m/44'/60'/0'/0 (this is used in ethereum, in
             // bitcoin it is different
             int[] derivationPath = {44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT,
@@ -171,9 +172,10 @@ public class EthereumServiceImpl implements EthereumService {
 
     @Override
     public void addCase(Case monitoredCase) {
+        log.info("addCase Called");
         try {
             byte[] uuid;
-
+            log.info("trying to add {}", monitoredCase.getUuid());
             if (StringUtils.isEmpty(monitoredCase.getUuid())) {
                 // UUIDs random cannot be encoded with only 16bytes (they are 32 min) so we use
                 // Base 62 is used by tinyurl and bit.ly for the abbreviated URLs. It's a
@@ -187,6 +189,7 @@ public class EthereumServiceImpl implements EthereumService {
                 uuid = ByteConverters.stringToBytes16(currentUUID).getValue();
             } else {
                 uuid = ByteConverters.stringToBytes16(monitoredCase.getUuid()).getValue();
+                log.info("!!!the uuid HEX is: "+ Hex.encodeHexString( uuid ));
             }
             LocalDateTime time = monitoredCase.getDate();
             if (time == null) {
@@ -197,10 +200,11 @@ public class EthereumServiceImpl implements EthereumService {
             String functionCall = this.getContract()
                     .addCase(uuid, BigInteger.valueOf(millis))
                     .encodeFunctionCall();
-            
-            this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
+            //,
+            this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE , BigInteger.valueOf(1000000),
                     contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
 
+            log.info("transaciton sent");
         } catch (IOException ex) {
             log.info(ex.getMessage());
         }

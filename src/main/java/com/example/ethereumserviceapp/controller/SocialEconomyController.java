@@ -2,6 +2,7 @@ package com.example.ethereumserviceapp.controller;
 
 import com.example.ethereumserviceapp.model.GeneratePopFormBind;
 import com.example.ethereumserviceapp.model.MonitorCmdHelper;
+import com.example.ethereumserviceapp.model.Notifications;
 import com.example.ethereumserviceapp.model.entities.SsiApplication;
 import com.example.ethereumserviceapp.repository.SsiApplicationRepository;
 import com.example.ethereumserviceapp.service.HelperService;
@@ -14,12 +15,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.core.MessagePostProcessor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -30,8 +32,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -43,6 +47,10 @@ public class SocialEconomyController {
 
     @Autowired
     HelperService helperService;
+
+    @Autowired
+    private SimpMessagingTemplate simpMessagingTemplate;
+
 
     @GetMapping("/")
     public ModelAndView getHome(@ModelAttribute MonitorCmdHelper monitorCmdHelper) {
@@ -116,5 +124,88 @@ public class SocialEconomyController {
         redir.addFlashAttribute("finished", true);
         return redirectView;
     }
+
+    @GetMapping("/simulate")
+    protected ModelAndView simulate(@ModelAttribute MonitorCmdHelper monitorCmdHelper, ModelMap model,
+                                    HttpServletRequest request, RedirectAttributes redirectAttrs) {
+        simpMessagingTemplate.convertAndSend("/topic/app/", new Notifications("this is a testttt"));
+
+        return new ModelAndView("simulate", "monitorCmdHelper", monitorCmdHelper);
+    }
+
+    @PostMapping("/startSimulation")
+    protected @ResponseBody String simulatePost(@ModelAttribute MonitorCmdHelper monitorCmdHelper, ModelMap model,
+                        HttpServletRequest request, RedirectAttributes redirectAttrs) {
+        simpMessagingTemplate.convertAndSend("/topic/app",
+                "started", new ModelMap(), new MessagePostProcessor() {
+                    @Override
+                    public Message<?> postProcessMessage(Message<?> message) {
+                        log.info(message.toString());
+                        return message;
+                    }
+                });
+//        log.info("xxxxxxxxxxxxxxxxx start monitoring :{}", LocalDateTime.now());
+        helperService.runMonitoring(monitorCmdHelper.getStartDate(), monitorCmdHelper.getNumDays(),
+                Double.valueOf(monitorCmdHelper.getPValue()));
+
+        simpMessagingTemplate.convertAndSend("/topic/app",
+                "finished", new ModelMap(), new MessagePostProcessor() {
+                    @Override
+                    public Message<?> postProcessMessage(Message<?> message) {
+                        log.info(message.toString());
+                        return message;
+                    }
+                });
+        return "OK";
+    }
+
+    @GetMapping("/getJsonReport")
+    protected ResponseEntity<Resource> getJsonReport() {
+        try {
+            File pop = new File("caseApps.json");
+            InputStreamResource resource = new InputStreamResource(new FileInputStream(pop));
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.TEXT_PLAIN);
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + pop.getName());
+            headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
+            headers.add("Pragma", "no-cache");
+            headers.add("Expires", "0");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentLength(pop.length())
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(resource);
+        } catch (FileNotFoundException e) {
+            log.error(e.getMessage());
+        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+
+
+    @GetMapping("/getXLSReport")
+    protected ResponseEntity<Resource> getXLSReport() {
+        try {
+            File pop = new File("AcceptedCaseSample.xlsx");
+            InputStreamResource resource = new InputStreamResource(new FileInputStream(pop));
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.TEXT_PLAIN);
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + pop.getName());
+            headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
+            headers.add("Pragma", "no-cache");
+            headers.add("Expires", "0");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentLength(pop.length())
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(resource);
+        } catch (FileNotFoundException e) {
+            log.error(e.getMessage());
+        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+
+
 
 }
