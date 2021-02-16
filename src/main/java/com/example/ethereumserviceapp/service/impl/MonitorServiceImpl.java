@@ -37,6 +37,7 @@ import com.example.ethereumserviceapp.utils.EthAppUtils;
 import com.example.ethereumserviceapp.utils.ExportCaseToExcel;
 import com.example.ethereumserviceapp.utils.MonitorUtils;
 
+import org.apache.xpath.operations.Bool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -833,12 +834,18 @@ public class MonitorServiceImpl implements MonitorService {
             }
         }
 
-        if (monitoredCase.getRejectionDate().equals("") || finalResult.getDate().isBefore(DateUtils.dateStringToLD(monitoredCase.getRejectionDate()))) {
-            monitoredCase.setRejectionDate(DateUtils.dateToString(finalResult.getDate()));
+        if(finalResult.getRejection() != null && finalResult.getRejection().equals(Boolean.TRUE)){
+            if (finalResult.getDate() != null && (monitoredCase.getRejectionDate().equals("") || finalResult.getDate().isBefore(DateUtils.dateStringToLD(monitoredCase.getRejectionDate())))) {
+                monitoredCase.setRejectionDate(DateUtils.dateToString(finalResult.getDate()));
+            } else {
+                finalResult.setDate(DateUtils.dateStringToLD(monitoredCase.getRejectionDate()));
+                finalResult.setRejectionCode(monitoredCase.getRejectionCode());
+            }
         } else {
-            finalResult.setDate(DateUtils.dateStringToLD(monitoredCase.getRejectionDate()));
-            finalResult.setRejectionCode(monitoredCase.getRejectionCode());
+            finalResult.setRejection(false);
+            finalResult.setRejectionCode(RejectionCode.REJECTION0);
         }
+        
         finalResult.setCount(apiCallsUpdates);
         //ExternalChecksResult finalResult = new ExternalChecksResult();
         // finalResult.setRejection(false);

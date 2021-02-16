@@ -100,9 +100,9 @@ public class TestMonitorServ extends TestUtils{
        Mockito.when(mongoServ.findCredentialIdsByUuid(anyString())).thenReturn(credIdAndExp);
        Mockito.when(ethServ.checkRevocationStatus(anyString())).thenReturn(false);
 //       Mockito.when(mongoServ.findByHouseholdPrincipalIn(any())).thenReturn(oneItemList);
-       Mockito.when(mongoServ.findByHouseholdComposition(any())).thenReturn(oneItemList);
+       //Mockito.when(mongoServ.findByHouseholdComposition(any())).thenReturn(oneItemList);
        //Mockito.when(mongoServ.findByMeterNumber(anyString())).thenReturn(oneItemList);
-       Mockito.when(mongoServ.findByIban(anyString())).thenReturn(oneItemList);
+       //Mockito.when(mongoServ.findByIban(anyString())).thenReturn(oneItemList);
        //doNothing().when(ethServ).updateCase(any(), false);
 
        monServ.startScheduledMonitoring();
