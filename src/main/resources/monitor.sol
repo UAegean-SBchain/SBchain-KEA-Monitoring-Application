@@ -50,10 +50,16 @@ contract CaseMonitor{
 
     enum RejectionCode{
         Rejection0,
-        Rejection1,
-        Rejection2,
-        Rejection3,
-        Rejection4
+        Rejection101,
+        Rejection102,
+        Rejection103,
+        Rejection104,
+        Rejection105,
+        Rejection106,
+        Rejection107,
+        Rejection108,
+        Rejection109,
+        Rejection110
     }
 
     function _getCaseIndex(bytes16 _uuid) public view returns (uint) {
