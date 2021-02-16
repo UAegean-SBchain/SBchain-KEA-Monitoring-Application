@@ -118,6 +118,7 @@ public class MonitorServiceImpl implements MonitorService {
             Optional<SsiApplication> ssiCase = mongoServ.findByUuid(uuid);
             if (!ssiCase.isPresent()) {
                 log.info("application in database not present");
+                monitoredCase.setRejectionCode(RejectionCode.REJECTION104);
                 updateCase(monitoredCase, State.REJECTED, null, currentDate, isTest, uuid, null, credChange,
                         storeDataForSE);
                 return;
@@ -183,11 +184,11 @@ public class MonitorServiceImpl implements MonitorService {
             // if the case is already rejected update only if there are new credential changes
             if(monitoredCase.getState().equals(State.REJECTED)){
                 if(exCheckResult.getRejection()){
-                    monitoredCase.setRejectionCode(RejectionCode.REJECTION1);
+                    monitoredCase.setRejectionCode(exCheckResult.getRejectionCode());
                     monitoredCase.setRejectionDate(DateUtils.dateToString(exCheckResult.getDate()));
                 }
                 if(credChange || exCheckResult.getRejection()){
-                    log.info("aaaaaaa rejected case uuid :{}, date :{}, state :{}, dailyValue :{}, offset:{}, sum:{}, rejectionCode :{}, rejection date :{} ", monitoredCase.getUuid(), monitoredCase.getDate(), monitoredCase.getState(), monitoredCase.getDailyValue(), monitoredCase.getOffset(), monitoredCase.getDailySum(), monitoredCase.getRejectionCode(), monitoredCase.getRejectionDate());
+                    log.info("rejected case uuid :{}, date :{}, state :{}, dailyValue :{}, offset:{}, sum:{}, rejectionCode :{}, rejection date :{} ", monitoredCase.getUuid(), monitoredCase.getDate(), monitoredCase.getState(), monitoredCase.getDailyValue(), monitoredCase.getOffset(), monitoredCase.getDailySum(), monitoredCase.getRejectionCode(), monitoredCase.getRejectionDate());
             
                     updateCase(monitoredCase, State.REJECTED, ssiApp, currentDate, isTest, uuid, null, credChange, storeDataForSE);
                     //continue;
@@ -207,7 +208,7 @@ public class MonitorServiceImpl implements MonitorService {
 
             if(exCheckResult.getRejection()){
                 monitoredCase.setRejectionDate(DateUtils.dateToString(exCheckResult.getDate()));
-                monitoredCase.setRejectionCode(RejectionCode.REJECTION1);
+                monitoredCase.setRejectionCode(exCheckResult.getRejectionCode());
                 monitoredCase.setDailyValue(BigDecimal.ZERO);
                 monitoredCase.setDailySum(BigDecimal.ZERO);
                 updateCase(monitoredCase, State.REJECTED, ssiApp, currentDate, isTest, uuid, null, credChange, storeDataForSE);
@@ -258,7 +259,7 @@ public class MonitorServiceImpl implements MonitorService {
             if (MonitorUtils.isCaseOlderThanSixMonths(firstAcceptedDate, currentDate)) {
                 //update the status of the case to REJECTED and the date with the current date
                     monitoredCase.setRejectionDate(DateUtils.dateToString(currentDate.toLocalDate()));
-                    monitoredCase.setRejectionCode(RejectionCode.REJECTION4);
+                    monitoredCase.setRejectionCode(RejectionCode.REJECTION103);
                     monitoredCase.setDailyValue(BigDecimal.ZERO);
                     monitoredCase.setDailySum(BigDecimal.ZERO);
                     updateCase(monitoredCase, State.REJECTED, ssiApp, currentDate, isTest, uuid, aggregatedSsiApp, credChange, storeDataForSE);
@@ -286,7 +287,7 @@ public class MonitorServiceImpl implements MonitorService {
             } else {
                 log.info("validation failed, case rejected");
                 monitoredCase.setRejectionDate(DateUtils.dateToString(currentDate.toLocalDate()));
-                monitoredCase.setRejectionCode(RejectionCode.REJECTION1);
+                //monitoredCase.setRejectionCode(RejectionCode.REJECTION1);
                 monitoredCase.setDailyValue(BigDecimal.ZERO);
                 monitoredCase.setDailySum(BigDecimal.ZERO);
                 //rejectOrSuspendCases(uuid, State.REJECTED, householdApps, currentDate, null, RejectionCode.REJECTION1, isTest, credChange, storeDataForSE);
@@ -452,7 +453,7 @@ public class MonitorServiceImpl implements MonitorService {
             log.info("is credential {} revoked? == {}", credIdAndExp[i].getId(), isRevoked);
             if (isRevoked){
                 monitoredCase.setRejectionDate(DateUtils.dateToString(currentDate.toLocalDate()));
-                monitoredCase.setRejectionCode(RejectionCode.REJECTION2);
+                monitoredCase.setRejectionCode(RejectionCode.REJECTION107);
                 monitoredCase.setDailyValue(BigDecimal.ZERO);
                 monitoredCase.setDailySum(BigDecimal.ZERO);
                 updateCase(monitoredCase, State.REJECTED, ssiApp, currentDate, isTest, monitoredCase.getUuid(), null, credChange, storeDataForSE);
@@ -492,6 +493,7 @@ public class MonitorServiceImpl implements MonitorService {
         Long principalCount = householdApps.stream().filter(h -> h.getHouseholdPrincipal().getAfm().equals(h.getTaxisAfm())).count();
         if (principalCount > 1) {
             log.info("rejected - more than one principal in household");
+            monitoredCase.setRejectionCode(RejectionCode.REJECTION110);
             return false;
         }
 
@@ -499,6 +501,7 @@ public class MonitorServiceImpl implements MonitorService {
         for(SsiApplication app:householdApps){
            if(!duplicateApps.add(app.getTaxisAfm())){
                 log.info("rejected - duplicate applications in household for uuid :{}", app.getUuid());
+                monitoredCase.setRejectionCode(RejectionCode.REJECTION110);
                 return false;
            }
         }
@@ -510,6 +513,7 @@ public class MonitorServiceImpl implements MonitorService {
         while (it.hasNext()) {
             if (suspendEndDate.equals(suspendStartDate.plusMonths(2))) {
                 log.info("rejected - application suspended for 2 months or more");
+                monitoredCase.setRejectionCode(RejectionCode.REJECTION108);
                 return false;
             }
             Map.Entry<LocalDateTime, State> entry = it.next();
@@ -526,13 +530,15 @@ public class MonitorServiceImpl implements MonitorService {
         //economics check
         if (EthAppUtils.getTotalMonthlyValue(aggregatedSsiApp, null).compareTo(BigDecimal.ZERO) == 0) {
             log.info("rejected - financial data restriction (total household income > payment thresshold)");
+            monitoredCase.setRejectionCode(RejectionCode.REJECTION101);
             return false;
         }
 
-        //validate each household application credentials
+        //does an application exist in a different household
         for (SsiApplication app : householdApps) {
             if(mongoServ.findByTaxisAfm(app.getTaxisAfm()).size()>1){
                 log.info("rejected - afm exists in different houshold");
+                monitoredCase.setRejectionCode(RejectionCode.REJECTION109);
                 return false;
             }
         }
@@ -801,33 +807,53 @@ public class MonitorServiceImpl implements MonitorService {
                 finalResult.setChangedFinancials(result.getChanged());
             }
             apiCallsUpdates = result.getCount() > 0? apiCallsUpdates + result.getCount() : apiCallsUpdates;
-            if(result.getDate() != null) rejectionDates.add(result.getDate().toLocalDate());
+            //if(result.getDate() != null ) finalResult.setDate(result.getDate().toLocalDate());  //rejectionDates.add(result.getDate().toLocalDate());
             if (apiCallsUpdates < 2) {
                 result = oaedRegistrationCheck(principalApp, pValue, makeMockCheck, householdApps, count, currentDate, rejectionDates);
                 apiCallsUpdates = result.getCount() > 0? apiCallsUpdates + result.getCount() : apiCallsUpdates;
-                if(result.getDate() != null) rejectionDates.add(result.getDate().toLocalDate());
+                if(result.getDate() != null && (finalResult.getDate() == null || result.getDate().toLocalDate().isBefore(finalResult.getDate()))) {
+                    finalResult.setDate(result.getDate().toLocalDate());
+                    finalResult.setRejection(true);
+                    finalResult.setRejectionCode(RejectionCode.REJECTION102);
+                    //rejectionDates.add(result.getDate().toLocalDate());
+                }  
                 if (apiCallsUpdates < 2) {
                     result = luxuryCheck(principalApp, pValue, makeMockCheck, householdApps, count, currentDate, rejectionDates);
                     apiCallsUpdates = result.getCount() > 0? apiCallsUpdates + result.getCount() : apiCallsUpdates;
-                    if(result.getDate() != null) rejectionDates.add(result.getDate().toLocalDate());
+                    //if(result.getDate() != null) rejectionDates.add(result.getDate().toLocalDate());
+                    if(result.getDate() != null && (finalResult.getDate() == null || result.getDate().toLocalDate().isBefore(finalResult.getDate()))) {
+                        finalResult.setDate(result.getDate().toLocalDate());
+                        finalResult.setRejection(true);
+                        finalResult.setRejectionCode(RejectionCode.REJECTION105);
+                        
+                        //rejectionDates.add(result.getDate().toLocalDate());
+                    }  
+
                 }
             }
         }
-        
-        //ExternalChecksResult finalResult = new ExternalChecksResult();
-        finalResult.setRejection(false);
-        finalResult.setCount(apiCallsUpdates);
-        //finalResult.setChangedFinancials(result.getChanged());
-        if (!rejectionDates.isEmpty()) {
-            LocalDate minDate = rejectionDates.stream()
-                    .min(Comparator.naturalOrder())
-                    .get();
-            if (monitoredCase.getRejectionDate().equals("") || DateUtils.dateStringToLD(monitoredCase.getRejectionDate()).isAfter(minDate)) {
-                monitoredCase.setRejectionDate(DateUtils.dateToString(minDate));
-            }
-            finalResult.setRejection(true);
-            finalResult.setDate(minDate);
+
+        if (monitoredCase.getRejectionDate().equals("") || finalResult.getDate().isBefore(DateUtils.dateStringToLD(monitoredCase.getRejectionDate()))) {
+            monitoredCase.setRejectionDate(DateUtils.dateToString(finalResult.getDate()));
+        } else {
+            finalResult.setDate(DateUtils.dateStringToLD(monitoredCase.getRejectionDate()));
+            finalResult.setRejectionCode(monitoredCase.getRejectionCode());
         }
+        finalResult.setCount(apiCallsUpdates);
+        //ExternalChecksResult finalResult = new ExternalChecksResult();
+        // finalResult.setRejection(false);
+        // finalResult.setCount(apiCallsUpdates);
+        // //finalResult.setChangedFinancials(result.getChanged());
+        // if (!rejectionDates.isEmpty()) {
+        //     LocalDate minDate = rejectionDates.stream()
+        //             .min(Comparator.naturalOrder())
+        //             .get();
+        //     if (monitoredCase.getRejectionDate().equals("") || DateUtils.dateStringToLD(monitoredCase.getRejectionDate()).isAfter(minDate)) {
+        //         monitoredCase.setRejectionDate(DateUtils.dateToString(minDate));
+        //     }
+        //     finalResult.setRejection(true);
+        //     finalResult.setDate(minDate);
+        // }
 
         return finalResult;
 

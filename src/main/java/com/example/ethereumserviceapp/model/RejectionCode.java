@@ -3,10 +3,16 @@ package com.example.ethereumserviceapp.model;
 public enum RejectionCode {
     
     REJECTION0(0, "NotRejected"), 
-    REJECTION1(1, "Rejection1"),    
-    REJECTION2(2, "Rejection2"),  
-    REJECTION3(3, "Rejection3"), 
-    REJECTION4(4, "Rejection4");
+    REJECTION101(1, "Rejection101"),    
+    REJECTION102(2, "Rejection102"),  
+    REJECTION103(3, "Rejection103"), 
+    REJECTION104(4, "Rejection104"),
+    REJECTION105(5, "Rejection105"),    
+    REJECTION106(6, "Rejection106"),  
+    REJECTION107(7, "Rejection107"), 
+    REJECTION108(8, "Rejection108"),
+    REJECTION109(9, "Rejection109"),  
+    REJECTION110(10, "Rejection110");
 
     public final Integer value;
     public final String description;

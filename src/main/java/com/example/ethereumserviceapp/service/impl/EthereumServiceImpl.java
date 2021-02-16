@@ -76,8 +76,8 @@ public class EthereumServiceImpl implements EthereumService {
         // Derived the key using the derivation path
         Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, derivationPath);
         // Load the wallet for the derived key 
-        this.credentials = Credentials.create(derivedKeyPair); //0xE777fAf8240196bA99c6e2a89E8F24B75C52Eb2a, 0x2a85A14cB9Fefdf55f2Bb8550FEAe8f1C8595697, 0xDa04fa66Bd544fAc14214Da9862F41447Ee55c71, 0x1858cCeC051049Fa1269E958da2d33bCA27c6Db8 previous
-        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x1f841d9c63B76923f0B544Dc6b605630377f3c55" // old besu contract "0xFa5B6432308d45B54A1CE1373513Fab77166436f" // old ropsten contract 0x3027b1e481C3478E85f9adD58d239eD9742AB418
+        this.credentials = Credentials.create(derivedKeyPair); 
+        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0xa4fB8b2c7264452eDD946Df6Dbb5c4842aa62Cf1" 
                 : System.getenv("CONTRACT_ADDRESS");
         this.REVOCATION_CONTRACT_ADDRESS = System.getenv("REVOCATION_CONTRACT_ADDRESS") == null
                 ? "0x9534d226e56826Cc4C01912Eb388b121Bb0683b5"
@@ -227,7 +227,7 @@ public class EthereumServiceImpl implements EthereumService {
                                  BigInteger.valueOf(monitoredCase.getRejectionCode().getValue()), 
                                  BigInteger.valueOf(rjctMillis))
                         .encodeFunctionCall();
-                String txHash = this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
+                this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
                         contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
 
                 
@@ -311,7 +311,7 @@ public class EthereumServiceImpl implements EthereumService {
                                 payment.getCalculatedPayment().multiply(BigDecimal.valueOf(100)).toBigInteger(), 
                                 monitoredCase.getOffset().multiply(BigDecimal.valueOf(100)).toBigInteger())
                         .encodeFunctionCall();
-                String txHash = this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
+                this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE, BigInteger.valueOf(1000000),
                         contract.getContractAddress(), functionCall, BigInteger.ZERO).getTransactionHash();
 
                 // if(sync){

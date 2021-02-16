@@ -20,4 +20,5 @@ public class ExternalAPICallResult {
     //private LocalDate date;
     private LocalDateTime date;
     private Boolean changed;
+    private RejectionCode rejectionCode;
 }

@@ -13,5 +13,6 @@ public class ExternalChecksResult {
     private Boolean rejection;
     private LocalDate date;
     private Boolean changedFinancials;
+    private RejectionCode rejectionCode;
     private int count;
 }
