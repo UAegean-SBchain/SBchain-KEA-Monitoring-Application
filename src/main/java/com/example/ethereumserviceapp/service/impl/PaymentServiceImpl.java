@@ -47,7 +47,7 @@ public class PaymentServiceImpl implements PaymentService{
     public void startPayment(LocalDateTime dateNow, Boolean sync){
         log.info("payment start");
         List<String> uuids = this.ethServ.getAllCaseUUID();
-        uuids.stream().forEach(uuid -> {
+        uuids.parallelStream().forEach(uuid -> {
             // get the case from the block chain
             Optional<Case> theCase = this.ethServ.getCaseByUUID(uuid);
             //if the case does not exist or is a case belonging to a non principal member, continue to the next case
