@@ -39,7 +39,7 @@ public class TestEthService {
     public void testAddCaseDelete() {
         EthereumService ethServ = new EthereumServiceImpl();
         Case theCase = new Case();
-        theCase.setUuid("1WEC5TOI63P0AFN1");
+        theCase.setUuid("1WEC5TOI63P0AFN0");
         log.info("will try to add");
         ethServ.addCase(theCase);
 //        Assertions.assertEquals(ethServ.getCaseByUUID("1WEC5TOI63P0AFN1").isPresent(), true);
