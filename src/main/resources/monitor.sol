@@ -1,30 +1,28 @@
-// SPDX-License-Identifier: GPL-3.0
-
 pragma solidity >=0.4.21;
 
 contract CaseMonitor{
 
-    Case[] cases;
-    mapping(bytes16 => uint) caseUuidToIndex;
-
+    Case[] cases; 
+    mapping(bytes16 => uint) caseUuidToIndex; 
+    
     CasePayment[] payments;
-    mapping(bytes16 => uint) paymentUuidToIndex;
+    mapping(bytes16 => uint) paymentUuidToIndex; 
 
     CaseRejection[] rejections;
-    mapping(bytes16 => uint) rejectionUuidToIndex;
-
+    mapping(bytes16 => uint) rejectionUuidToIndex; 
+    
     //defines a case along with its state
     struct Case {
         bytes16 uuid;
         uint latestDate;
         uint[] datesHistory;
-        CaseState[] statesHistory;
+        CaseState[] statesHistory; 
         uint[] payPerDayHistory;
         uint[] sumDailyValueHistory;
         CaseState currState;
         int paymentOffset;
     }
-
+    
     struct CasePayment{
         bytes16 uuid;
         uint[] paymentDateHistory;          //the date of payment
@@ -57,7 +55,6 @@ contract CaseMonitor{
         Rejection103,
         Rejection104,
         Rejection105,
-        Rejection106,
         Rejection107,
         Rejection108,
         Rejection109,
@@ -65,15 +62,15 @@ contract CaseMonitor{
     }
 
     function _getCaseIndex(bytes16 _uuid) public view returns (uint) {
-        return caseUuidToIndex[_uuid];
+        return caseUuidToIndex[_uuid]; 
     }
-
+    
     function _getPaymentIndex(bytes16 _uuid) public view returns (uint) {
-        return paymentUuidToIndex[_uuid];
+        return paymentUuidToIndex[_uuid]; 
     }
 
     function _getRejectionIndex(bytes16 _uuid) public view returns (uint) {
-        return rejectionUuidToIndex[_uuid];
+        return rejectionUuidToIndex[_uuid]; 
     }
 
     function addCase(bytes16 _uuid, uint _date) public {
@@ -91,20 +88,20 @@ contract CaseMonitor{
         sumDailyValueHistory[0] = 0;
 
         //add the case 
-        cases.push(Case(_uuid, _date, datesHistory, statesHistory, payPerDayHistory, sumDailyValueHistory, CaseState.Undefined, 0));
+        cases.push(Case(_uuid, _date, datesHistory, statesHistory, payPerDayHistory, sumDailyValueHistory, CaseState.Undefined, 0)); 
         uint newIndex = cases.length-1;
         caseUuidToIndex[_uuid] = newIndex;
         addCasePayment(_uuid);
         addCaseRejection(_uuid);
-
+        
         //return the unique id of the new case
         //return newIndex;
     }
-
+    
     function addCasePayment(bytes16 _uuid) public  {
-
+        
         require(!paymentExists(_uuid));
-
+        
         uint[] memory paymentDateHistory = new uint[](1);
         paymentDateHistory[0] = 0;
         uint[] memory paymentHistory = new uint[](1);
@@ -113,19 +110,19 @@ contract CaseMonitor{
         paymentCalculationHistory[0] = 0;
         CaseState[] memory paymentStateHistory = new CaseState[](1);
         paymentStateHistory[0] = CaseState.Undefined;
-
+        
         payments.push(CasePayment(_uuid, paymentDateHistory, paymentHistory, paymentCalculationHistory, paymentStateHistory));
-
+        
         uint newIndex = payments.length-1;
         paymentUuidToIndex[_uuid] = newIndex;
     }
 
     function addCaseRejection(bytes16 _uuid) public  {
-
+        
         require(!rejectionExists(_uuid));
-
+        
         rejections.push(CaseRejection(_uuid, RejectionCode.Rejection0, 0));
-
+        
         uint newIndex = rejections.length-1;
         rejectionUuidToIndex[_uuid] = newIndex;
     }
@@ -133,17 +130,17 @@ contract CaseMonitor{
     function updateCase(bytes16 _uuid, uint _date, CaseState _state, uint _payPerDay, uint _sumDaily, int _offset, RejectionCode _rejectionCode, uint _rejectionDate) public {
 
         require(caseExists(_uuid));
-
+        
         uint index = _getCaseIndex(_uuid);
         Case storage theCase = cases[index];
         if(_rejectionCode != RejectionCode.Rejection0){
             uint rejectionIndex = _getRejectionIndex(_uuid);
             CaseRejection storage rejectedCase = rejections[rejectionIndex];
-
+            
             rejectedCase.rejectionCode = _rejectionCode;
             rejectedCase.rejectionDate = _rejectionDate;
         }
-
+        
         theCase.latestDate = _date;
         theCase.datesHistory.push(_date);
         theCase.statesHistory.push(_state);
@@ -151,14 +148,14 @@ contract CaseMonitor{
         theCase.sumDailyValueHistory.push(_sumDaily);
         theCase.currState= _state;
         theCase.paymentOffset = _offset;
-
-
+        
+        
     }
 
     function addPayment(bytes16 _uuid, CaseState _state, uint _pDate, uint _payHistory, uint _payCalculation, int _offset) public{
 
         require(caseExists(_uuid));
-
+        
         uint caseIndex = _getCaseIndex(_uuid);
         Case storage theCase = cases[caseIndex];
         uint paymentIndex = _getPaymentIndex(_uuid);
@@ -186,10 +183,10 @@ contract CaseMonitor{
         if(cases[_getCaseIndex(_uuid)].uuid == _uuid){
             return true;
         }
-
+        
         return false;
     }
-
+    
     function paymentExists(bytes16 _uuid) public view returns (bool) {
         if (payments.length == 0)
             return false;
@@ -197,7 +194,7 @@ contract CaseMonitor{
         if(payments[_getPaymentIndex(_uuid)].uuid == _uuid){
             return true;
         }
-
+        
         return false;
     }
 
@@ -208,12 +205,12 @@ contract CaseMonitor{
         if(rejections[_getRejectionIndex(_uuid)].uuid == _uuid){
             return true;
         }
-
+        
         return false;
     }
 
     function getAllCases() public view returns (bytes16[] memory) {
-        bytes16[] memory output = new bytes16[](cases.length);
+        bytes16[] memory output = new bytes16[](cases.length); 
 
         //get all ids 
         if (cases.length > 0) {
@@ -222,7 +219,7 @@ contract CaseMonitor{
                 output[index++] = cases[n-1].uuid;
             }
         }
-        return output;
+        return output; 
     }
 
     function getCase(bytes16 _uuid) public view returns (
@@ -234,47 +231,47 @@ contract CaseMonitor{
         uint[] memory sumDailyValueHistory,
         CaseState currState,
         int paymentOffset) {
-
+            
         require(caseExists(_uuid));
 
         Case storage theCase = cases[_getCaseIndex(_uuid)];
-
-
-        return (theCase.uuid, theCase.latestDate,
-        theCase.datesHistory, theCase.statesHistory, theCase.payPerDayHistory, theCase.sumDailyValueHistory, theCase.currState,
-        theCase.paymentOffset);
-
+        
+        
+        return (theCase.uuid, theCase.latestDate, 
+                 theCase.datesHistory, theCase.statesHistory, theCase.payPerDayHistory, theCase.sumDailyValueHistory, theCase.currState,
+                 theCase.paymentOffset); 
+        
     }
-
+    
     function getPayment(bytes16 _uuid) public view returns (
         bytes16 uuid,
         uint[] memory paymentDateHistory,
         uint[] memory paymentValueHistory,
         uint[] memory paymentCalculationHistory,
         CaseState[] memory paymentStateHistory) {
-
+            
         require(paymentExists(_uuid));
 
         CasePayment storage payment = payments[_getPaymentIndex(_uuid)];
-        return (payment.uuid, payment.paymentDateHistory, payment.paymentValueHistory, payment.paymentCalculationHistory, payment.paymentStateHistory);
-
+        return (payment.uuid, payment.paymentDateHistory, payment.paymentValueHistory, payment.paymentCalculationHistory, payment.paymentStateHistory); 
+        
     }
 
     function getRejection(bytes16 _uuid) public view returns (
         bytes16 uuid,
         RejectionCode rejectionCode,
         uint rejectionDate) {
-
+            
         require(rejectionExists(_uuid));
 
         CaseRejection storage rejection = rejections[_getRejectionIndex(_uuid)];
-        return (rejection.uuid, rejection.rejectionCode, rejection.rejectionDate);
-
+        return (rejection.uuid, rejection.rejectionCode, rejection.rejectionDate); 
+        
     }
 
     function deleteCase(bytes16 _uuid) public {
         require(caseExists(_uuid));
-
+        
         uint caseIndex = _getCaseIndex(_uuid);
 
         if(caseIndex != cases.length - 1){
@@ -290,18 +287,18 @@ contract CaseMonitor{
         }
 
         cases.pop();
-
+        
         deletePayment(_uuid);
         deleteRejection(_uuid);
     }
-
+    
     function deletePayment(bytes16 _uuid) public {
         require(paymentExists(_uuid));
-
+        
         uint paymentIndex = _getPaymentIndex(_uuid);
 
         if(paymentIndex != payments.length - 1){
-
+            
             // switch the payment to be deleted with the last payment of the array and then pop it
             CasePayment memory paymentToDelete = payments[paymentIndex];
             // find the uuid of the last payment that will be switched and delete that pair from the key/value pair mapping
@@ -312,18 +309,18 @@ contract CaseMonitor{
             // add the uuid of the switched payment back to the mapping
             paymentUuidToIndex[switchedUuid] = paymentIndex;
         }
-
+        
         payments.pop();
-
+       
     }
 
     function deleteRejection(bytes16 _uuid) public {
         require(rejectionExists(_uuid));
-
+        
         uint rejectionIndex = _getRejectionIndex(_uuid);
 
         if(rejectionIndex != rejections.length - 1){
-
+            
             // switch the rejection of the case to be deleted with the last payment of the array and then pop it
             CaseRejection memory rejectionToDelete = rejections[rejectionIndex];
             // find the uuid of the last rejection that will be switched and delete that pair from the key/value pair mapping
@@ -334,8 +331,8 @@ contract CaseMonitor{
             // add the uuid of the switched payment back to the mapping
             rejectionUuidToIndex[switchedUuid] = rejectionIndex;
         }
-
+        
         rejections.pop();
-
+       
     }
 }

@@ -78,7 +78,7 @@ public class EthereumServiceImpl implements EthereumService {
         Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, derivationPath);
         // Load the wallet for the derived key 
         this.credentials = Credentials.create(derivedKeyPair);
-        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x1858cCeC051049Fa1269E958da2d33bCA27c6Db8"
+        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0xDa04fa66Bd544fAc14214Da9862F41447Ee55c71"
                 : System.getenv("CONTRACT_ADDRESS");
         this.REVOCATION_CONTRACT_ADDRESS = System.getenv("REVOCATION_CONTRACT_ADDRESS") == null
                 ? "0x9534d226e56826Cc4C01912Eb388b121Bb0683b5"
