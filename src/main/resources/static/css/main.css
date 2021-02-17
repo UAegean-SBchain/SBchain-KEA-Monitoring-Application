@@ -1,4 +1,4 @@
-.container{
+/* .container{
     width: 70%;
     margin: 0 auto;
     align-self: center;
@@ -7,7 +7,7 @@
     max-width: 75%;
     height: 100%;
     min-height: 70vh;
-}
+} */
 
 .table{
     width:100%;
@@ -16,7 +16,7 @@
 }
 
 .tableHeader{
-    background-color:rgb(57, 110, 255);
+    background-color:#337ab7;
     color: white;
     padding:0.8rem;
 }
@@ -55,8 +55,8 @@
 
 .showHistBtn{
     height: 2.5rem;
-    width: 6.5rem;
-    color: rgb(57, 110, 255);
+    width: 10rem;
+    color: #337ab7;
     font-size: 0.9rem;
     border: none;
   background-color: inherit;

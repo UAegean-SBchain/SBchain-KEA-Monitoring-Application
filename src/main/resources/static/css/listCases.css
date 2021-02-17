@@ -11,7 +11,7 @@ ul{
   }
 
   .active{
-      background-color: rgb(57, 110, 255);
+      background-color: #337ab7;
       color:white;
   }
 
@@ -34,7 +34,22 @@ ul{
 
   .tHeader{
     padding: 0.5rem;
-    background-color: rgb(57, 110, 255);
+    background-color: #337ab7;
     color:white;
+    height:4.3rem;
   }
+
+  .cHeader{
+    padding: 0.5rem;
+  }
+
+.resNumSelectorWrapper{
+  min-width:5rem;
+  text-align: center;
+  left:11.7rem;
+}
+
+.resNumSelector{
+  width:5rem;
+}
 
