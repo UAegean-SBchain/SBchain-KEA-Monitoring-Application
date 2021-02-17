@@ -67,7 +67,7 @@ public class MonitorServiceImpl implements MonitorService {
     MonitorUtils monitorUtils;
 
     @Override
-    @Scheduled(cron = "0 0 12 * * ?")
+    //@Scheduled(cron = "0 0 12 * * ?")
     public void startScheduledMonitoring() {
         startMonitoring(LocalDateTime.now(), false, 0, false, null);
     }
@@ -355,12 +355,10 @@ public class MonitorServiceImpl implements MonitorService {
                 // calculate offset only for principal members and only if there has been a change in credentials and there has already been a payment
                 if(ssiApp.getTaxisAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())){
                     if(credChange && !monitoredCase.getPaymentHistory().isEmpty()){
-                        log.info("gggggggggggggggggggg calculate offset");
                         MonitorUtils.calculateOffset(monitoredCase, ssiApp, allHouseholdApps);
+                        log.info("offset calculation for case :{}, offset :{}", monitoredCase.getUuid(), monitoredCase.getOffset());
                     }
-                    
                 }
-
                 monitoredCase.setState(state);
 
                 if (state.equals(State.ACCEPTED)) {

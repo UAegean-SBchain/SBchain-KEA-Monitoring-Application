@@ -37,7 +37,7 @@ public class PaymentServiceImpl implements PaymentService{
     }
 
     @Override
-    @Scheduled(cron = "0 0 0 1 * ?")
+    //@Scheduled(cron = "0 0 0 1 * ?")
     public void startScheduledPayment(){
         List<String> uuids = this.ethServ.getAllCaseUUID();
         startPayment(LocalDateTime.now(), false);
@@ -84,10 +84,10 @@ public class PaymentServiceImpl implements PaymentService{
                     if(ssiApp.isPresent() && ssiApp.get().getHouseholdPrincipal().getAfm().equals(ssiApp.get().getTaxisAfm())){
                         calculatePayment(caseToBePaid, ssiApp.get(), householdApps, currentDate, sync);
                     }
-                } else if(caseToBePaid.getState().equals(State.REJECTED) ){
+                } /*else if(caseToBePaid.getState().equals(State.REJECTED) ){
                     // if the case's state is rejected and there are no days during the month during which the case was accepted, delete it from the block chain 
                     ethServ.deleteCaseByUuid(uuid);
-                }
+                }*/
             }
         });
     }

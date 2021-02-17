@@ -77,8 +77,8 @@ public class EthereumServiceImpl implements EthereumService {
         // Derived the key using the derivation path
         Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, derivationPath);
         // Load the wallet for the derived key 
-        this.credentials = Credentials.create(derivedKeyPair); //0xE777fAf8240196bA99c6e2a89E8F24B75C52Eb2a, 0x2a85A14cB9Fefdf55f2Bb8550FEAe8f1C8595697, 0xDa04fa66Bd544fAc14214Da9862F41447Ee55c71, 0x1858cCeC051049Fa1269E958da2d33bCA27c6Db8 previous
-        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0xc0ED63E3A70BfCB003452B1Cc083db822e1f23e1" // old besu contract "0xFa5B6432308d45B54A1CE1373513Fab77166436f" // old ropsten contract 0x3027b1e481C3478E85f9adD58d239eD9742AB418
+        this.credentials = Credentials.create(derivedKeyPair);
+        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x1858cCeC051049Fa1269E958da2d33bCA27c6Db8"
                 : System.getenv("CONTRACT_ADDRESS");
         this.REVOCATION_CONTRACT_ADDRESS = System.getenv("REVOCATION_CONTRACT_ADDRESS") == null
                 ? "0x9534d226e56826Cc4C01912Eb388b121Bb0683b5"

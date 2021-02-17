@@ -67,10 +67,11 @@ public class HelperService {
             if (currentDate.plusDays(1).compareTo(endDate) == 0) {
                 storedDataForSE = new ArrayList<>();
             }
+            
+            monitorService.startMonitoring(currentDate, false, pValue, true, storedDataForSE);
             if (currentDate.getDayOfMonth() == 1) {
                 paymentService.startPayment(currentDate, false);
             }
-            monitorService.startMonitoring(currentDate, false, pValue, true, storedDataForSE);
             
             currentDate = currentDate.plusDays(1);
         }
