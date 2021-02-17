@@ -149,15 +149,16 @@ public class MonitorServiceImpl implements MonitorService {
                 //continue;
             }
 
+            // TODO this check should probably be held in a different scheduled method and not run during social economy
             // if the case is rejected for more than one month then delete it
-            if (monitoredCase.getState().equals(State.REJECTED) && monitoredCase.getDate().toLocalDate().isBefore(currentDate.toLocalDate().minusMonths(1))) {
+            // if (monitoredCase.getState().equals(State.REJECTED) && monitoredCase.getDate().toLocalDate().isBefore(currentDate.toLocalDate().minusMonths(1))) {
                 
-                Set<String> householdAfms = ssiApp.getHouseholdComposition().stream().map(s -> s.getAfm())
-                            .collect(Collectors.toSet());
-                for (String hhuuid : mongoServ.findUuidByTaxisAfmIn(householdAfms)) {
-                    this.mongoServ.deleteByUuid(hhuuid);
-                }
-            }
+            //     Set<String> householdAfms = ssiApp.getHouseholdComposition().stream().map(s -> s.getAfm())
+            //                 .collect(Collectors.toSet());
+            //     for (String hhuuid : mongoServ.findUuidByTaxisAfmIn(householdAfms)) {
+            //         this.mongoServ.deleteByUuid(hhuuid);
+            //     }
+            // }
 
             // if the payment has failed for 3 consecutive months delete the case
             if (checkForFailedPayments(monitoredCase)) {
@@ -354,7 +355,7 @@ public class MonitorServiceImpl implements MonitorService {
 
                 // calculate offset only for principal members and only if there has been a change in credentials and there has already been a payment
                 if(ssiApp.getTaxisAfm().equals(ssiApp.getHouseholdPrincipal().getAfm())){
-                    if(credChange && !monitoredCase.getPaymentHistory().isEmpty()){
+                    if((credChange && !monitoredCase.getPaymentHistory().isEmpty()) || isTest){
                         MonitorUtils.calculateOffset(monitoredCase, ssiApp, allHouseholdApps);
                         log.info("offset calculation for case :{}, offset :{}", monitoredCase.getUuid(), monitoredCase.getOffset());
                     }
@@ -496,14 +497,14 @@ public class MonitorServiceImpl implements MonitorService {
             return false;
         }
 
-        Set<String> duplicateApps = new HashSet<>();
-        for(SsiApplication app:householdApps){
-           if(!duplicateApps.add(app.getTaxisAfm())){
-                log.info("rejected - duplicate applications in household for uuid :{}", app.getUuid());
-                monitoredCase.setRejectionCode(RejectionCode.REJECTION110);
-                return false;
-           }
-        }
+        // Set<String> duplicateApps = new HashSet<>();
+        // for(SsiApplication app:householdApps){
+        //    if(!duplicateApps.add(app.getTaxisAfm())){
+        //         log.info("rejected - duplicate applications in household for uuid :{}", app.getUuid());
+        //         monitoredCase.setRejectionCode(RejectionCode.REJECTION110);
+        //         return false;
+        //    }
+        // }
 
         //check if two months have passed while the application is in status suspended
         Iterator<Entry<LocalDateTime, State>> it = monitoredCase.getHistory().entrySet().iterator();

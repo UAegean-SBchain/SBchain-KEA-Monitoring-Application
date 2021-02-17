@@ -91,13 +91,7 @@ public class ExampleRunTest extends TestUtils{
         Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(mockList);
         Mockito.when(mongoServ.findCredentialIdsByUuid(anyString())).thenReturn(credIdAndExp);
         Mockito.when(ethServ.checkRevocationStatus(anyString())).thenReturn(false);
-//        Mockito.when(mongoServ.findByHouseholdPrincipalIn(any())).thenReturn(oneItemList);
-        //Mockito.when(mongoServ.findByHouseholdComposition(any())).thenReturn(oneItemList);
-        //Mockito.when(mongoServ.findByMeterNumber(anyString())).thenReturn(oneItemList);
-        //Mockito.when(mongoServ.findByIban(anyString())).thenReturn(oneItemList);
-        //doNothing().when(ethServ).updateCase(any(), false);
 
-        //monServ.startScheduledMonitoring();
         monServ.startMonitoring(runDate, true, 0, false, null);
 
         verify(ethServ, times(1)).updateCase(any());
@@ -416,16 +410,7 @@ public class ExampleRunTest extends TestUtils{
             history.put(startDateTime.withDayOfMonth(i), State.ACCEPTED);
             dailyValue.put(startDateTime.withDayOfMonth(i), BigDecimal.valueOf(0.03));
         }
-
-        // for(int i=1; i<=daysOfMinus2; i++){
-        //     BigDecimal dailySum = new BigDecimal(0.03).multiply(BigDecimal.valueOf(i));
-        //     CaseHistory ch = new CaseHistory();
-        //     ch.setDailyBenefit(new BigDecimal(0.03));
-        //     ch.setDailySum(dailySum);
-        //     ch.setDate(date);
-        //     history.put(currentDateTime.minusMonths(2).withDayOfMonth(i), State.ACCEPTED);
-        //     dailyValue.put(currentDateTime.minusMonths(2).withDayOfMonth(i), BigDecimal.valueOf(0.03));
-        // }
+        
         for(int i=1; i<=daysOfCurrentPayment; i++){
             BigDecimal dailySum = new BigDecimal(0.03).multiply(BigDecimal.valueOf(i));
             CaseHistory ch = new CaseHistory();
