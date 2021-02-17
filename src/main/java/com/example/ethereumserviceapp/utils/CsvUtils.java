@@ -212,17 +212,17 @@ public class CsvUtils {
 
 
 
-    public static List<SsiApplication> generateMockData(int size) {
-        List<SsiApplication> finalHouseholdApp = generateMockHouseholdApplications();
+    public static List<SsiApplication> generateMockData(int size,  int crossBorder, int women, int married, int parents, int underAged, int employed) {
+        List<SsiApplication> finalHouseholdApp = generateMockHouseholdApplications(crossBorder, women, married, parents, underAged, employed);
         while (finalHouseholdApp.size() < size) {
-            List<SsiApplication> additionalHousholdApp = generateMockHouseholdApplications();
+            List<SsiApplication> additionalHousholdApp = generateMockHouseholdApplications(crossBorder, women, married, parents,  underAged, employed);
             finalHouseholdApp = Stream.concat(finalHouseholdApp.stream(), additionalHousholdApp.stream()).collect(Collectors.toList());
         }
         return finalHouseholdApp;
     }
 
 
-    public static List<SsiApplication> generateMockHouseholdApplications() {
+    public static List<SsiApplication> generateMockHouseholdApplications(int crossBorder, int women, int married, int parents, int underAged, int employed) {
 
         List<SsiApplication> householdAppList = new ArrayList<>();
         List<HouseholdMember> householdMemberList = new ArrayList<>();
@@ -716,25 +716,25 @@ public class CsvUtils {
         return maxAmount;
     }
 
-    public static List<SsiApplication> makePercentages(List<SsiApplication> appList) throws FileNotFoundException {
+    public static List<SsiApplication> makePercentages(List<SsiApplication> appList, int crossBorder, int women, int married, int parents, int underAged, int employed) throws FileNotFoundException {
         int sampleSize = appList.size();
-        int euCitizens = (sampleSize * 5) / 100;
+        int euCitizens = (sampleSize * crossBorder) / 100;
         for (int i = 0; i < euCitizens; i++) {
             appList.get(i).setNationality("EU Citizen");
         }
-        int womenSize = (sampleSize) / 2;
+        int womenSize = (sampleSize) *(women/100) ;
         for (int i = 0; i < womenSize; i++) {
             appList.get(i).setTaxisGender("female");
             appList.get(i).setGender("female");
             appList.get(i).setTaxisFirstName(getRandomFirstNameFemale()[0]);
         }
-        int marriedSize = (sampleSize * 70) / 100;
+        int marriedSize = (sampleSize * married) / 100;
         for (int i = 0; i < marriedSize; i++) {
             appList.get(i).setMaritalStatus("married");
         }
-        int childrenPercent = (sampleSize * 25) / 100;
-        int unemployedPercent = (sampleSize) / 2;
-        int parenthoodPercent = (sampleSize * 18) / 100;
+        int childrenPercent = (sampleSize * underAged) / 100;
+        int unemployedPercent = sampleSize * (employed /100);
+        int parenthoodPercent = (sampleSize * parents) / 100;
         //only non principal applications can be children
         int childrenAdded = 0;
         int unemployedAdded = 0;
@@ -775,8 +775,8 @@ public class CsvUtils {
     }
 
 
-    public static void writeToCSV(List<SsiApplication> appList) throws FileNotFoundException {
-        appList = makePercentages(appList);
+    public static File writeToCSV(List<SsiApplication> appList, int crossBorder, int women, int married, int parents, int underAged, int employed) throws FileNotFoundException {
+        appList = makePercentages(appList, crossBorder, women, married, parents, underAged,  employed);
         final String CSV_SEPARATOR = ",";
         try {
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("applications.csv"), StandardCharsets.UTF_8));
@@ -1003,6 +1003,8 @@ public class CsvUtils {
         } catch (IOException e) {
             log.info(e.getMessage());
         }
+
+        return  new File("applications.csv");
     }
 
     private static String translitarate(String name){

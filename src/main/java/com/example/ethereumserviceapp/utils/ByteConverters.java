@@ -5,6 +5,7 @@
  */
 package com.example.ethereumserviceapp.utils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import org.web3j.abi.datatypes.generated.Bytes16;
 import org.web3j.abi.datatypes.generated.Bytes32;

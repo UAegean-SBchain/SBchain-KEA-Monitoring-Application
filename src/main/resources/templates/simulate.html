@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico"/>
+
+    <title>SBChain Social Benefit Economy</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../static/css2/bootstrap.css" rel="stylesheet" th:href="@{/css2/bootstrap.css}"/>
+</head>
+<body onload="connect()">
+<div class="container">
+    <!-- Static navbar -->
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">
+                    <img alt="Brand" src="..." th:src="@{/img/logo.png}" style="width:11rem;">
+                </a>
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                        aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#" th:text="${username}">SBChain</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="/">Home</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                           aria-expanded="false">Population <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/generate">Generate Population</a></li>
+                            <li><a href="/uploadCSV">Upload Population</a></li>
+                            <!--                            <li><a href="#">Something else here</a></li>-->
+                            <!--                            <li role="separator" class="divider"></li>-->
+                            <!--                            <li class="dropdown-header">Nav header</li>-->
+                            <!--                            <li><a href="#">Separated link</a></li>-->
+                            <!--                            <li><a href="#">One more separated link</a></li>-->
+                        </ul>
+                    </li>
+                    <li><a href="/simulate">Start Simulation</a></li>
+                    <!--                    <li><a href="#">Upload Population</a></li>-->
+
+                </ul>
+                <!--                <ul class="nav navbar-nav navbar-right">-->
+                <!--                    <li class="active"><a href="./">Default <span class="sr-only">(current)</span></a></li>-->
+                <!--                    <li><a href="#">Static top</a></li>-->
+                <!--                    <li><a href="#/">Fixed top</a></li>-->
+                <!--                </ul>-->
+            </div><!--/.nav-collapse -->
+        </div><!--/.container-fluid -->
+    </nav>
+    <!-- Main component for a primary marketing message or call to action -->
+    <div class="jumbotron">
+        <div class="row" id="formRow">
+            <!--Usage of models we wrote in WepAppController th:text="'Welcome to basic Bootstrap with Spring Boot created by ' + ${username} -->
+            <h3 th:text="'Welcome to the SBChain Social Economy Simulator'"></h3>
+            <!--        <p th:text="'This date example  ' + ${#dates.format(datetime, 'dd MMM yyyy HH:mm')}"></p>-->
+            <form th:action="@{/startSimulation}" method="post" th:object="${monitorCmdHelper}" id="infoForm">
+                <div class="form-group">
+                    <label for="parents1">Start Date: </label>
+                    <input lass="form-control" id="parents1" aria-describedby="parents"
+                           placeholder="0" type="datetime-local" step="1"  th:field="*{startDate}" />
+                </div>
+                <div class="form-group">
+                    <label for="parents1">Number of days: </label>
+                    <input lass="form-control" id="parents1" aria-describedby="parents"
+                           placeholder="0" type="number" step="1"  th:field="*{numDays}" />
+                </div>
+                <div class="form-group">
+                    <label for="parents1">Binomial Distribution pValue: </label>
+                    <input lass="form-control" id="parents1" aria-describedby="parents"
+                           placeholder="0" type="number" step="0.01" th:field="*{pValue}" />
+                </div>
+
+                <div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div> <!-- end of row -->
+
+        <div class="row" id="progressRow" style="display:none">
+            <div class="progress" id="porgressbar" style="margin-top:3rem;">
+                <span style="margin-left:1rem;">Running simulation, please do not close this window...</span>
+                <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="45"
+                     aria-valuemin="0" aria-valuemax="100" style="width: 15%">
+                    <span class="sr-only">50% Complete</span>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="container row" id="downloadButtons" style="display:none; margin-top:3rem;">
+            <div class="row">
+                Simulation finished!
+            </div>
+            <div class="row">
+                Please use the following buttons, to download the generated reports
+            </div>
+            <div class="row" style="margin-top:2rem;">
+                <div class="col-sm-2">
+                    <a href="/getJsonReport" class="btn btn-primary">Download JSON</a>
+                </div>
+                <div class="col-sm-2">
+                    <a href="/getXLSReport" class="btn btn-primary" style="margin-left:1rem;">Download XLS</a>
+                </div>
+            </div>
+        </div>
+
+
+
+    </div>
+</div> <!-- /container -->
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script  th:src="@{/js/bootstrap.js}"></script>
+<script  th:src="@{/js/stomp.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+<script type="text/javascript">
+            var stompClient = null;
+
+            function setConnected(connected) {
+                console.log("connected");
+            }
+
+            function connect() {
+                var socket = new SockJS('/socket');
+                stompClient = Stomp.over(socket);
+                stompClient.connect({}, function(frame) {
+                    setConnected(true);
+                    console.log('Connected: ' + frame);
+                    stompClient.subscribe('/topic/app', function(messageOutput) {
+                    console.log(messageOutput.body);
+                    if(messageOutput.body === "started"){
+                        //progressRow
+                        document.getElementById("progressRow").style.display="block";
+                    }
+
+                    if(messageOutput.body === "finished"){
+                        document.getElementById("downloadButtons").style.display="block";
+                        document.getElementById("progressRow").style.display="none";
+                        document.getElementById("formRow").style.display="none";
+                    }
+                    });
+                });
+
+
+                document.getElementById("infoForm").addEventListener("submit", formSubmit);
+            }
+
+            function disconnect() {
+                if(stompClient != null) {
+                    stompClient.disconnect();
+                }
+                setConnected(false);
+                console.log("Disconnected");
+            }
+
+
+
+            function formSubmit(event) {
+              var url = "/startSimulation";
+              var request = new XMLHttpRequest();
+              request.open('POST', url, true);
+              request.onload = function() { // request successful
+              // we can use server response to our request now
+                console.log(request.responseText);
+              };
+
+              request.onerror = function() {
+                // request failed
+              };
+
+              request.send(new FormData(event.target)); // create FormData from form that triggered event
+              event.preventDefault();
+            }
+
+
+
+        </script>
+</body>
+</html>
+

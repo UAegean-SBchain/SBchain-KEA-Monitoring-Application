@@ -25,8 +25,10 @@ public class TestEthService {
 
         EthereumService ethServ = new EthereumServiceImpl();
         ethServ.getAllCaseUUID().stream().forEach(uuid -> {
+            System.out.println("****************************the uuis is :");
             System.out.println(uuid);
-            System.out.println("the case stat is:");
+            System.out.println("****************************");
+            System.out.println("********************the case stat is:");
 //            System.out.println(ethServ.getCaseByUUID(uuid).get().getState().getValue());
         });
         //fakeuuid
@@ -37,10 +39,11 @@ public class TestEthService {
     public void testAddCaseDelete() {
         EthereumService ethServ = new EthereumServiceImpl();
         Case theCase = new Case();
-        theCase.setUuid("6YLVALU9V5FXMTJS");
+        theCase.setUuid("1WEC5TOI63P0AFN0");
+        log.info("will try to add");
         ethServ.addCase(theCase);
-//        Assertions.assertEquals(ethServ.getCaseByUUID("6YLVALU9V5FXMTJS").isPresent(), true);
-//        ethServ.deleteCaseByUuid("5YLVALU9V5FXMTJS");
+//        Assertions.assertEquals(ethServ.getCaseByUUID("1WEC5TOI63P0AFN1").isPresent(), true);
+//        ethServ.deleteCaseByUuid("1WEC5TOI63P0AFN1");
 
     }
 

@@ -1,6 +1,5 @@
 package com.example.ethereumserviceapp.controller;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +17,6 @@ import com.example.ethereumserviceapp.service.EthereumService;
 import com.example.ethereumserviceapp.service.HelperService;
 import com.example.ethereumserviceapp.service.MongoService;
 import com.example.ethereumserviceapp.utils.CsvUtils;
-import com.example.ethereumserviceapp.utils.ExportCaseToExcel;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

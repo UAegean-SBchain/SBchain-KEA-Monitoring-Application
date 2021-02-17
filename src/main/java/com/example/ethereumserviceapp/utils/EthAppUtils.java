@@ -6,10 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.example.ethereumserviceapp.model.HouseholdMember;
@@ -27,7 +24,8 @@ public class EthAppUtils {
         if(householdApps.size() > 1){
             principalApp = householdApps.stream().filter(h -> h.getTaxisAfm().equals(h.getHouseholdPrincipal().getAfm())).collect(Collectors.toList()).get(0);
         } else {
-            principalApp = householdApps.get(0);
+
+            if(householdApps.size() > 0) principalApp = householdApps.get(0);
         }
         //SsiApplication principalApp = householdApps.stream().filter(h -> h.getTaxisAfm().equals(h.getHouseholdPrincipal().getAfm())).collect(Collectors.toList()).get(0);
         
@@ -137,7 +135,7 @@ public class EthAppUtils {
 
     public static BigDecimal getTotalMonthlyValue(SsiApplication ssiApp, LocalDate date){
         BigDecimal paymentThresshold = BigDecimal.ZERO;
-        List<HouseholdMember> household = ssiApp.getHouseholdComposition();
+        List<HouseholdMember> household = ssiApp.getHouseholdComposition() != null?ssiApp.getHouseholdComposition() : new ArrayList<>();
         final LocalDate referenceDate = date == null? LocalDate.now(): date;
 
         Long adults = household.stream().filter(h -> calculateAge(DateUtils.dateStringToLD(h.getDateOfBirth()), referenceDate) >= 18).count();

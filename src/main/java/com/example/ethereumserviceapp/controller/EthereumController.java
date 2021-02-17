@@ -65,16 +65,16 @@ public class EthereumController {
     String validateAndupdateCase(@RequestParam(value = "uuid") String uuid) {
 
         Optional<Case> c = this.ethService.getCaseByUUID(uuid);
-        if (c.isPresent()) {
-            Optional<SsiApplication> ssiApp = mongoServ.findByUuid(c.get().getUuid());
+//        if (c.isPresent()) {
+            Optional<SsiApplication> ssiApp = mongoServ.findByUuid(uuid);
             if (!ssiApp.isPresent()) {
                 return "FAIL";
             }
             c.get().setState(State.ACCEPTED);
             this.ethService.updateCase(c.get()/*, false*/);
             return "OK";
-        }
-        return "FAIL";
+//        }
+//        return "FAIL";
     }
 
     @GetMapping("/getContractState")

@@ -19,7 +19,7 @@ public class TestMockServices {
     public void testOtheBenefits() {
         MockServices ms = new MockServicesImpl();
         LocalDate today = LocalDate.now();
-        final List<SsiApplication> allApps = CsvUtils.generateMockData(200);
+        final List<SsiApplication> allApps = CsvUtils.generateMockData(200, 5,50,10,20,10,50);
         int num = 0;
         for (SsiApplication app : allApps) {
             LocalDate start = app.getTime();
@@ -43,7 +43,7 @@ public class TestMockServices {
     public void testDeaths() {
         MockServices ms = new MockServicesImpl();
         LocalDate today = LocalDate.now();
-        final List<SsiApplication> allApps = CsvUtils.generateMockData(200);
+        final List<SsiApplication> allApps = CsvUtils.generateMockData(200,5,10,50,20,50,50);
         int num = 0;
         for (SsiApplication app : allApps) {
             int perHousehold = 0;
@@ -69,7 +69,7 @@ public class TestMockServices {
     public void testOAED() {
         MockServices ms = new MockServicesImpl();
         LocalDate today = LocalDate.now();
-        final List<SsiApplication> allApps = CsvUtils.generateMockData(200);
+        final List<SsiApplication> allApps = CsvUtils.generateMockData(200,5,10,15,20,50,50);
         int num = 0;
         for (SsiApplication app : allApps) {
             List<SsiApplication> householdApps =

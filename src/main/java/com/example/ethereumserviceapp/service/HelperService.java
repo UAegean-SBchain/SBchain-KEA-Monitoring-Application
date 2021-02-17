@@ -42,8 +42,11 @@ public class HelperService {
     private PaymentService paymentService;
 
     public void addTestCase(String uuid) {
+        log.info("looking for case {}", uuid);
         Optional<SsiApplication> ssiApp = mongoService.findByUuid(uuid);
+
         if (ssiApp.isPresent()) {
+
             Case caseToAdd = new Case();
             caseToAdd.setDate(LocalDateTime.of(ssiApp.get().getTime(), LocalTime.of(00, 00, 00)));
             caseToAdd.setUuid(uuid);
@@ -54,7 +57,7 @@ public class HelperService {
     public void runMonitoring(String startDate, String numDays, double pValue) {
 
         String startDateFixed = startDate.replace("T", " ");
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime currentDate = LocalDateTime.parse(startDateFixed, formatter);
         LocalDateTime endDate = currentDate.plusDays(Long.valueOf(numDays));
         List<CaseAppDTO> storedDataForSE = null;
