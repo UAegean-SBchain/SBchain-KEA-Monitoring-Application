@@ -96,8 +96,10 @@ public class ExampleRunTest extends TestUtils{
         Mockito.when(mongoServ.findCredentialIdsByUuid(anyString())).thenReturn(credIdAndExp);
         Mockito.when(ethServ.checkRevocationStatus(anyString())).thenReturn(false);
 
-        //Mockito.when(mockServ.getLuxury((LocalDate) any(), (LocalDate) any(), anyDouble(), (SsiApplication) any(), anyBoolean(), anyList())).thenReturn(Optional.of(generateMockResult(LocalDateTime.of(2021, 1, 12, 00, 00), true)));
-        //Mockito.when(mockServ.getOAEDRegistration((LocalDate) any(), (LocalDate) any(), anyDouble(), (SsiApplication) any(), anyBoolean(), anyList())).thenReturn(Optional.of(generateMockResult(LocalDateTime.of(2021, 1, 12, 00, 00), true)));
+        //Mockito.when(mockServ.getLuxury((LocalDate) any(), (LocalDate) any(), anyDouble(), (SsiApplication) any(), anyBoolean(), anyList()))
+            //.thenReturn(Optional.of(generateMockResult(LocalDateTime.of(2021, 1, 12, 00, 00))));
+        // Mockito.when(mockServ.getOAEDRegistration((LocalDate) any(), (LocalDate) any(), anyDouble(), (SsiApplication) any(), anyBoolean(), anyList()))
+            //.thenReturn(Optional.of(generateMockResult(LocalDateTime.of(2021, 1, 12, 00, 00))));
 
         monServ.startMonitoring(runDate, true, 0, false, null);
 
@@ -469,11 +471,10 @@ public class ExampleRunTest extends TestUtils{
 
     }
 
-    private BooleanMockResult generateMockResult(LocalDateTime date, Boolean value){
+    private BooleanMockResult generateMockResult(LocalDateTime date){
 
         BooleanMockResult mockRes = new BooleanMockResult();
         mockRes.setDate(date);
-        mockRes.setValue(value);
 
         return mockRes;
     }
