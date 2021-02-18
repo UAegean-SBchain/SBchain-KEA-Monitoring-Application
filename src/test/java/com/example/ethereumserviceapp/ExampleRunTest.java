@@ -1,6 +1,9 @@
 package com.example.ethereumserviceapp;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
@@ -16,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 
+import com.example.ethereumserviceapp.model.BooleanMockResult;
 import com.example.ethereumserviceapp.model.Case;
 import com.example.ethereumserviceapp.model.CaseHistory;
 import com.example.ethereumserviceapp.model.CasePayment;
@@ -91,6 +95,9 @@ public class ExampleRunTest extends TestUtils{
         Mockito.when(mongoServ.findByTaxisAfmIn(anySet())).thenReturn(mockList);
         Mockito.when(mongoServ.findCredentialIdsByUuid(anyString())).thenReturn(credIdAndExp);
         Mockito.when(ethServ.checkRevocationStatus(anyString())).thenReturn(false);
+
+        //Mockito.when(mockServ.getLuxury((LocalDate) any(), (LocalDate) any(), anyDouble(), (SsiApplication) any(), anyBoolean(), anyList())).thenReturn(Optional.of(generateMockResult(LocalDateTime.of(2021, 1, 12, 00, 00), true)));
+        //Mockito.when(mockServ.getOAEDRegistration((LocalDate) any(), (LocalDate) any(), anyDouble(), (SsiApplication) any(), anyBoolean(), anyList())).thenReturn(Optional.of(generateMockResult(LocalDateTime.of(2021, 1, 12, 00, 00), true)));
 
         monServ.startMonitoring(runDate, true, 0, false, null);
 
@@ -460,5 +467,14 @@ public class ExampleRunTest extends TestUtils{
 
         return monitoredCase;
 
+    }
+
+    private BooleanMockResult generateMockResult(LocalDateTime date, Boolean value){
+
+        BooleanMockResult mockRes = new BooleanMockResult();
+        mockRes.setDate(date);
+        mockRes.setValue(value);
+
+        return mockRes;
     }
 }
