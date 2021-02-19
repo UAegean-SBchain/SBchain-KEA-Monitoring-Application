@@ -23,31 +23,31 @@ import org.web3j.crypto.Credentials;
  */
 public interface EthereumService {
 
-    public Credentials getCredentials();
+    Credentials getCredentials();
 
-    public CaseMonitor getContract();
+    CaseMonitor getContract();
 
-    public List<String> getAllCaseUUID();
+    List<String> getAllCaseUUID();
 
-    public Optional<Case> getCaseByUUID(String uuid);
+    Optional<Case> getCaseByUUID(String uuid);
 
-    public void addCase(Case monitoredCase);
+    void addCase(Case monitoredCase);
 
-    public void deleteCaseByUuid(String uuid);
+    void deleteCaseByUuid(String uuid);
 
-    public void updateCase(Case monitoredCase);
+    void updateCase(Case monitoredCase);
 
     //public void updateRejection(Case monitoredCase);
 
-    public void addPayment(Case monitoredCase, CasePayment payment, Boolean sync);
+    void addPayment(Case monitoredCase, CasePayment payment, Boolean sync);
 
-    public boolean checkIfCaseExists(String uuid);
+    boolean checkIfCaseExists(String uuid);
 
-    public VcRevocationRegistry getRevocationContract();
+    VcRevocationRegistry getRevocationContract();
 
-    public boolean checkRevocationStatus(String uuid);
+    boolean checkRevocationStatus(String uuid);
 
-    public Page<String> getCaseUuidsPaginated(Pageable pageable);
+    Page<String> getCaseUuidsPaginated(Pageable pageable);
 
     //public void revokeCredentials(String uuid);
 }

@@ -24,7 +24,7 @@ public class LocalDateMapDeserializer   extends JsonDeserializer<LinkedHashMap<L
     public LinkedHashMap<LocalDateTime, String> deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         ObjectCodec oc = jp.getCodec();
-        TextNode node = (TextNode) oc.readTree(jp);
+        TextNode node = oc.readTree(jp);
         String dateString = node.textValue();
         ObjectMapper mapper = new ObjectMapper();
         TypeReference<LinkedHashMap<String, String>> typeRef

@@ -131,7 +131,7 @@ public class EthereumServiceImpl implements EthereumService {
         try {
             List<byte[]> cases = this.getContract().getAllCases().sendAsync().get();
             cases.stream().forEach(caseId -> {
-                result.add(ByteConverters.hexToASCII(Numeric.toHexStringNoPrefix((byte[]) caseId)));
+                result.add(ByteConverters.hexToASCII(Numeric.toHexStringNoPrefix(caseId)));
             });
 
         } catch (InterruptedException ex) {

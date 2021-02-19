@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public interface PaymentService {
 
-    public void startScheduledPayment();
+    void startScheduledPayment();
     
-    public void startPayment(LocalDateTime dateNow, Boolean sync);
+    void startPayment(LocalDateTime dateNow, Boolean sync);
 }

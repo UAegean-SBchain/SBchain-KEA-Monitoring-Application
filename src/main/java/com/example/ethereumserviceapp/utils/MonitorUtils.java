@@ -31,10 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MonitorUtils extends EthAppUtils{
                 
     public static Boolean isCaseOlderThanSixMonths(LocalDateTime firstAcceptedDate, LocalDateTime currentDate){
-        if(currentDate.isAfter(firstAcceptedDate.plusMonths(6))){
-            return true;
-        }
-        return false;
+        return currentDate.isAfter(firstAcceptedDate.plusMonths(6));
     }
 
     //mock method, fill up when more information is available

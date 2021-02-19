@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk-alpine
+FROM openjdk:15
 MAINTAINER Nikos Triantafyllou
 VOLUME /tmp
 ADD ./target/ethereum-service-app-0.0.1-SNAPSHOT.jar  app.jar

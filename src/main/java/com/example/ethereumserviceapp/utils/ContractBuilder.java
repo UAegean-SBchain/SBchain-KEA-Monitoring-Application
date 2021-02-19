@@ -42,7 +42,7 @@ public class ContractBuilder {
         LinkedHashMap<LocalDateTime, State> history = new LinkedHashMap<>();
         LinkedHashMap<LocalDateTime, BigDecimal> dailyBenefit = new LinkedHashMap<>();
         List<CaseHistory> caseHistory = new ArrayList<>();
-        transformedCase.setUuid(ByteConverters.hexToASCII(Numeric.toHexStringNoPrefix((byte[]) theCase.component1())));
+        transformedCase.setUuid(ByteConverters.hexToASCII(Numeric.toHexStringNoPrefix(theCase.component1())));
         transformedCase.setDate(Instant.ofEpochMilli(theCase.component2().longValue()).atZone(ZoneId.systemDefault()).toLocalDateTime());
         transformedCase.setState(State.values()[theCase.component7().intValue()]);
 

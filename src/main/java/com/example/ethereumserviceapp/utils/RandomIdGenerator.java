@@ -13,11 +13,11 @@ import java.util.Random;
  */
 public class RandomIdGenerator {
 
-    private static char[] _base62chars
+    private static final char[] _base62chars
             = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
                     .toCharArray();
 
-    private static Random _random = new Random();
+    private static final Random _random = new Random();
 
     public static String GetBase62(int length) {
         StringBuilder sb = new StringBuilder(length);

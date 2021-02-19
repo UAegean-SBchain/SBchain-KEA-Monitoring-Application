@@ -16,7 +16,7 @@ public enum RejectionCode {
     public final Integer value;
     public final String description;
 
-    private RejectionCode(Integer value, String description) {
+    RejectionCode(Integer value, String description) {
         this.value = value;
         this.description = description;
     }

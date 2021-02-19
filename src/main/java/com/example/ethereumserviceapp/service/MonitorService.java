@@ -17,8 +17,8 @@ import com.example.ethereumserviceapp.model.entities.SsiApplication;
  */
 public interface MonitorService {
 
-    public void startScheduledMonitoring();
+    void startScheduledMonitoring();
 
-    public void startMonitoring(LocalDateTime currentDate, Boolean isTest, double pValue, Boolean makeMockChecks, List<CaseAppDTO> storeDataForSE);
+    void startMonitoring(LocalDateTime currentDate, Boolean isTest, double pValue, Boolean makeMockChecks, List<CaseAppDTO> storeDataForSE);
 
 }

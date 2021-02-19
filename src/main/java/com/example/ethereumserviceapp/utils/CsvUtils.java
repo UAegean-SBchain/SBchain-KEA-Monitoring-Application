@@ -22,6 +22,8 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.util.ResourceUtils;
 import org.thymeleaf.util.StringUtils;
 
 @Slf4j
@@ -479,7 +481,15 @@ public class CsvUtils {
 
         if (GREEK_FIRST_NAMES_MALE.size() == 0) {
 //            ClassLoader classLoader = CsvUtils.class.getClassLoader();
-            InputStream inputStream = new FileInputStream("male_names_gr.txt");// classLoader.getResourceAsStream("male_names_gr.txt");
+//            InputStream inputStream = new FileInputStream("male_names_gr.txt");// classLoader.getResourceAsStream("male_names_gr.txt");
+//            InputStream inputStream = new FileInputStream(ResourceUtils.getFile("classpath:male_names_gr.txt"));
+            InputStream inputStream = null;
+            try {
+                inputStream = new ClassPathResource(
+                        "male_names_gr.txt").getInputStream();
+            } catch (IOException e) {
+                log.error(e.getMessage());
+            }
             try (BufferedReader br
                          = new BufferedReader(new InputStreamReader(inputStream))) {
                 String line;
@@ -497,7 +507,15 @@ public class CsvUtils {
 
     public static String[] getRandomFirstNameFemale() throws FileNotFoundException {
         if (GREEK_FIRST_NAMES_FEMALE.size() == 0) {
-            InputStream inputStream = new FileInputStream("female_names_gr.txt");// classLoader.getResourceAsStream("male_names_gr.txt");
+//            InputStream inputStream = new FileInputStream("female_names_gr.txt");// classLoader.getResourceAsStream("male_names_gr.txt");
+//            InputStream inputStream = new FileInputStream(ResourceUtils.getFile("classpath:female_names_gr.txt"));
+            InputStream inputStream = null;
+            try {
+                inputStream = new ClassPathResource(
+                        "female_names_gr.txt").getInputStream();
+            } catch (IOException e) {
+                log.error(e.getMessage());
+            }
             try (BufferedReader br
                          = new BufferedReader(new InputStreamReader(inputStream))) {
                 String line;
@@ -521,8 +539,13 @@ public class CsvUtils {
 //            ClassLoader classLoader = CsvUtils.class.getClassLoader();
             InputStream inputStream = null;// classLoader.getResourceAsStream("male_names_gr.txt");
             try {
-                inputStream = new FileInputStream("surnames_gr.txt");
+//                inputStream = new FileInputStream(ResourceUtils.getFile("classpath:surnames_gr.txt"));
+//                inputStream = new FileInputStream("surnames_gr.txt");
+                inputStream = new ClassPathResource(
+                        "surnames_gr.txt").getInputStream();
             } catch (FileNotFoundException e) {
+                log.info(e.getMessage());
+            } catch (IOException e) {
                 log.info(e.getMessage());
             }
             try {

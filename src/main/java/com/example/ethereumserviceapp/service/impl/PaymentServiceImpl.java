@@ -27,8 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class PaymentServiceImpl implements PaymentService{
 
-    private EthereumService ethServ;
-    private MongoService mongoServ;
+    private final EthereumService ethServ;
+    private final MongoService mongoServ;
 
     @Autowired
     public PaymentServiceImpl(EthereumService ethServ, MongoService mongoServ) {

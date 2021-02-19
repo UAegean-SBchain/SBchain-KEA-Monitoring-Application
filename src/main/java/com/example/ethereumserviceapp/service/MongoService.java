@@ -21,33 +21,33 @@ import org.springframework.stereotype.Service;
  */
 public interface MongoService {
 
-    public Optional<SsiApplication> findFirstByTaxisAfm(String taxisAfm);
+    Optional<SsiApplication> findFirstByTaxisAfm(String taxisAfm);
 
-    public List<SsiApplication> findBySubmittedMunicipality(String municipality);
+    List<SsiApplication> findBySubmittedMunicipality(String municipality);
 
-    public List<SsiApplication> findByTaxisAfm(String taxisAfm);
+    List<SsiApplication> findByTaxisAfm(String taxisAfm);
 
-    public List<SsiApplication> findByTaxisAfmIn(Set<String> taxisAfms);
+    List<SsiApplication> findByTaxisAfmIn(Set<String> taxisAfms);
 
-    public Optional<SsiApplication> findByUuid(String uuid);
+    Optional<SsiApplication> findByUuid(String uuid);
 
-    public List<SsiApplication> findAll();
+    List<SsiApplication> findAll();
 
-    public CredsAndExp[] findCredentialIdsByUuid(String uuid);
+    CredsAndExp[] findCredentialIdsByUuid(String uuid);
 
-    public List<SsiApplication> findByMeterNumber(String meterNumber);
+    List<SsiApplication> findByMeterNumber(String meterNumber);
 
-    public List<SsiApplication> findByIban(String iban);
+    List<SsiApplication> findByIban(String iban);
 
-    public List<SsiApplication> findByHouseholdCompositionIn(Map<String, String> household);
+    List<SsiApplication> findByHouseholdCompositionIn(Map<String, String> household);
 
-    public List<SsiApplication> findByHouseholdComposition(HouseholdMember member);
+    List<SsiApplication> findByHouseholdComposition(HouseholdMember member);
 
-    public List<SsiApplication> findByHouseholdPrincipalIn(List<HouseholdMember> members);
+    List<SsiApplication> findByHouseholdPrincipalIn(List<HouseholdMember> members);
 
-    public List<String> findUuidByTaxisAfmIn(Set<String> taxisAfms);
+    List<String> findUuidByTaxisAfmIn(Set<String> taxisAfms);
 
-    public void deleteByUuid(String uuid);
+    void deleteByUuid(String uuid);
 
-    public void updateSsiApp(SsiApplication ssiApp);
+    void updateSsiApp(SsiApplication ssiApp);
 }

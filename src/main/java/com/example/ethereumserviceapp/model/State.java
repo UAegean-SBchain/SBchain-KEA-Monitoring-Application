@@ -13,7 +13,7 @@ public enum State {
     public final Integer value;
     public final String description;
 
-    private State(Integer value, String description) {
+    State(Integer value, String description) {
         this.value = value;
         this.description = description;
     }

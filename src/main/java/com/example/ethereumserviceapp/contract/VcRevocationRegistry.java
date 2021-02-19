@@ -53,24 +53,20 @@ public class VcRevocationRegistry extends Contract {
     public static final String FUNC_REVOKE = "revoke";
 
     public static final Event REVOKEDEVENT_EVENT = new Event("RevokedEvent",
-            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>(true) {
+            Arrays.asList(new TypeReference<Uint256>(true) {
             }, new TypeReference<Bytes32>() {
             }));
-    ;
 
     public static final Event LOG_EVENT = new Event("log",
-            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {
+            Arrays.asList(new TypeReference<Uint256>() {
             }, new TypeReference<Bytes32>() {
             }, new TypeReference<Bool>() {
             }));
-    ;
 
     public static final Event LOGEXISTS_EVENT = new Event("logExists",
-            Arrays.<TypeReference<?>>asList(new TypeReference<Bytes32>() {
+            Arrays.asList(new TypeReference<Bytes32>() {
             }, new TypeReference<Bool>() {
             }));
-
-    ;
 
     @Deprecated
     protected VcRevocationRegistry(String contractAddress, Web3j web3j, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
@@ -193,8 +189,8 @@ public class VcRevocationRegistry extends Contract {
 
     public RemoteFunctionCall<Boolean> isRevoked(byte[] _uuid) {
         final org.web3j.abi.datatypes.Function function = new org.web3j.abi.datatypes.Function(FUNC_ISREVOKED,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes32(_uuid)),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Bool>() {
+                Arrays.asList(new org.web3j.abi.datatypes.generated.Bytes32(_uuid)),
+                Arrays.asList(new TypeReference<Bool>() {
                 }));
         return executeRemoteCallSingleValueReturn(function, Boolean.class);
     }
@@ -202,8 +198,8 @@ public class VcRevocationRegistry extends Contract {
     public RemoteFunctionCall<TransactionReceipt> revoke(byte[] _uuid) {
         final org.web3j.abi.datatypes.Function function = new org.web3j.abi.datatypes.Function(
                 FUNC_REVOKE,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes32(_uuid)),
-                Collections.<TypeReference<?>>emptyList());
+                Arrays.asList(new org.web3j.abi.datatypes.generated.Bytes32(_uuid)),
+                Collections.emptyList());
         return executeRemoteCallTransaction(function);
     }
 

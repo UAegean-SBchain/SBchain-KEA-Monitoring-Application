@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MongoServiceImpl implements MongoService {
 
-    private SsiApplicationRepository rep;
+    private final SsiApplicationRepository rep;
 
     @Autowired
     public MongoServiceImpl(SsiApplicationRepository rep) {

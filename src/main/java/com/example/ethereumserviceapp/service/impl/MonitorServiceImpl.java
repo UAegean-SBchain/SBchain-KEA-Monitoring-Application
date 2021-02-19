@@ -51,11 +51,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MonitorServiceImpl implements MonitorService {
 
-    private MongoService mongoServ;
+    private final MongoService mongoServ;
 
-    private EthereumService ethServ;
+    private final EthereumService ethServ;
 
-    private MockServices mockServ;
+    private final MockServices mockServ;
 
     @Autowired
     public MonitorServiceImpl(MongoService mongoS, EthereumService ethServ, MockServices mockServices) {
@@ -236,7 +236,7 @@ public class MonitorServiceImpl implements MonitorService {
             Iterator<Entry<LocalDateTime, State>> it = monitoredCase.getHistory().entrySet().iterator();
             while (it.hasNext() && !accepted) {
                 Entry<LocalDateTime, State> entry = it.next();
-                accepted = entry.getValue().equals(State.ACCEPTED) ? true : false;
+                accepted = entry.getValue().equals(State.ACCEPTED);
                 if (accepted) {
                     firstAcceptedDate = entry.getKey();
                 }

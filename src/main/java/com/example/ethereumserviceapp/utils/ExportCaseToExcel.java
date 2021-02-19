@@ -24,10 +24,10 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class ExportCaseToExcel {
-    private XSSFWorkbook workbook;
+    private final XSSFWorkbook workbook;
     private XSSFSheet sheet;
-    private Case monitoredCase;
-    private List<SsiApplication> ssiApps;
+    private final Case monitoredCase;
+    private final List<SsiApplication> ssiApps;
      
     public ExportCaseToExcel(Case monitoredCase, List<SsiApplication> ssiApps) {
         this.monitoredCase = monitoredCase;
