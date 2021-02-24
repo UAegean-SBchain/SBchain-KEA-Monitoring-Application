@@ -269,10 +269,9 @@ public class MonitorServiceImpl implements MonitorService {
                 //this.mongoServ.deleteByUuid(uuid);
                 }
             //SsiApplication aggregatedSsiApp = EthAppUtils.aggregateHouseholdValues(householdApps);
-            if (checkHouseholdCredentials(monitoredCase, ssiApp, householdApps, aggregatedSsiApp)
-                    && !MonitorUtils.isCaseOlderThanSixMonths(firstAcceptedDate, currentDate)) {
+            if (checkHouseholdCredentials(monitoredCase, ssiApp, householdApps, aggregatedSsiApp)) {
                 // if there is a missing application in the household suspend the case
-                if (!checkHouseholdApplications(monitoredCase, ssiApp, currentDate.toLocalDate())) {
+                if (!checkHouseholdApplications(monitoredCase, ssiApp, householdApps, currentDate.toLocalDate())) {
                     log.info("household apps not all present, case suspended");
                     monitoredCase.setRejectionCode(RejectionCode.REJECTION0);
                     monitoredCase.setDailyValue(BigDecimal.ZERO);
@@ -320,7 +319,7 @@ public class MonitorServiceImpl implements MonitorService {
     //     }
     // }
 
-    private Boolean checkHouseholdApplications(Case monitoredCase, SsiApplication ssiApp, LocalDate currentDate) {
+    private Boolean checkHouseholdApplications(Case monitoredCase, SsiApplication ssiApp, List<SsiApplication> householdApps, LocalDate currentDate) {
         //final LocalDate currentDate = LocalDate.now();
         final LocalDate endDate = LocalDate.of(currentDate.getYear(), currentDate.getMonthValue(), EthAppUtils.monthDays(currentDate));
 
@@ -330,6 +329,17 @@ public class MonitorServiceImpl implements MonitorService {
         if (currentDate.equals(endDate)) {
             for(HouseholdMember hm: household){
                 if(mongoServ.findByTaxisAfm(hm.getAfm()).isEmpty()){
+                    return false;
+                }
+            }
+        }
+
+        //does an application exist in a different household
+        for (SsiApplication app : householdApps) {
+            List<SsiApplication> duplicateAfms = mongoServ.findByTaxisAfm(app.getTaxisAfm());
+            if(duplicateAfms.size()>1){
+                if(duplicateAfms.stream().filter(d -> !d.getHouseId().equals(app.getHouseId())).count()>0){
+                    log.info("suspended - afm exists in different houshold");
                     return false;
                 }
             }
@@ -532,15 +542,6 @@ public class MonitorServiceImpl implements MonitorService {
             log.info("rejected - financial data restriction (total household income > payment thresshold)");
             monitoredCase.setRejectionCode(RejectionCode.REJECTION101);
             return false;
-        }
-
-        //does an application exist in a different household
-        for (SsiApplication app : householdApps) {
-            if(mongoServ.findByTaxisAfm(app.getTaxisAfm()).size()>1){
-                log.info("rejected - afm exists in different houshold");
-                monitoredCase.setRejectionCode(RejectionCode.REJECTION109);
-                return false;
-            }
         }
 
         return true;

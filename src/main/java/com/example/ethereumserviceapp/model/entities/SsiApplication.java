@@ -126,6 +126,8 @@ public class SsiApplication {
     private HouseholdMember householdPrincipal;
     private List<HouseholdMember> householdComposition;
     private LinkedHashMap<String, List<HouseholdMember>> householdCompositionHistory;
+    //household id
+    private String houseId;
 
     //income guarantee
     private String monthlyGuarantee;
