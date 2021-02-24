@@ -21,7 +21,7 @@ contract CaseMonitor{
         uint[] sumDailyValueHistory;
         CaseState currState;
         int paymentOffset;
-        bytes32 houseId;
+        bytes32 householdId;
     }
     
     struct CasePayment{
@@ -58,7 +58,6 @@ contract CaseMonitor{
         Rejection105,
         Rejection107,
         Rejection108,
-        Rejection109,
         Rejection110
     }
 
@@ -74,7 +73,7 @@ contract CaseMonitor{
         return rejectionUuidToIndex[_uuid]; 
     }
 
-    function addCase(bytes16 _uuid, uint _date, bytes32 _houseId) public {
+    function addCase(bytes16 _uuid, uint _date, bytes32 _householdId) public {
 
         //require that the case be unique (not already added) 
         require(!caseExists(_uuid));
@@ -89,7 +88,7 @@ contract CaseMonitor{
         sumDailyValueHistory[0] = 0;
 
         //add the case 
-        cases.push(Case(_uuid, _date, datesHistory, statesHistory, payPerDayHistory, sumDailyValueHistory, CaseState.Undefined, 0, _houseId)); 
+        cases.push(Case(_uuid, _date, datesHistory, statesHistory, payPerDayHistory, sumDailyValueHistory, CaseState.Undefined, 0, _householdId)); 
         uint newIndex = cases.length-1;
         caseUuidToIndex[_uuid] = newIndex;
         addCasePayment(_uuid);
@@ -232,7 +231,7 @@ contract CaseMonitor{
         uint[] memory sumDailyValueHistory,
         CaseState currState,
         int paymentOffset,
-        bytes32 houseId) {
+        bytes32 householdId) {
             
         require(caseExists(_uuid));
 
@@ -241,7 +240,7 @@ contract CaseMonitor{
         
         return (theCase.uuid, theCase.latestDate, 
                  theCase.datesHistory, theCase.statesHistory, theCase.payPerDayHistory, theCase.sumDailyValueHistory, theCase.currState,
-                 theCase.paymentOffset, theCase.houseId); 
+                 theCase.paymentOffset, theCase.householdId); 
         
     }
     

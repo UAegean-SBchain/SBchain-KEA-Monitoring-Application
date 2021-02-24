@@ -24,6 +24,7 @@ import com.example.ethereumserviceapp.model.State;
 import org.web3j.tuples.generated.Tuple3;
 import org.web3j.tuples.generated.Tuple5;
 import org.web3j.tuples.generated.Tuple8;
+import org.web3j.tuples.generated.Tuple9;
 import org.web3j.utils.Numeric;
 
 import lombok.extern.slf4j.Slf4j;
@@ -35,8 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ContractBuilder {
 
-    public static Case buildCaseFromTuple(Tuple8<byte[], BigInteger, List<BigInteger>, List<BigInteger>,
-            List<BigInteger>, List<BigInteger>, BigInteger, BigInteger> theCase) {
+    public static Case buildCaseFromTuple(Tuple9<byte[], BigInteger, List<BigInteger>, List<BigInteger>,
+            List<BigInteger>, List<BigInteger>, BigInteger, BigInteger, byte[]> theCase) {
         Case transformedCase = new Case();
         //List<CasePayment> paymentHistory = new ArrayList<>();
         LinkedHashMap<LocalDateTime, State> history = new LinkedHashMap<>();
@@ -61,6 +62,7 @@ public class ContractBuilder {
             }
         }
         transformedCase.setCaseHistory(caseHistory);
+        transformedCase.setHouseholdId(ByteConverters.hexToASCII(Numeric.toHexStringNoPrefix(theCase.component9())));
 
         // for(int i=0; i<theCase.component6().size(); i++){
         //     CasePayment transformedPayment = new CasePayment();

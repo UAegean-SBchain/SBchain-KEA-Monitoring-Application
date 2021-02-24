@@ -30,5 +30,5 @@ public class Case {
     private RejectionCode rejectionCode;
     private BigDecimal dailyValue;
     private BigDecimal dailySum;
-    private String houseId;
+    private String householdId;
 }

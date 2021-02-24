@@ -10,7 +10,6 @@ public enum RejectionCode {
     REJECTION105(5, "Rejection105"),  
     REJECTION107(7, "Rejection107"), 
     REJECTION108(8, "Rejection108"),
-    REJECTION109(9, "Rejection109"),  
     REJECTION110(10, "Rejection110");
 
     public final Integer value;

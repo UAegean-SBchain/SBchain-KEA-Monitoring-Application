@@ -34,10 +34,11 @@ public class EthereumController {
 
     @PostMapping("/addCase")
     protected void addCase(@RequestParam(value = "uuid", required = true) String uuid,
-            @RequestParam(value = "date", required = true) String date) {
+            @RequestParam(value = "date", required = true) String date, @RequestParam(value = "householdId", required = true) String householdId) {
 
         Case monitoredCase = new Case();
         monitoredCase.setUuid(uuid);
+        monitoredCase.setHouseholdId(householdId);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         monitoredCase.setDate(LocalDateTime.parse(date, formatter));

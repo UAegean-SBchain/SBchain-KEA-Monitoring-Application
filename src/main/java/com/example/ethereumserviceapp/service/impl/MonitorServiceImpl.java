@@ -338,7 +338,7 @@ public class MonitorServiceImpl implements MonitorService {
         for (SsiApplication app : householdApps) {
             List<SsiApplication> duplicateAfms = mongoServ.findByTaxisAfm(app.getTaxisAfm());
             if(duplicateAfms.size()>1){
-                if(duplicateAfms.stream().filter(d -> !d.getHouseId().equals(app.getHouseId())).count()>0){
+                if(duplicateAfms.stream().filter(d -> !d.getHouseholdId().equals(app.getHouseholdId())).count()>0){
                     log.info("suspended - afm exists in different houshold");
                     return false;
                 }

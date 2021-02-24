@@ -78,7 +78,7 @@ public class EthereumServiceImpl implements EthereumService {
         Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair, derivationPath);
         // Load the wallet for the derived key 
         this.credentials = Credentials.create(derivedKeyPair);
-        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0xDa04fa66Bd544fAc14214Da9862F41447Ee55c71"
+        this.CONTRACT_ADDRESS = System.getenv("CONTRACT_ADDRESS") == null ? "0x1b0854594EdFA67b046290631224dA71aBB2D734"
                 : System.getenv("CONTRACT_ADDRESS");
         this.REVOCATION_CONTRACT_ADDRESS = System.getenv("REVOCATION_CONTRACT_ADDRESS") == null
                 ? "0x9534d226e56826Cc4C01912Eb388b121Bb0683b5"
@@ -190,6 +190,8 @@ public class EthereumServiceImpl implements EthereumService {
                 uuid = ByteConverters.stringToBytes16(monitoredCase.getUuid()).getValue();
                 log.info("!!!the uuid HEX is: "+ Hex.encodeHexString( uuid ));
             }
+            byte[] householdId =  ByteConverters.stringToBytes32(monitoredCase.getHouseholdId()).getValue();
+
             LocalDateTime time = monitoredCase.getDate();
             if (time == null) {
                 time = LocalDateTime.now();
@@ -197,7 +199,7 @@ public class EthereumServiceImpl implements EthereumService {
             ZonedDateTime zdt = time.atZone(ZoneId.of("Europe/Athens"));
             long millis = zdt.toInstant().toEpochMilli();
             String functionCall = this.getContract()
-                    .addCase(uuid, BigInteger.valueOf(millis))
+                    .addCase(uuid, BigInteger.valueOf(millis), householdId)
                     .encodeFunctionCall();
             //,
             String hash = this.txManager.sendTransaction(DefaultGasProvider.GAS_PRICE , BigInteger.valueOf(1000000),
